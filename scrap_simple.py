@@ -1,6 +1,8 @@
 
 import pandas as pd
 from common import last_bd
+from utils import timer
+
 
 URL_ROOT = "http://www.worldgovernmentbonds.com/country/"
 
@@ -57,6 +59,7 @@ def scrap_govies(save_to_file=True):
 #     DBsubs.DB_update(res,"GOVIES_TS",idx=False,mode='append')
 #     return res
 
+@timer
 def import_govies(argument=None):
     try:
         res = scrap_govies()

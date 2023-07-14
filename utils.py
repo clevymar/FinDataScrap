@@ -6,6 +6,6 @@ def timer(func):
         start_time = time.perf_counter()
         result = func(*args, **kwargs)
         end_time = time.perf_counter()
-        print_color(f"[I]Function {func.__name__} from module {func.__module__} took {end_time - start_time:,.1f} seconds","cyan")
+        print(f"[I]Function {func.__name__} from module {func.__module__} took {end_time - start_time:,.1f} seconds")
         return result
     return wrapper

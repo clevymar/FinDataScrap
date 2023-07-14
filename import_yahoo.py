@@ -3,6 +3,7 @@ import pandas as pd
 import yfinance as yf
 
 from common import start, end, EQUITY_UNDS
+from utils import timer
 
 
 def download_clean_TS(unds: list, field: str = "Adj Close", rounding: int = None):
@@ -39,7 +40,7 @@ def download_clean_TS(unds: list, field: str = "Adj Close", rounding: int = None
     res_clean  = resDB.fillna(method="ffill")
     return resDB, res_clean
 
-
+@timer
 def import_yahoo():
     try:
         resDB,res=download_clean_TS(EQUITY_UNDS,rounding=2)
