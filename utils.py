@@ -1,7 +1,10 @@
 import time
+from functools import wraps
+
 
 def timer(func):
     """A decorator that prints the execution time for the decorated function"""
+    @wraps(func)
     def wrapper(*args, **kwargs):
         start_time = time.perf_counter()
         result = func(*args, **kwargs)

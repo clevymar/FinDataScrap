@@ -44,7 +44,7 @@ def sub_getETF_Selenium(driver,ETF_name,exchange='arcx'):
                 break
         if not foundURL:
             raise SeleniumError('Correct Url could not be found for: '+ETF_name)
-    
+    print(f'[+]Scrapping for {url=}')
     driver.get(url)
     wait = WebDriverWait(driver, 15)
     element = wait.until(EC.presence_of_element_located((By.CLASS_NAME, 'sal-sector-exposure__sector-table')))
@@ -104,27 +104,30 @@ def sub_getETF_Selenium(driver,ETF_name,exchange='arcx'):
     return res
 
 
-
 def start_driver():
     try:
         chrome_options = webdriver.ChromeOptions()
         chrome_options.add_argument("--no-sandbox")
         chrome_options.add_argument("--headless")
         chrome_options.add_argument("--disable-gpu")
+        chrome_options.add_argument("--log-level=3")
         driver = webdriver.Chrome(options=chrome_options)
         return driver
     except Exception as e:
+        driver.quit()       
         raise Exception("Could not create the driver") from e
-    finally:
-        driver.quit()
-        
+         
 
 @timer
 def selenium_scrap():
     # using info from https://help.pythonanywhere.com/pages/selenium
-    driver = start_driver()
-    res = sub_getETF_Selenium(driver,'QQQ')
-    print(res) 
+    res=None
+    try:
+        driver = start_driver()
+        res = sub_getETF_Selenium(driver,'QQQ', exchange='xnas')
+        print(res) 
+    finally:
+        driver.quit()
     return res
 
 
