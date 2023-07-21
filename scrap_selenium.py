@@ -114,3 +114,7 @@ def selenium_scrap():
     print(res) 
     return res
 
+
+if __name__ == "__main__":
+    res = selenium_scrap()
+    print('Scrapped ok')
