@@ -106,9 +106,12 @@ def sub_getETF_Selenium(driver,ETF_name,exchange='arcx'):
 
 @timer
 def selenium_scrap():
-    options = Options()
-    options.add_argument('--headless')
-    driver = webdriver.Chrome()
+    # using info from https://help.pythonanywhere.com/pages/selenium
+    chrome_options = webdriver.ChromeOptions()
+    chrome_options.add_argument("--no-sandbox")
+    chrome_options.add_argument("--headless")
+    chrome_options.add_argument("--disable-gpu")
+    driver = webdriver.Chrome(options=chrome_options)
 
     res = sub_getETF_Selenium(driver,'QQQ')
     print(res) 
