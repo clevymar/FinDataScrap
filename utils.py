@@ -1,6 +1,7 @@
 import time
+import os
 from functools import wraps
-
+# print('Importing utils')
 
 def timer(func):
     """A decorator that prints the execution time for the decorated function"""
@@ -12,3 +13,12 @@ def timer(func):
         print(f"[I]Function {func.__name__} from module {func.__module__} took {end_time - start_time:,.1f} seconds")
         return result
     return wrapper
+
+
+if os.environ.get('HOMEPATH')=='\\Users\\clevy':
+    LOCATION='LOCAL'
+else:
+    LOCATION='SERVER'
+
+def isLocal():
+    return (LOCATION=="LOCAL")
