@@ -1,7 +1,7 @@
 """
 really only useful for GCP itself
 """
-from scrap_govies import import_govies
+from import_govies import import_govies
 from import_yahoo import import_yahoo
 from scrap_selenium import selenium_scrap
 

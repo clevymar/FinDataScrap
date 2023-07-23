@@ -1,12 +1,11 @@
 import datetime
 import pandas as pd
 
-from scrap_govies import ScrapGovies
+from import_govies import ScrapGovies
+from import_swaps import ScrapIRS
+from common import last_bd
 
-end = datetime.date.today()-pd.tseries.offsets.BDay(1)+pd.tseries.offsets.Hour(23)+pd.tseries.offsets.Minute(59)
-last_bd=end.strftime("%Y-%m-%d")
-
-lstScrap = [ScrapGovies]
+lstScrap = [ScrapGovies, ScrapIRS]
 
 def need_reimport(last_in_DB:str):
     if last_in_DB=='None' or last_in_DB is None:

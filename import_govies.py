@@ -48,7 +48,7 @@ def scrap_govies(save_to_file=True):
     return dfAll
 
 
-
+@timer
 def govies_toDB(verbose=True):
     df=scrap_govies()
     df['nYears']=df['Maturity'].apply(maturity_string_to_nyears)
@@ -60,7 +60,6 @@ def govies_toDB(verbose=True):
     DB_update(res,"GOVIES_TS",idx=False,mode='append',verbose=verbose)
     return res
 
-@timer
 def import_govies(argument=None):
     try:
         res = govies_toDB()
@@ -71,11 +70,10 @@ def import_govies(argument=None):
         print(e)
         return 'Error while downloading'
 
-
 def govies_last_date():
     return DB_last_date("GOVIES_TS")
 
-ScrapGovies = Scrap("Govies",govies_toDB,govies_last_date)
+ScrapGovies = Scrap("Govies", govies_toDB, govies_last_date)
 
  
 if __name__ == '__main__' :
