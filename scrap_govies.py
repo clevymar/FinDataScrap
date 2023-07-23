@@ -2,7 +2,8 @@
 import pandas as pd
 from common import last_bd
 from utils import timer
-from database import DB_update
+from database import DB_update,DB_last_date
+from classes import Scrap
 
 URL_ROOT = "http://www.worldgovernmentbonds.com/country/"
 COUNTRIES=['united-states','germany','france','switzerland','united-kingdom',]
@@ -70,8 +71,12 @@ def import_govies(argument=None):
         print(e)
         return 'Error while downloading'
 
-    
-    
-    
+
+def govies_last_date():
+    return DB_last_date("GOVIES_TS")
+
+ScrapGovies = Scrap("Govies",govies_toDB,govies_last_date)
+
+ 
 if __name__ == '__main__' :
     print(import_govies())

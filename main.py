@@ -1,38 +1,36 @@
-"""
-really only useful for GCP itself
-"""
-from scrap_simple import import_govies
-from import_yahoo import import_yahoo
-from scrap_selenium import selenium_scrap
+import datetime
+import pandas as pd
 
-# URL_REQUEST_ROOT = "https://europe-west6-hybrid-elixir-392513.cloudfunctions.net/test_import?param="
+from scrap_govies import ScrapGovies
 
+end = datetime.date.today()-pd.tseries.offsets.BDay(1)+pd.tseries.offsets.Hour(23)+pd.tseries.offsets.Minute(59)
+last_bd=end.strftime("%Y-%m-%d")
 
-dictFunc = {
-    1: import_govies,
-    2: import_yahoo,
-    3: selenium_scrap,
-    
-}
+lstScrap = [ScrapGovies]
 
-
-
-def run_import(argument=None):
-    """ need the argument for GCP
-    choose which function to call 
-    """
-
-    if argument:
-        try:
-            param = argument.args.get('param')
-            # param = argument
-            func = dictFunc[int(param)]
-            print(f'{param=}, {func=}')
-            return func()
-        except Exception as e:
-            raise ValueError(f'param {param} not valid - should be in {list(dictFunc.keys())}') from e
+def need_reimport(last_in_DB:str):
+    if last_in_DB=='None' or last_in_DB is None:
+        need=True
     else:
-        raise ValueError('No argument passed in the http request')
+        latest=datetime.datetime.strptime(last_in_DB,"%Y-%m-%d")
+        # latest=latest+pd.tseries.offsets.Day(1-type_date)
+        need=latest<datetime.datetime.strptime(last_bd,"%Y-%m-%d")
+    return need
 
-    
-# run_import('2')
+
+
+def scrap_main(el):
+    last_date = el.func_last_date()
+    print(last_date)
+    need=need_reimport(last_date)
+    if need:
+        print(f'Func {el.func_scrap} should execute')
+    else:
+        print(f"Data for {el.name} already scraped as of {last_date} - no need to reimport")
+
+
+for el in lstScrap:
+    scrap_main(el)
+
+
+
