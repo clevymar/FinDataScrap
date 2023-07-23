@@ -17,16 +17,22 @@ def need_reimport(last_in_DB:str):
         need=latest<datetime.datetime.strptime(last_bd,"%Y-%m-%d")
     return need
 
-
-
 def scrap_main(el):
-    last_date = el.func_last_date()
-    print(last_date)
-    need=need_reimport(last_date)
-    if need:
-        print(f'Func {el.func_scrap} should execute')
-    else:
-        print(f"Data for {el.name} already scraped as of {last_date} - no need to reimport")
+    try:
+        last_date = el.func_last_date()
+        need=need_reimport(last_date)
+        if need:
+            print(f'Func {el.func_scrap} will execute as latest date in DB was {last_date}')
+            try:
+                res = el.func_scrap()
+                msg = f'Well downloaded for {el.name} - {len(res)} rows, {len(res.columns)} cols'
+                print(msg)
+            except Exception as e:
+                raise Exception(f'Error while scrapping with {el.func_scrap} for {el.name}') from e
+        else:
+            print(f"Data for {el.name} already scraped as of {last_date} - no need to reimport")
+    except Exception as e:
+        raise Exception(f'Error while scrapping for {el.name}') from e
 
 
 for el in lstScrap:
