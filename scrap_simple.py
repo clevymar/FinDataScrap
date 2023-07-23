@@ -2,10 +2,9 @@
 import pandas as pd
 from common import last_bd
 from utils import timer
-
+from database import DB_update
 
 URL_ROOT = "http://www.worldgovernmentbonds.com/country/"
-
 COUNTRIES=['united-states','germany','france','switzerland','united-kingdom',]
 
 def maturity_string_to_nyears(s:str)->float:
@@ -49,21 +48,21 @@ def scrap_govies(save_to_file=True):
 
 
 
-# def govies_toDB(verbose=True):
-#     df=scrap_govies()
-#     df['nYears']=df['Maturity'].apply(maturity_string_to_nyears)
-#     df=df[df['nYears']<=30]
-#     res=df[["Date","nYears","country","Yield"]]
-#     res.columns=['Date','nYears','Country','Rate']
-#     print(res)
-#     DBsubs.DB_update(res,"GOVIES_TS",idx=False,mode='append')
-#     return res
+def govies_toDB(verbose=True):
+    df=scrap_govies()
+    df['nYears']=df['Maturity'].apply(maturity_string_to_nyears)
+    df=df[df['nYears']<=30]
+    res=df[["Date","nYears","country","Yield"]]
+    res.columns=['Date','nYears','Country','Rate']
+    if verbose:
+        print(res)
+    DB_update(res,"GOVIES_TS",idx=False,mode='append',verbose=verbose)
+    return res
 
 @timer
 def import_govies(argument=None):
     try:
-        res = scrap_govies()
-        print(res.tail())
+        res = govies_toDB()
         msg = f'Well downloaded !!! \n{len(res)} rows, {len(res.columns)} cols'
         return msg
     except Exception as e:

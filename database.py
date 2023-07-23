@@ -30,6 +30,15 @@ def create_connection():
 
 
 
+def DB_update(df,tablename,mode="replace",idx=True,verbose=True):
+    engine=create_connection()
+    df.to_sql(tablename, con=engine, if_exists=mode,index=idx)
+    if verbose: print(f" {len(df)} records saved to {tablename}")
+
+
+
+""" old procs"""
+
 def create_table(conn, create_table_sql):
     """ create a table from the create_table_sql statement
     :param conn: Connection object
@@ -41,6 +50,7 @@ def create_table(conn, create_table_sql):
         c.execute(create_table_sql)
     except Error as e:
         print(e)
+
 
 def read_table(table):
     conn=create_connection()
