@@ -23,7 +23,7 @@ def create_connection():
     """ create a database connection to a SQLite database """
     try:
         conn = sqlite3.connect(DB_PATH)
-        print("Connected - SQLite version : " + sqlite3.version)
+        # print("Connected - SQLite version : " + sqlite3.version)
         return conn
     except Error as e:
         raise ConnectionAbortedError('Could not connect to the DB') from e
@@ -35,6 +35,15 @@ def DB_update(df,tablename,mode="replace",idx=True,verbose=True):
     df.to_sql(tablename, con=engine, if_exists=mode,index=idx)
     if verbose: print(f" {len(df)} records saved to {tablename}")
 
+def DB_last_date(tablename,field="Date"):
+    engine=create_connection()
+    sql = f""" select max({field}) from {tablename} """
+    with engine:
+        cur = engine.cursor()
+        cur.execute(sql)
+        rows = cur.fetchall()
+
+    return rows[0][0]
 
 
 """ old procs"""
@@ -71,15 +80,6 @@ def DB_date_exists(tablename,d):
     else :
         return True
 
-def DB_last_date(tablename,field="Date"):
-    engine=create_connection()
-    sql = f""" select max({field}) from {tablename} """
-    with engine:
-        cur = engine.cursor()
-        cur.execute(sql)
-        rows = cur.fetchall()
-
-    return rows[0][0]
 
 def DB_doublon(tablename):
     engine=create_connection()
