@@ -49,7 +49,7 @@ def scrap_govies(save_to_file=True):
 
 
 @timer
-def govies_toDB(verbose=True):
+def govies_toDB(verbose=False):
     df=scrap_govies()
     df['nYears']=df['Maturity'].apply(maturity_string_to_nyears)
     df=df[df['nYears']<=30]

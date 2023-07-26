@@ -1,0 +1,6 @@
+CREATE TABLE Persons (
+    PersonID INT PRIMARY KEY AUTO_INCREMENT,
+    LastName VARCHAR(255),
+    FirstName VARCHAR(255),
+    City VARCHAR(255)
+);
