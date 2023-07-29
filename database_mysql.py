@@ -25,7 +25,7 @@ def get_connection():
         conn = pymysql.connect( 
                 user=USERNAME, #PA database username
                 password=DB_PWD,
-                host="{USERNAME}.mysql.eu.pythonanywhere-services.com", 
+                host=f"{USERNAME}.mysql.eu.pythonanywhere-services.com", 
                 database=f'{USERNAME}$Finance',
                 cursorclass=pymysql.cursors.DictCursor)
         print('DB connected')
