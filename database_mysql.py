@@ -6,7 +6,13 @@ USERNAME = "CyrilFinanceData"
 DB_PWD = "MySQLpwd00" #saved in my.cnf file on PA
 
 
+
 def check_tables(conn,cur,table):
+    CHECK_QUERY = """
+    SELECT ORDINAL_POSITION, COLUMN_NAME, DATA_TYPE 
+    FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE TABLE_NAME = '{}'
+    """
     cur.execute("SHOW TABLES")
     for row in cur.fetchall():
         print(row)
