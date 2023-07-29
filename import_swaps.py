@@ -3,7 +3,7 @@ import requests
 
 from common import last_bd
 from utils import timer
-from database import DB_update,DB_last_date
+from database_sqlite import DB_update,DB_last_date
 from classes import Scrap
 
 IRS_ccies={ "EUR":"Europe_Europe_EUR",

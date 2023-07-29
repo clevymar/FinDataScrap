@@ -4,3 +4,12 @@ CREATE TABLE Persons (
     FirstName VARCHAR(255),
     City VARCHAR(255)
 );
+
+
+
+CREATE TABLE IF NOT EXISTS GOVIES_TS (
+	Date VARCHAR(10),
+    nYears FLOAT,
+	Country VARCHAR(50),
+	Rate FLOAT
+);

@@ -2,7 +2,7 @@
 import pandas as pd
 from common import last_bd
 from utils import timer
-from database import DB_update,DB_last_date
+from database_sqlite import DB_update,DB_last_date
 from classes import Scrap
 
 URL_ROOT = "http://www.worldgovernmentbonds.com/country/"
