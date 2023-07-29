@@ -3,3 +3,4 @@ Pipfile.lock
 GCP_deploy.zip
 deploy.zip
 credentials.py
+Finance.db.sql

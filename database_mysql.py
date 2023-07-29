@@ -2,7 +2,9 @@ import pandas as pd
 import pymysql.cursors
 from sqlalchemy import create_engine, URL
 
-from credentials import USERNAME, DB_PWD, PA_PWD
+USERNAME = "CyrilFinanceData"
+DB_PWD = "MySQLpwd00" #saved in my.cnf file on PA
+
 
 def check_tables(conn,cur,table):
     cur.execute("SHOW TABLES")
