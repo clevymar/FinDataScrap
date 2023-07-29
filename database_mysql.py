@@ -43,8 +43,10 @@ def get_connection():
 
 conn = get_connection()
 try:
-    with conn.cursor() as cur
+    with conn.cursor() as cur:
         check_tables(conn,cur,'GOVIES_TS')
+except Exception as e:
+    raise Exception(f"Error writing to database") from e
 finally:
     conn.close
     
