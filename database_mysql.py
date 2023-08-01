@@ -38,8 +38,29 @@ def get_connection():
         raise Exception(f"Error connecting to database") from e
     return conn
 
+def get_connection_sqlalchemy():
+    engine = None
+    try:
+        url_object = URL.create(
+            "mysql+pymysql",
+            username=USERNAME,
+            password=DB_PWD, 
+            host=f"{USERNAME}.mysql.eu.pythonanywhere-services.com",
+            # port = 3306,
+            database=f'{USERNAME}$Finance',
+            )
+        engine = create_engine(url_object)
+        test=pd.read_sql_table('GOVIES_TS',engine)
+        print('Existing table\n',test)
+    except Exception as e:
+        print(e)
+        raise Exception(f"Error connecting to database with SQL Alchemy") from e
+    return engine
+
+
+
 def SQL_update(df,tablename,mode="replace",idx=True,verbose=True):
-    engine=get_connection()
+    engine=get_connection_sqlalchemy()
     try:
         df.to_sql(tablename, con=engine, if_exists=mode,index=idx)
         if verbose: print(f" {len(df)} records saved to {tablename}")
