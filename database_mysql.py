@@ -50,10 +50,10 @@ def get_connection_sqlalchemy():
             database=f'{USERNAME}$Finance',
             )
         engine = create_engine(url_object)
-        test=pd.read_sql_table('GOVIES_TS',engine)
-        print('Existing table\n',test)
+        # test=pd.read_sql_table('GOVIES_TS',engine)
+        # print('Existing table\n',test)
     except Exception as e:
-        print(e)
+        # print(e)
         raise Exception(f"Error connecting to database with SQL Alchemy") from e
     return engine
 
@@ -67,8 +67,6 @@ def SQL_update(df,tablename,mode="replace",idx=True,verbose=True):
     except Exception as e:
         print(e)
         raise Exception(f"Error saving {tablename} to SQL DB") from e
-    finally:
-        engine.close()
 
 
 if __name__ == "__main__":

@@ -74,7 +74,7 @@ with sshtunnel.SSHTunnelForwarder(
                                 ) as tunnel:
     print(f'Tunnel setup at port {tunnel.local_bind_port}')
     
-    initial_table_setup('GOVIES_TS',erase=True)
+    initial_table_setup('GOVIES_TS',erase=False)
     
     url_object = URL.create(
         "mysql+pymysql",
