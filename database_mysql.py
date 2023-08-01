@@ -25,7 +25,6 @@ def check_tables(conn,cur,table):
         print(f"{col['ORDINAL_POSITION']} - {col['COLUMN_NAME']} - {col['DATA_TYPE']}")
 
 def get_connection():
-
     conn = None
     try:
         conn = pymysql.connect( 
@@ -37,7 +36,6 @@ def get_connection():
         print('DB connected')
     except Exception as e:
         raise Exception(f"Error connecting to database") from e
-    
     return conn
 
 def SQL_update(df,tablename,mode="replace",idx=True,verbose=True):
@@ -46,18 +44,20 @@ def SQL_update(df,tablename,mode="replace",idx=True,verbose=True):
         df.to_sql(tablename, con=engine, if_exists=mode,index=idx)
         if verbose: print(f" {len(df)} records saved to {tablename}")
     except Exception as e:
-        raise Exception(f"Error connecting to database") from e
+        print(e)
+        raise Exception(f"Error saving {tablename} to SQL DB") from e
     finally:
         engine.close()
 
 
+if __name__ == "__main__":
 
-conn = get_connection()
-try:
-    with conn.cursor() as cur:
-        check_tables(conn,cur,'GOVIES_TS')
-except Exception as e:
-    raise Exception(f"Error writing to database") from e
-finally:
-    conn.close
+    conn = get_connection()
+    try:
+        with conn.cursor() as cur:
+            check_tables(conn,cur,'GOVIES_TS')
+    except Exception as e:
+        raise Exception(f"Error writing to database") from e
+    finally:
+        conn.close
     

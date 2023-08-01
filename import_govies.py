@@ -63,14 +63,13 @@ def govies_toDB(verbose=False):
     return res
 
 def import_govies(argument=None):
+    msg=None
     try:
         res = govies_toDB()
         msg = f'Well downloaded !!! \n{len(res)} rows, {len(res.columns)} cols'
-        return msg
     except Exception as e:
-        print('Error while downloading')
-        print(e)
-        return 'Error while downloading'
+        raise Exception('Error while downloading Govies') from e
+    return msg
 
 def govies_last_date():
     return DB_last_date("GOVIES_TS")
