@@ -5,7 +5,7 @@ import pymysql.cursors
 from sqlalchemy import create_engine, URL
 
 
-from database import DB_FOLDER
+from database_sqlite import DB_FOLDER
 from credentials import USERNAME, DB_PWD, PA_PWD
 HOST = '127.0.0.1'
 

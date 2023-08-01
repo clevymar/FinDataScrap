@@ -39,15 +39,18 @@ def get_connection():
         raise Exception(f"Error connecting to database") from e
     
     return conn
-    # Do stuff
-    
-    # with conn.cursor() as cur:
-    #     if erase:
-    #         cur.execute(f"DROP TABLE IF EXISTS `{tablename}`;")
-    #     create_table(conn,cur,tablename)
-    #     check_tables(conn,cur,tablename)
-    # print('Closing connection')
-    # conn.close()
+
+def SQL_update(df,tablename,mode="replace",idx=True,verbose=True):
+    engine=get_connection()
+    try:
+        df.to_sql(tablename, con=engine, if_exists=mode,index=idx)
+        if verbose: print(f" {len(df)} records saved to {tablename}")
+    except Exception as e:
+        raise Exception(f"Error connecting to database") from e
+    finally:
+        engine.close()
+
+
 
 conn = get_connection()
 try:

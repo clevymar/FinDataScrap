@@ -3,6 +3,7 @@ import pandas as pd
 from common import last_bd
 from utils import timer
 from database_sqlite import DB_update,DB_last_date
+from database_mysql import SQL_update 
 from classes import Scrap
 
 URL_ROOT = "http://www.worldgovernmentbonds.com/country/"
@@ -58,6 +59,7 @@ def govies_toDB(verbose=False):
     if verbose:
         print(res)
     DB_update(res,"GOVIES_TS",idx=False,mode='append',verbose=verbose)
+    SQL_update(res,"GOVIES_TS",idx=False,mode='append',verbose=verbose)
     return res
 
 def import_govies(argument=None):
