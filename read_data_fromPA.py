@@ -22,6 +22,20 @@ sshtunnel.TUNNEL_TIMEOUT = 5.0
 
 # exit(0)
 
+def DB_last_date(engine,tablename,include_data=False):
+    sql = f""" select max(Date) from {tablename} """
+    cur = engine.cursor()
+    cur.execute(sql)
+    rows = cur.fetchall()
+    last_date = rows[0][0]
+    
+#     cnx = get_connection_sqlalchemy()
+#     df=pd.read_sql_query(f"SELECT * FROM {tablename}" , cnx)
+#     df=df[df['Date']==last_date]
+#     print(df)
+    return last_date
+
+
 with sshtunnel.SSHTunnelForwarder(
     ('ssh.eu.pythonanywhere.com'),
     ssh_username=USERNAME, #PA login
@@ -42,7 +56,8 @@ with sshtunnel.SSHTunnelForwarder(
             password=DB_PWD,
             host='127.0.0.1', port=tunnel.local_bind_port,
             database=f'{USERNAME}$Finance',
-            cursorclass=pymysql.cursors.DictCursor)
+            # cursorclass=pymysql.cursors.DictCursor
+            )
     # Do stuff
     print('DB connected')
     with conn.cursor() as cur:
@@ -51,5 +66,9 @@ with sshtunnel.SSHTunnelForwarder(
             print(row)
     # print(conn.is_connected())
     
+        for table in ['GOVIES_TS','IRS_TS']:
+            lastDate = DB_last_date(conn,table)
+            print(f"Last date in {table} is {lastDate}")
+        
     print('Closing connection')
     conn.close()

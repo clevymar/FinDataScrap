@@ -68,6 +68,22 @@ def SQL_update(df,tablename,mode="replace",idx=True,verbose=True):
         print(e)
         raise Exception(f"Error saving {tablename} to SQL DB") from e
 
+# def DB_last_date(tablename,include_data=False):
+#     engine=get_connection()
+#     sql = f""" select max(Date) from {tablename} """
+#     with engine:
+#         cur = engine.cursor()
+#         cur.execute(sql)
+#         rows = cur.fetchall()
+#     last_date = rows[0][0]
+    
+#     cnx = get_connection_sqlalchemy()
+#     df=pd.read_sql_query(f"SELECT * FROM {tablename}" , cnx)
+#     df=df[df['Date']==last_date]
+#     print(df)
+#     return last_date
+
+
 
 if __name__ == "__main__":
 
