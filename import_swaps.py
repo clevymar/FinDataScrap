@@ -4,6 +4,7 @@ import requests
 from common import last_bd
 from utils import timer
 from database_sqlite import DB_update,DB_last_date
+from database_mysql import SQL_update
 from classes import Scrap
 
 IRS_ccies={ "EUR":"Europe_Europe_EUR",
@@ -53,6 +54,8 @@ def scrap_allIRS(verbose=True):
 def IRS_toDB(verbose=True):
     res=scrap_allIRS(verbose)
     DB_update(res,"IRS_TS",idx=False,mode='append')
+    SQL_update(res,"IRS_TS",idx=False,mode='append',verbose=verbose)
+
     return res
 
 @timer
@@ -71,3 +74,7 @@ def swaps_last_date():
     return DB_last_date("IRS_TS")
 
 ScrapIRS = Scrap("IRS", IRS_toDB, swaps_last_date)
+
+ 
+if __name__ == '__main__' :
+    print(import_swaps())
