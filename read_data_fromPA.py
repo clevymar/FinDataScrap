@@ -2,25 +2,13 @@
 import pandas as pd
 import sshtunnel
 import pymysql.cursors
+from sqlalchemy import create_engine, URL
+from database_mysql import get_connection,get_connection_sqlalchemy
 
 from credentials import USERNAME, DB_PWD, PA_PWD
 
 sshtunnel.SSH_TIMEOUT = 5.0
 sshtunnel.TUNNEL_TIMEOUT = 5.0
-
-# server = sshtunnel.open_tunnel(
-#     ('ssh.eu.pythonanywhere.com'),
-#     ssh_username=USERNAME, #PA login
-#     ssh_password='Python00clm#',
-#     remote_bind_address=(f'{USERNAME}.mysql.eu.pythonanywhere-services.com', 3306),
-#     debug_level='TRACE',
-# )
-
-# server.start()
-# print(f"\n\n{server.local_bind_port=}")  # show assigned local port
-# server.stop()
-
-# exit(0)
 
 def DB_last_date(engine,tablename,include_data=False):
     sql = f""" select max(Date) from {tablename} """
@@ -35,22 +23,18 @@ def DB_last_date(engine,tablename,include_data=False):
 #     print(df)
     return last_date
 
-
-with sshtunnel.SSHTunnelForwarder(
+def sshserver():
+    server =   sshtunnel.SSHTunnelForwarder(
     ('ssh.eu.pythonanywhere.com'),
     ssh_username=USERNAME, #PA login
     ssh_password=PA_PWD,
     remote_bind_address=(f'{USERNAME}.mysql.eu.pythonanywhere-services.com', 3306),
-                                ) as tunnel:
-    print(f'Tunnel setup at port {tunnel.local_bind_port}')
+                                )
+    server.start() #TODO dont forget to close it !
+    print(f'Tunnel created at port {server.local_bind_port}')
+    return server
     
-    # conn = connect(
-    #     user=USERNAME, #PA database username
-    #     password=DB_PWD,
-    #     host='127.0.0.1', port=tunnel.local_bind_port,
-    #     database=f'{USERNAME}$Finance',
-    # )
-    
+def PADB_connect(tunnel):    
     conn = pymysql.connect( 
             user=USERNAME, #PA database username
             password=DB_PWD,
@@ -60,15 +44,62 @@ with sshtunnel.SSHTunnelForwarder(
             )
     # Do stuff
     print('DB connected')
+    return conn
+
+def PADB_connection_sqlalchemy(tunnel):
+    engine = None
+    try:
+        url_object = URL.create(
+            "mysql+pymysql",
+            username=USERNAME,
+            password=DB_PWD, 
+            host='127.0.0.1',
+            port = tunnel.local_bind_port,
+            database=f'{USERNAME}$Finance',
+            )
+        engine = create_engine(url_object)
+        print('Connection to SQLAlchemy successful')
+    except Exception as e:
+        # print(e)
+        raise Exception(f"Error connecting to database with SQL Alchemy") from e
+    return engine
+
+
+def explore(conn,sqlalchemycon):
     with conn.cursor() as cur:
         cur.execute("SHOW TABLES")
         for row in cur.fetchall():
             print(row)
-    # print(conn.is_connected())
     
-        for table in ['GOVIES_TS','IRS_TS']:
-            lastDate = DB_last_date(conn,table)
-            print(f"Last date in {table} is {lastDate}")
-        
-    print('Closing connection')
-    conn.close()
+    for table in ['GOVIES_TS','IRS_TS']:
+        lastDate = DB_last_date(conn,table)
+        print(f"Last date in {table} is {lastDate}")
+            
+        df=pd.read_sql_query(f"SELECT * FROM {table}" , sqlalchemycon)
+        df=df[df['Date']==lastDate]
+        print(df)
+            
+
+def PADB_run_task(func,run_local=True):
+    
+    if run_local:
+        conn = get_connection()
+        cnx = get_connection_sqlalchemy()
+    else:
+        server = sshserver()
+        conn = PADB_connect(server)
+        cnx = PADB_connection_sqlalchemy(server)
+
+    try:    
+        func(conn,cnx)
+    except Exception as e:
+        raise Exception(f'Error whilst running {func}') from e
+    
+    finally:
+        conn.close()
+        if not run_local: server.close()
+
+    
+if __name__ == "__main__":
+    PADB_run_task(explore,False)
+    
