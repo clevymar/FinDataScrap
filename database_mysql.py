@@ -32,7 +32,8 @@ def get_connection():
                 password=DB_PWD,
                 host=f"{USERNAME}.mysql.eu.pythonanywhere-services.com", 
                 database=f'{USERNAME}$Finance',
-                cursorclass=pymysql.cursors.DictCursor)
+                # cursorclass=pymysql.cursors.DictCursor
+                )
         print('DB connected')
     except Exception as e:
         raise Exception(f"Error connecting to database") from e
@@ -50,8 +51,9 @@ def get_connection_sqlalchemy():
             database=f'{USERNAME}$Finance',
             )
         engine = create_engine(url_object)
-        # test=pd.read_sql_table('GOVIES_TS',engine)
-        # print('Existing table\n',test)
+        print('Connection with SQLAlchemy successful')
+        test=pd.read_sql_table('GOVIES_TS',engine)
+        print('Existing table\n',test)
     except Exception as e:
         # print(e)
         raise Exception(f"Error connecting to database with SQL Alchemy") from e

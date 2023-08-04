@@ -15,11 +15,6 @@ def DB_last_date(engine,tablename,include_data=False):
     cur.execute(sql)
     rows = cur.fetchall()
     last_date = rows[0][0]
-    
-#     cnx = get_connection_sqlalchemy()
-#     df=pd.read_sql_query(f"SELECT * FROM {tablename}" , cnx)
-#     df=df[df['Date']==last_date]
-#     print(df)
     return last_date
 
 def sshserver():
@@ -60,7 +55,7 @@ def PADB_connection_sqlalchemy(tunnel):
             database=f'{USERNAME}$Finance',
             )
         engine = create_engine(url_object)
-        print('Connection to SQLAlchemy successful')
+        print('Connection with SQLAlchemy successful')
     except Exception as e:
         # print(e)
         raise Exception(f"Error connecting to database with SQL Alchemy") from e
