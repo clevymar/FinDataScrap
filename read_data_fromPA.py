@@ -1,12 +1,12 @@
 # from mysql.connector import connect, Error  # not sure why but does not work, pymysql does
 import pandas as pd
-import sshtunnel
 import pymysql.cursors
 from sqlalchemy import create_engine, URL
 from database_mysql import get_connection,get_connection_sqlalchemy
 
 from credentials import USERNAME, DB_PWD, PA_PWD
 from utils import isLocal
+if isLocal(): import sshtunnel
 
 
 def DB_last_date(engine,tablename,include_data=False):
