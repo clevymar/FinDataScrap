@@ -6,9 +6,8 @@ from sqlalchemy import create_engine, URL
 from database_mysql import get_connection,get_connection_sqlalchemy
 
 from credentials import USERNAME, DB_PWD, PA_PWD
+from utils import isLocal
 
-sshtunnel.SSH_TIMEOUT = 5.0
-sshtunnel.TUNNEL_TIMEOUT = 5.0
 
 def DB_last_date(engine,tablename,include_data=False):
     sql = f""" select max(Date) from {tablename} """
@@ -24,6 +23,9 @@ def DB_last_date(engine,tablename,include_data=False):
     return last_date
 
 def sshserver():
+    sshtunnel.SSH_TIMEOUT = 5.0
+    sshtunnel.TUNNEL_TIMEOUT = 5.0
+
     server =   sshtunnel.SSHTunnelForwarder(
     ('ssh.eu.pythonanywhere.com'),
     ssh_username=USERNAME, #PA login
@@ -83,23 +85,22 @@ def explore(conn,sqlalchemycon):
 def PADB_run_task(func,run_local=True):
     
     if run_local:
-        conn = get_connection()
-        cnx = get_connection_sqlalchemy()
-    else:
         server = sshserver()
         conn = PADB_connect(server)
         cnx = PADB_connection_sqlalchemy(server)
+    else:
+        conn = get_connection()
+        cnx = get_connection_sqlalchemy()
 
     try:    
         func(conn,cnx)
     except Exception as e:
         raise Exception(f'Error whilst running {func}') from e
-    
     finally:
         conn.close()
-        if not run_local: server.close()
+        if run_local: server.close()
 
     
 if __name__ == "__main__":
-    PADB_run_task(explore,False)
+    PADB_run_task(explore,isLocal())
     
