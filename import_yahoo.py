@@ -25,6 +25,7 @@ def download_clean_TS(unds: list, field: str = "Adj Close", rounding: int = None
         print('Error while trying full download')
         print(e)
         print('Downloading data one by one')
+        raise e
         res = pd.DataFrame()
         for y in unds:
             temp = yf.download(y, start, end,ignore_tz=True,progress=False)[field]
