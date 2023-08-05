@@ -22,7 +22,6 @@ def download_clean_TS(unds: list, field: str = "Adj Close", rounding: int = None
     """
 
     try:
-        raise ValueError('Tets')
         res = yf.download(unds, start, end, ignore_tz=True,threads = isLocal())[field]
     except Exception as e:  
         # if pb usually coming from duplicated dates
