@@ -20,12 +20,14 @@ def download_clean_TS(unds: list, field: str = "Adj Close", rounding: int = None
     """
     try:
         res = yf.download(unds, start, end, ignore_tz=True,threads = True)[field]
-    except Exception:  
+    except Exception as e:  
         # if pb usually coming from duplicated dates
+        print('Error while trying full download')
+        print(e)
         print('Downloading data one by one')
         res = pd.DataFrame()
         for y in unds:
-            temp = yf.download(y, start, end)[field]
+            temp = yf.download(y, start, end,ignore_tz=True,progress=False)[field]
             temp = temp.rename(y)
             l1 = len(temp)
             temp = temp[~temp.index.duplicated()]
