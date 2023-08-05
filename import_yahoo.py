@@ -18,30 +18,34 @@ def download_clean_TS(unds: list, field: str = "Adj Close", rounding: int = None
     Returns:
         tuple: Tuple containing two pandas DataFrames. The first is the raw data with no cleaning, and the second is the cleaned data.
     """
-    try:
-        res = yf.download(unds, start, end, ignore_tz=True,threads = True)[field]
-    except Exception as e:  
-        # if pb usually coming from duplicated dates
-        print('Error while trying full download')
-        print(e)
-        print('Downloading data one by one')
-        raise e
-        res = pd.DataFrame()
-        for y in unds:
-            temp = yf.download(y, start, end,ignore_tz=True,progress=False)[field]
-            temp = temp.rename(y)
-            l1 = len(temp)
-            temp = temp[~temp.index.duplicated()]
-            l2 = len(temp)
-            if l1 != l2:
-                print(f"\t[-] Issue was with {y}: {l1-l2} dates duplicated")
-            res = res.join(temp, how="outer")
-    res = res[~res.index.duplicated()]
-    if rounding:
-        res = res.round(rounding)
-    resDB= res[pd.to_datetime(res.index).tz_localize(None) <= pd.to_datetime(end)]
-    res_clean  = resDB.fillna(method="ffill")
-    return resDB, res_clean
+
+    res = yf.download(unds, start, end, ignore_tz=True,threads = True)[field]
+    return res
+
+    # try:
+    #     res = yf.download(unds, start, end, ignore_tz=True,threads = True)[field]
+    # except Exception as e:  
+    #     # if pb usually coming from duplicated dates
+    #     print('Error while trying full download')
+    #     print(e)
+    #     print('Downloading data one by one')
+    #     raise e
+    #     res = pd.DataFrame()
+    #     for y in unds:
+    #         temp = yf.download(y, start, end,ignore_tz=True,progress=False)[field]
+    #         temp = temp.rename(y)
+    #         l1 = len(temp)
+    #         temp = temp[~temp.index.duplicated()]
+    #         l2 = len(temp)
+    #         if l1 != l2:
+    #             print(f"\t[-] Issue was with {y}: {l1-l2} dates duplicated")
+    #         res = res.join(temp, how="outer")
+    # res = res[~res.index.duplicated()]
+    # if rounding:
+    #     res = res.round(rounding)
+    # resDB= res[pd.to_datetime(res.index).tz_localize(None) <= pd.to_datetime(end)]
+    # res_clean  = resDB.fillna(method="ffill")
+    # return resDB, res_clean
 
 @timer
 def import_yahoo():
