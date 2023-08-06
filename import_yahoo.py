@@ -54,8 +54,8 @@ def download_clean_TS(unds: list, field: str = "Adj Close", rounding: int = None
 
 def TS_toDB(verbose=True):
     resDB,res=download_clean_TS(EQUITY_UNDS,rounding=2)
-    DB_update(res, "EQTY_SPOTS",idx=False,mode='replace')
-    SQL_update(res, "EQTY_SPOTS",idx=False,mode='replace',verbose=verbose)
+    DB_update(resDB, "EQTY_SPOTS",idx=False,mode='replace')
+    SQL_update(resDB, "EQTY_SPOTS",idx=False,mode='replace',verbose=verbose)
     return res
 
 
