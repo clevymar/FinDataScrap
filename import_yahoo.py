@@ -76,37 +76,5 @@ ScrapYahoo = Scrap("EQTY_SPOTS", TS_toDB, EQTYTS_last_date)
 
 
 if __name__ == "__main__":
-    print(import_yahoo())
+    print(import_yahoo(True))
     
-"""
-@timer
-def IRS_toDB(verbose=True):
-    res=scrap_allIRS(verbose)
-    DB_update(res,"IRS_TS",idx=False,mode='append')
-    SQL_update(res,"IRS_TS",idx=False,mode='append',verbose=verbose)
-
-    return res
-
-@timer
-def import_swaps(verbose=True):
-    try:
-        res = IRS_toDB()
-        msg = f'Well downloaded !!! \n{len(res)} rows, {len(res.columns)} cols'
-        return msg
-    except Exception as e:
-        print('Error while downloading')
-        print(e)
-        return 'Error while downloading'
-
-
-def swaps_last_date():
-    return DB_last_date("IRS_TS")
-
-ScrapIRS = Scrap("IRS", IRS_toDB, swaps_last_date)
-
- 
-if __name__ == '__main__' :
-    print(import_swaps())
-
-
-"""
