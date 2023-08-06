@@ -68,7 +68,7 @@ def explore(conn,sqlalchemycon):
         for row in cur.fetchall():
             print(row)
     
-    for table in ['GOVIES_TS','IRS_TS']:
+    for table in ['GOVIES_TS','IRS_TS','EQTY_SPOTS']:
         lastDate = DB_last_date(conn,table)
         print(f"Last date in {table} is {lastDate}")
             

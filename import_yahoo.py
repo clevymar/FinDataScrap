@@ -49,19 +49,20 @@ def download_clean_TS(unds: list, field: str = "Adj Close", rounding: int = None
         res = res.round(rounding)
     resDB= res[pd.to_datetime(res.index).tz_localize(None) <= pd.to_datetime(end)]
     res_clean  = resDB.fillna(method="ffill")
+    resDB=resDB.reset_index()
     return resDB, res_clean
 
 def TS_toDB(verbose=True):
     resDB,res=download_clean_TS(EQUITY_UNDS,rounding=2)
-    DB_update(res,"EQTY_SPOTS",idx=False,mode='replace')
-    SQL_update(res,"EQTY_SPOTS",idx=False,mode='replace',verbose=verbose)
+    DB_update(res, "EQTY_SPOTS",idx=False,mode='replace')
+    SQL_update(res, "EQTY_SPOTS",idx=False,mode='replace',verbose=verbose)
     return res
 
 
 @timer
 def import_yahoo(verbose=True):
     try:
-        TS_toDB(verbose)
+        res = TS_toDB(verbose)
         msg = f'Well downloaded !!! - {len(res)} rows, {len(res.columns)} columns'
         return msg
     except Exception as e:
