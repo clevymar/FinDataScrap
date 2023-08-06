@@ -3,9 +3,10 @@ import pandas as pd
 
 from import_govies import ScrapGovies
 from import_swaps import ScrapIRS
+from import_yahoo import ScrapYahoo
 from common import last_bd
 
-lstScrap = [ScrapGovies, ScrapIRS]
+lstScrap = [ScrapGovies, ScrapIRS, ScrapYahoo]
 
 def need_reimport(last_in_DB:str):
     if last_in_DB=='None' or last_in_DB is None:

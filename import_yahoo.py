@@ -6,6 +6,9 @@ from tqdm import tqdm
 
 from common import start, end, EQUITY_UNDS
 from utils import timer, isLocal
+from database_sqlite import DB_update,DB_last_date
+from database_mysql import SQL_update
+from classes import Scrap
 
 
 def download_clean_TS(unds: list, field: str = "Adj Close", rounding: int = None):
@@ -48,12 +51,17 @@ def download_clean_TS(unds: list, field: str = "Adj Close", rounding: int = None
     res_clean  = resDB.fillna(method="ffill")
     return resDB, res_clean
 
+def TS_toDB(verbose=True):
+    resDB,res=download_clean_TS(EQUITY_UNDS,rounding=2)
+    DB_update(res,"EQTY_SPOTS",idx=False,mode='replace')
+    SQL_update(res,"EQTY_SPOTS",idx=False,mode='replace',verbose=verbose)
+    return res
+
+
 @timer
-def import_yahoo():
+def import_yahoo(verbose=True):
     try:
-        resDB,res=download_clean_TS(EQUITY_UNDS,rounding=2)
-        # print(res.head())
-        # print(res.tail()) 
+        TS_toDB(verbose)
         msg = f'Well downloaded !!! - {len(res)} rows, {len(res.columns)} columns'
         return msg
     except Exception as e:
@@ -61,5 +69,44 @@ def import_yahoo():
         print(e)
         return 'Error while downloading'
 
+def EQTYTS_last_date():
+    return DB_last_date("EQTY_SPOTS")
+
+ScrapYahoo = Scrap("EQTY_SPOTS", TS_toDB, EQTYTS_last_date)
+
+
 if __name__ == "__main__":
     print(import_yahoo())
+    
+"""
+@timer
+def IRS_toDB(verbose=True):
+    res=scrap_allIRS(verbose)
+    DB_update(res,"IRS_TS",idx=False,mode='append')
+    SQL_update(res,"IRS_TS",idx=False,mode='append',verbose=verbose)
+
+    return res
+
+@timer
+def import_swaps(verbose=True):
+    try:
+        res = IRS_toDB()
+        msg = f'Well downloaded !!! \n{len(res)} rows, {len(res.columns)} cols'
+        return msg
+    except Exception as e:
+        print('Error while downloading')
+        print(e)
+        return 'Error while downloading'
+
+
+def swaps_last_date():
+    return DB_last_date("IRS_TS")
+
+ScrapIRS = Scrap("IRS", IRS_toDB, swaps_last_date)
+
+ 
+if __name__ == '__main__' :
+    print(import_swaps())
+
+
+"""
