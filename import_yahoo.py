@@ -5,7 +5,7 @@ import json
 import yfinance as yf
 from tqdm import tqdm
 
-from common import start, end, EQUITY_UNDS,DIR_FILES
+from common import start, end, DIR_FILES
 from utils import timer, isLocal
 from database_sqlite import DB_update,DB_last_date
 from database_mysql import SQL_update
