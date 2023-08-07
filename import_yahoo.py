@@ -1,14 +1,21 @@
 import datetime
 import pandas as pd 
+import json
 
 import yfinance as yf
 from tqdm import tqdm
 
-from common import start, end, EQUITY_UNDS
+from common import start, end, EQUITY_UNDS,DIR_FILES
 from utils import timer, isLocal
 from database_sqlite import DB_update,DB_last_date
 from database_mysql import SQL_update
 from classes import Scrap
+
+if isLocal():
+    fichier = DIR_FILES + "TS_underlyings.json"
+else:
+    fichier = "TS_underlyings_prod.json"
+dictInput = json.load(open(fichier, "r"))
 
 
 def download_clean_TS(unds: list, field: str = "Adj Close", rounding: int = None):
@@ -52,28 +59,43 @@ def download_clean_TS(unds: list, field: str = "Adj Close", rounding: int = None
     resDB=resDB.reset_index().rename(columns={resDB.index.name:'Date'})
     return resDB, res_clean
 
-def TS_toDB(verbose=True):
-    resDB,res=download_clean_TS(EQUITY_UNDS,rounding=2)
-    DB_update(resDB, "EQTY_SPOTS",idx=False,mode='replace')
-    SQL_update(resDB, "EQTY_SPOTS",idx=False,mode='replace',verbose=verbose)
+def TS_toDB(unds,table,field,verbose=True):
+    resDB,res=download_clean_TS(unds,field=field,rounding=2)
+    DB_update(resDB, table,idx=False,mode='replace')
+    SQL_update(resDB, table,idx=False,mode='replace',verbose=verbose)
     return res
 
 
 @timer
 def import_yahoo(verbose=True):
-    try:
-        res = TS_toDB(verbose)
-        msg = f'Well downloaded !!! - {len(res)} rows, {len(res.columns)} columns'
-        return msg
-    except Exception as e:
-        print('Error while downloading')
-        print(e)
-        return 'Error while downloading'
+    msgs=[]
+    data = []
+    for table,unds in dictInput.items():
+        try:
+            if table == 'EQTY_SPOTS':
+                field = "Adj Close"
+            else:
+                field = "Close"
+            if verbose: print(f'Processing {table} with {len(unds)} underlyings')
+            res = TS_toDB(unds,table,field,verbose)
+            msg = f'{table } well downloaded !!! - {len(res)} rows, {len(res.columns)} columns'
+        except Exception as e:
+            msg=f'Error while downloading {table}'
+            res=None
+            print(msg)
+            print(e)
+        finally:
+            msgs.append(msg)
+            data.append(res)
+    if verbose:
+        print('\n'.join(msgs))
+    return data
+
 
 def EQTYTS_last_date():
     return DB_last_date("EQTY_SPOTS")
 
-ScrapYahoo = Scrap("EQTY_SPOTS", TS_toDB, EQTYTS_last_date)
+ScrapYahoo = Scrap("YAHOO_SPOTS", import_yahoo, EQTYTS_last_date)
 
 
 if __name__ == "__main__":
