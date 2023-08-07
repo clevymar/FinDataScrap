@@ -29,7 +29,10 @@ def need_reimport(last_in_DB:str):
     if last_in_DB=='None' or last_in_DB is None:
         need=True
     else:
-        latest=datetime.datetime.strptime(last_in_DB,"%Y-%m-%d")
+        if isinstance(last_in_DB, datetime.datetime):
+            latest=last_in_DB
+        else:
+            latest=datetime.datetime.strptime(last_in_DB,"%Y-%m-%d")
         # latest=latest+pd.tseries.offsets.Day(1-type_date)
         need=latest<datetime.datetime.strptime(last_bd,"%Y-%m-%d")
     return need
