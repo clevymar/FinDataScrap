@@ -57,6 +57,7 @@ def download_clean_TS(unds: list, field: str = "Adj Close", rounding: int = None
     resDB= res[pd.to_datetime(res.index).tz_localize(None) <= pd.to_datetime(end)]
     res_clean  = resDB.fillna(method="ffill")
     resDB=resDB.reset_index().rename(columns={resDB.index.name:'Date'})
+    resDB['Date']=resDB['Date'].dt.strftime('%Y-%m-%d')
     return resDB, res_clean
 
 def TS_toDB(unds,table,field,verbose=True):
