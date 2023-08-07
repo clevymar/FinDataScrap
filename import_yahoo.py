@@ -14,7 +14,7 @@ from classes import Scrap
 if isLocal():
     fichier = DIR_FILES + "TS_underlyings.json"
 else:
-    fichier = "TS_underlyings_prod.json"
+    fichier = "TS_underlyings.json"
 dictInput = json.load(open(fichier, "r"))
 
 
