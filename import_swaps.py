@@ -51,7 +51,7 @@ def scrap_allIRS(verbose=True):
     return res
 
 @timer
-def IRS_toDB(verbose=True):
+def IRS_toDB(verbose=False):
     res=scrap_allIRS(verbose)
     DB_update(res,"IRS_TS",idx=False,mode='append')
     SQL_update(res,"IRS_TS",idx=False,mode='append',verbose=verbose)

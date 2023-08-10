@@ -47,7 +47,7 @@ def scrap_main(el):
         last_date = el.func_last_date()
         need=need_reimport(last_date)
         if need:
-            print(f'Func {el.func_scrap} will execute as latest date in DB was {last_date}')
+            print(f'\n\nFunc {el.func_scrap} will execute as latest date in DB was {last_date}')
             try:
                 res = el.func_scrap()
                 if isinstance(res,list):
