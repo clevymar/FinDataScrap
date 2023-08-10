@@ -26,16 +26,21 @@ log.addHandler(ch)
 lstScrap = [ScrapGovies, ScrapIRS, ScrapYahoo]
 
 def need_reimport(last_in_DB:str):
-    if last_in_DB=='None' or last_in_DB is None:
-        need=True
-    else:
-        if isinstance(last_in_DB, datetime.datetime):
-            latest=last_in_DB
+    try:
+        if last_in_DB=='None' or last_in_DB is None:
+            need=True
         else:
-            latest=datetime.datetime.strptime(last_in_DB,"%Y-%m-%d")
-        # latest=latest+pd.tseries.offsets.Day(1-type_date)
-        need=latest<datetime.datetime.strptime(last_bd,"%Y-%m-%d")
-    return need
+            if isinstance(last_in_DB, datetime.datetime):
+                latest=last_in_DB
+            else:
+                latest=datetime.datetime.strptime(last_in_DB,"%Y-%m-%d")
+            # latest=latest+pd.tseries.offsets.Day(1-type_date)
+            need=latest<datetime.datetime.strptime(last_bd,"%Y-%m-%d")
+        return need
+    except Exception as e:
+        print(f'Error while checking need_reimport for {last_in_DB}')
+        print(e)
+        return False
 
 def scrap_main(el):
     try:
