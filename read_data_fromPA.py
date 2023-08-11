@@ -1,13 +1,8 @@
 # from mysql.connector import connect, Error  # not sure why but does not work, pymysql does
 import pandas as pd
-import pymysql.cursors
-from sqlalchemy import create_engine, URL
-from database_mysql import get_connection,get_connection_sqlalchemy
 
-from credentials import USERNAME, DB_PWD, PA_PWD
-from utils import isLocal
-if isLocal(): import sshtunnel
-
+from utils import isLocal, print_color
+from database_connect import PADB_connection
 
 def DB_last_date(engine,tablename,include_data=False):
     sql = f""" select max(Date) from {tablename} """
@@ -17,59 +12,18 @@ def DB_last_date(engine,tablename,include_data=False):
     last_date = rows[0][0]
     return last_date
 
-def sshserver():
-    sshtunnel.SSH_TIMEOUT = 5.0
-    sshtunnel.TUNNEL_TIMEOUT = 5.0
-
-    server =   sshtunnel.SSHTunnelForwarder(
-    ('ssh.eu.pythonanywhere.com'),
-    ssh_username=USERNAME, #PA login
-    ssh_password=PA_PWD,
-    remote_bind_address=(f'{USERNAME}.mysql.eu.pythonanywhere-services.com', 3306),
-                                )
-    server.start() #TODO dont forget to close it !
-    print(f'Tunnel created at port {server.local_bind_port}')
-    return server
-    
-def PADB_connect(tunnel):    
-    conn = pymysql.connect( 
-            user=USERNAME, #PA database username
-            password=DB_PWD,
-            host='127.0.0.1', port=tunnel.local_bind_port,
-            database=f'{USERNAME}$Finance',
-            # cursorclass=pymysql.cursors.DictCursor
-            )
-    # Do stuff
-    print('DB connected')
-    return conn
-
-def PADB_connection_sqlalchemy(tunnel):
-    engine = None
-    try:
-        url_object = URL.create(
-            "mysql+pymysql",
-            username=USERNAME,
-            password=DB_PWD, 
-            host='127.0.0.1',
-            port = tunnel.local_bind_port,
-            database=f'{USERNAME}$Finance',
-            )
-        engine = create_engine(url_object)
-        print('Connection with SQLAlchemy successful')
-    except Exception as e:
-        # print(e)
-        raise Exception(f"Error connecting to database with SQL Alchemy") from e
-    return engine
+def SQLA_last_date(sqlalchemycon,tablename):
+    sql = f""" select max(Date) from {tablename} """
+    tmp = pd.read_sql_query(sql , sqlalchemycon)
+    # last_date = rows[0][0]
+    return tmp.iloc[0,0]
 
 
-def explore(conn,sqlalchemycon):
-    with conn.cursor() as cur:
-        cur.execute("SHOW TABLES")
-        for row in cur.fetchall():
-            print(row)
+
+def explore(sqlalchemycon):
     
     for table in ['GOVIES_TS','IRS_TS','EQTY_SPOTS']:
-        lastDate = DB_last_date(conn,table)
+        lastDate = SQLA_last_date(sqlalchemycon,table)
         print(f"Last date in {table} is {lastDate}")
             
         df=pd.read_sql_query(f"SELECT * FROM {table}" , sqlalchemycon)
@@ -77,25 +31,31 @@ def explore(conn,sqlalchemycon):
         print(df)
             
 
-def PADB_run_task(func,run_local=True):
-    
-    if run_local:
-        server = sshserver()
-        conn = PADB_connect(server)
-        cnx = PADB_connection_sqlalchemy(server)
-    else:
-        conn = get_connection()
-        cnx = get_connection_sqlalchemy()
 
-    try:    
-        func(conn,cnx)
-    except Exception as e:
-        raise Exception(f'Error whilst running {func}') from e
-    finally:
-        conn.close()
-        if run_local: server.close()
+
+# def PADB_run_task(func,run_local=True):
+#     if run_local:
+#         server = sshserver()
+#         conn = PADB_connect(server)
+#         cnx = PADB_connection_sqlalchemy(server)
+#     else:
+#         conn = get_connection()
+#         cnx = get_connection_sqlalchemy()
+
+#     try:    
+#         func(conn,cnx)
+#     except Exception as e:
+#         raise Exception(f'Error whilst running {func}') from e
+#     finally:
+#         conn.close()
+#         if run_local: server.close()
 
     
 if __name__ == "__main__":
-    PADB_run_task(explore,isLocal())
+    # PADB_run_task(explore,isLocal())
+    with PADB_connection(isLocal()) as sqlalchemycon:
+        # temp = SQLA_last_date(sqlalchemycon,'GOVIES_TS')
+        # print(temp)
+        explore(sqlalchemycon)
+    
     

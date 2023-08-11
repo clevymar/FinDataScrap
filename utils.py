@@ -29,9 +29,11 @@ class Color(Enum):
     GREEN = '\033[92m'
     RED = '\033[91m'
     PINK = '\033[95m'
+    YELLOW = '\033[33m'
     
     RESULT  = GREEN
     COMMENT = BLUE
+    DBCONNECT  = YELLOW
 
     def __str__(self):
         return self.value
