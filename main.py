@@ -6,6 +6,7 @@ from import_govies import ScrapGovies
 from import_swaps import ScrapIRS
 from import_yahoo import ScrapYahoo
 from common import last_bd
+from utils import print_color
 
 log = logging.getLogger('logger')
 log.setLevel(logging.DEBUG)
@@ -38,7 +39,7 @@ def need_reimport(last_in_DB:str):
             need=latest<datetime.datetime.strptime(last_bd,"%Y-%m-%d")
         return need
     except Exception as e:
-        print(f'Error while checking need_reimport for {last_in_DB}')
+        print_color(f'Error while checking need_reimport for {last_in_DB}','FAIL')
         print(e)
         return False
 
@@ -47,7 +48,7 @@ def scrap_main(el):
         last_date = el.func_last_date()
         need=need_reimport(last_date)
         if need:
-            print(f'\n\nFunc {el.func_scrap} will execute as latest date in DB was {last_date}')
+            print_color(f'\n\nFunc {el.func_scrap} will execute as latest date in DB was {last_date}','HEADER')
             try:
                 res = el.func_scrap()
                 if isinstance(res,list):
@@ -57,11 +58,11 @@ def scrap_main(el):
                         print(msg)
                 else:
                     msg = f'Well downloaded for {el.name} - {len(res)} rows, {len(res.columns)} cols'
-                    print(msg)
+                    print_color(msg, 'RESULT')
             except Exception as e:
                 raise Exception(f'Error while scrapping with {el.func_scrap} for {el.name}') from e
         else:
-            print(f"Data for {el.name} already scraped as of {last_date} - no need to reimport")
+            print_color(f"Data for {el.name} already scraped as of {last_date} - no need to reimport",'COMMENT')
     except Exception as e:
         raise Exception(f'Error while scrapping for {el.name}') from e
 

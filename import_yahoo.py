@@ -32,7 +32,7 @@ def download_clean_TS(unds: list, field: str = "Adj Close", rounding: int = None
     """
 
     try:
-        res = yf.download(unds, start, end, ignore_tz=True,threads = isLocal())[field]
+        res = yf.download(unds, start, end, ignore_tz=True,threads = isLocal(),progress=False)[field]
     except Exception as e:  
         # if pb usually coming from duplicated dates
         print('[-]Error while trying full download')
