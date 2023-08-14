@@ -5,17 +5,13 @@ import json
 import yfinance as yf
 from tqdm import tqdm
 
-from common import start, end, DIR_FILES
+from common import start, end, DIR_FILES, fichierTSUnderlyings
 from utils import timer, isLocal
 from database_sqlite import DB_update,DB_last_date
 from database_mysql import SQL_update
 from classes import Scrap
 
-if isLocal():
-    fichier = DIR_FILES + "TS_underlyings.json"
-else:
-    fichier = "/home/CyrilFinanceData/FinDataScrap/TS_underlyings.json"
-dictInput = json.load(open(fichier, "r"))
+dictInput = json.load(open(fichierTSUnderlyings, "r"))
 
 
 def download_clean_TS(unds: list, field: str = "Adj Close", rounding: int = None):
