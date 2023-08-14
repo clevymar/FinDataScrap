@@ -128,12 +128,13 @@ def selenium_scrap():
     # using info from https://help.pythonanywhere.com/pages/selenium
     res=None
     driver = start_driver()
-    for sec in tqdm(secList):
-        try:
-            res = sub_getETF_Selenium(driver,sec, exchange='arcx')
-            print(res)
-        except Exception as e:
-            print(f'[-]Error in scrapping with selenium for {sec}: \n',e)
+    try:
+        for sec in tqdm(secList):
+            try:
+                res = sub_getETF_Selenium(driver,sec, exchange='arcx')
+                print(res)
+            except Exception as e:
+                print(f'[-]Error in scrapping with selenium for {sec}: \n',e)
     finally:
         driver.quit()
     return 
