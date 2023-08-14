@@ -1,4 +1,5 @@
 import requests
+import json
 from bs4 import BeautifulSoup
 
 from selenium import webdriver
@@ -7,8 +8,9 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
+from tqdm import tqdm
 
-from common import last_bd
+from common import last_bd, fichierTSUnderlyings
 from utils import timer
 
 COLS_MORNINGSTAR=["ETF","P/E1","P/B","P/S","P/CF","DY","EG","HG","SG","CFG","BG","Composite","Last_updated","UpdateMode","URL","Name"]
@@ -17,11 +19,14 @@ SECTORS =["Basic Materials","Consumer Cyclical","Financial Services", "Real Esta
               "Energy","Industrials","Technology", "Consumer Defensive", "Healthcare", "Utilities"  ]
 
 
+
 class SeleniumError(Exception):
     pass
 
 
 benchmark='ACWI'
+dictInput = json.load(open(fichierTSUnderlyings, "r"))
+secList = dictInput["EQTY_SPOTS"]
     
 ratios=[]
 row_dict={x:"" for x in COLS_MORNINGSTAR}
@@ -44,7 +49,7 @@ def sub_getETF_Selenium(driver,ETF_name,exchange='arcx'):
                 break
         if not foundURL:
             raise SeleniumError('Correct Url could not be found for: '+ETF_name)
-    print(f'[+]Scrapping for {url=}')
+    print(f'[+]Scrapping for {ETF_name} at {url=}')
     driver.get(url)
     wait = WebDriverWait(driver, 15)
     element = wait.until(EC.presence_of_element_located((By.CLASS_NAME, 'sal-sector-exposure__sector-table')))
@@ -122,15 +127,18 @@ def start_driver():
 def selenium_scrap():
     # using info from https://help.pythonanywhere.com/pages/selenium
     res=None
-    try:
-        driver = start_driver()
-        res = sub_getETF_Selenium(driver,'QQQ', exchange='xnas')
-        print(res) 
+    driver = start_driver()
+    for sec in tqdm(secList):
+        try:
+            res = sub_getETF_Selenium(driver,sec, exchange='arcx')
+            print(res)
+        except Exception as e:
+            print(f'[-]Error in scrapping with selenium for {sec}: \n',e)
     finally:
         driver.quit()
-    return res
+    return 
 
 
 if __name__ == "__main__":
-    res = selenium_scrap()
-    print('Scrapped ok')
+    selenium_scrap()
+    print('Scrap ended')

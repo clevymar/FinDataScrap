@@ -12,8 +12,11 @@ last_bd = end.strftime("%Y-%m-%d")
 if isLocal():
     MYPYTHON_ROOT=os.environ['ONEDRIVECONSUMER']+'\\Python Scripts\\'
     DIR_FILES = MYPYTHON_ROOT+'\\Financial files\\'
+    fichierTSUnderlyings = DIR_FILES + "TS_underlyings.json"
 else:
     DIR_FILES = ""
+    fichierTSUnderlyings = "/home/CyrilFinanceData/FinDataScrap/TS_underlyings.json"
+
 
 
 # EQUITY_UNDS = ['AAXJ', 'ACWI', 'AFK', 'ARGT', 'ARKK', 'BND', 'BNO', 'BWX', 'BWZ', 'CGGO', 'CGW', 'COPX', 'CORN', 'CYB', 'DBA', 'DBB', 'DBC', 'DEM', 'DFAX', 'DFEV', 'DFIV', 'DFLV', 'DFSV', 'DGS', 'DISV', 'DJP', 'ECOW', 'EEM', 'EEMV', 'EFA', 'EFG', 'EFV', 'EIDO', 'EIRL', 'EIS', 'EMLC', 'ENZL', 'EPHE', 'EPOL', 'EPP', 'EPU', 'ERUS', 'EUFN', 'EWA', 'EWC', 'EWD', 'EWG', 'EWH', 'EWI', 'EWJ', 'EWK', 'EWL', 'EWM', 'EWN', 'EWO', 'EWP', 'EWQ', 'EWS', 'EWT', 'EWU', 'EWW', 'EWY', 'EWZ', 'EYLD', 'EZA', 'EZU', 'FEZ', 'FM', 'FVAL', 'FXA', 'FXB', 'FXC', 'FXE', 'FXF', 'FXI', 'FXY', 'FYLD', 'GDX', 'GDXJ', 'GLD', 'GNR', 'GREK', 'GVAL', 'GXG', 'HAP', 'HYG', 'IDEV', 'IEF', 'IEMG', 'IEUR', 'IEV', 'IHY', 'ILF', 'INDY', 'IUSV', 'IVAL', 'IVE',
