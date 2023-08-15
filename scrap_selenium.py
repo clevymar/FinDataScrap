@@ -1,6 +1,7 @@
 import requests
 import json
 from bs4 import BeautifulSoup
+import pandas as pd
 
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -11,7 +12,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from tqdm import tqdm
 
 from common import last_bd, fichierTSUnderlyings
-from utils import timer
+from utils import timer, print_color
 
 COLS_MORNINGSTAR=["ETF","P/E1","P/B","P/S","P/CF","DY","EG","HG","SG","CFG","BG","Composite","Last_updated","UpdateMode","URL","Name"]
 COLS_RATIOS=["EY","B/P","S/P","DY","Compo_Zscore"]
@@ -26,10 +27,10 @@ class SeleniumError(Exception):
 
 benchmark='ACWI'
 dictInput = json.load(open(fichierTSUnderlyings, "r"))
-secList = dictInput["EQTY_SPOTS"]
+fullList = dictInput["EQTY_SPOTS"]
     
 ratios=[]
-row_dict={x:"" for x in COLS_MORNINGSTAR}
+initDict={x:"" for x in COLS_MORNINGSTAR}
 errs=[]
 
 
@@ -49,7 +50,7 @@ def sub_getETF_Selenium(driver,ETF_name,exchange='arcx'):
                 break
         if not foundURL:
             raise SeleniumError('Correct Url could not be found for: '+ETF_name)
-    print(f'[+]Scrapping for {ETF_name} at {url=}')
+    print_color(f'\n[+]Scrapping for {ETF_name} at {url=}','COMMENT')
     driver.get(url)
     wait = WebDriverWait(driver, 15)
     element = wait.until(EC.presence_of_element_located((By.CLASS_NAME, 'sal-sector-exposure__sector-table')))
@@ -60,6 +61,7 @@ def sub_getETF_Selenium(driver,ETF_name,exchange='arcx'):
     soup = BeautifulSoup(source_data, "lxml")
     
     compteur = 0
+    row_dict=initDict.copy()
     row_dict["ETF"]=ETF_name
     row_dict["Last_updated"]=last_bd
     res=soup.find(class_="mdc-security-header__name")
@@ -105,8 +107,7 @@ def sub_getETF_Selenium(driver,ETF_name,exchange='arcx'):
     row_dict["Last_updated"]=last_bd
     row_dict["UpdateMode"]='Selenium'
     row_dict["URL"]=url
-    res=row_dict   
-    return res
+    return row_dict
 
 
 def start_driver():
@@ -124,20 +125,35 @@ def start_driver():
          
 
 @timer
-def selenium_scrap():
+def selenium_scrap(secList:list):
     # using info from https://help.pythonanywhere.com/pages/selenium
-    res=None
+    res=[]
+    errs=[]
     driver = start_driver()
     try:
         for sec in tqdm(secList):
             try:
-                res = sub_getETF_Selenium(driver,sec, exchange='arcx')
-                print(res)
+                tmp = sub_getETF_Selenium(driver,sec, exchange='arcx')
+                res.append(tmp.copy())
             except Exception as e:
-                print(f'[-]Error in scrapping with selenium for {sec}: \n',e)
+                print_color(f'[-]Error in scrapping with selenium for {sec}: \n',"FAIL")
+                print(e)
+                errs.append(sec)
+                
+        if len(res)>0:
+            df=pd.DataFrame(res)
+            print_color(f'[+] {len(df)} underlyings ratios scrapped',"RESULT")
+            print(df)
+        else:
+            print_color(f'[-]No data was scrapped with selenium',"RESULT")
+        if len(errs)>0:
+            print_color(f'[-]Errors in scrapping with selenium for {len(errs)} underlyings',"FAIL")
+            print(errs)
     finally:
+        print_color('Quitting Selenium driver','COMMENT')
         driver.quit()
-    return 
+    return df,errs
+
 
 
 if __name__ == "__main__":
