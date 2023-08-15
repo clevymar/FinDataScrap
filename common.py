@@ -18,7 +18,24 @@ else:
     fichierTSUnderlyings = "/home/CyrilFinanceData/FinDataScrap/TS_underlyings.json"
 
 
-
+def need_reimport(last_in_DB:str):
+    try:
+        if last_in_DB=='None' or last_in_DB is None:
+            need=True
+        else:
+            if isinstance(last_in_DB, datetime.datetime):
+                latest=last_in_DB
+            else:
+                latest=datetime.datetime.strptime(last_in_DB,"%Y-%m-%d")
+            # latest=latest+pd.tseries.offsets.Day(1-type_date)
+            need=latest<datetime.datetime.strptime(last_bd,"%Y-%m-%d")
+        return need
+    except Exception as e:
+        print_color(f'Error while checking need_reimport for {last_in_DB}','FAIL')
+        print(e)
+        return False
+    
+    
 # EQUITY_UNDS = ['AAXJ', 'ACWI', 'AFK', 'ARGT', 'ARKK', 'BND', 'BNO', 'BWX', 'BWZ', 'CGGO', 'CGW', 'COPX', 'CORN', 'CYB', 'DBA', 'DBB', 'DBC', 'DEM', 'DFAX', 'DFEV', 'DFIV', 'DFLV', 'DFSV', 'DGS', 'DISV', 'DJP', 'ECOW', 'EEM', 'EEMV', 'EFA', 'EFG', 'EFV', 'EIDO', 'EIRL', 'EIS', 'EMLC', 'ENZL', 'EPHE', 'EPOL', 'EPP', 'EPU', 'ERUS', 'EUFN', 'EWA', 'EWC', 'EWD', 'EWG', 'EWH', 'EWI', 'EWJ', 'EWK', 'EWL', 'EWM', 'EWN', 'EWO', 'EWP', 'EWQ', 'EWS', 'EWT', 'EWU', 'EWW', 'EWY', 'EWZ', 'EYLD', 'EZA', 'EZU', 'FEZ', 'FM', 'FVAL', 'FXA', 'FXB', 'FXC', 'FXE', 'FXF', 'FXI', 'FXY', 'FYLD', 'GDX', 'GDXJ', 'GLD', 'GNR', 'GREK', 'GVAL', 'GXG', 'HAP', 'HYG', 'IDEV', 'IEF', 'IEMG', 'IEUR', 'IEV', 'IHY', 'ILF', 'INDY', 'IUSV', 'IVAL', 'IVE',
 #                'IWB', 'IWC', 'IWD', 'IWF', 'IWL', 'IWM', 'IWN', 'IWO', 'IWP', 'IWR', 'IWS', 'IYR', 'JKL', 'JNK', 'KBE', 'KCE', 'KIE', 'KRE', 'KWEB', 'LQD', 'MGK', 'MLXIX', 'NGE', 'NIB', 'NORW', 'OIH', 'PALL', 'PICB', 'PICK', 'PPLT', 'PRF', 'PXF', 'PXH', 'QQQ', 'QVAL', 'REM', 'RSX', 'SCJ', 'SHV', 'SHY', 'SIL', 'SLV', 'SOXX', 'SOYB', 'SPY', 'SYLD', 'THD', 'TIP', 'TLT', 'TUR', 'UDN', 'UGA', 'UNG', 'URA', 'USAI', 'USO', 'UUP', 'VBR', 'VCIT', 'VCLT', 'VCSH', 'VEA', 'VGK', 'VLUE', 'VNM', 'VNQ', 'VNQI', 'VONV', 'VOX', 'VPL', 'VTI', 'VTV', 'VWO', 'WEAT', 'WIP', 'XAR', 'XBI', 'XES', 'XHB', 'XHE', 'XHS', 'XLB', 'XLE', 'XLF', 'XLI', 'XLK', 'XLP', 'XLU', 'XLV', 'XLY', 'XME', 'XOP', 'XPH', 'XRT', 'XSD', 'XTN', '^HSCE', '^N225', '^STOXX50E']
 
