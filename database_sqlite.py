@@ -33,7 +33,7 @@ def create_connection():
 def DB_update(df,tablename,mode="replace",idx=True,verbose=True):
     engine=create_connection()
     df.to_sql(tablename, con=engine, if_exists=mode,index=idx)
-    if verbose: print(f" {len(df)} records saved to {tablename}")
+    if verbose: print(f" {len(df)} records saved to {tablename} via sqlite")
 
 def DB_last_date(tablename,field="Date"):
     engine=create_connection()

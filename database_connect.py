@@ -2,7 +2,6 @@ import pymysql.cursors
 from sqlalchemy import create_engine, URL
 from contextlib import contextmanager
 
-from database_mysql import get_connection,get_connection_sqlalchemy
 from credentials import USERNAME, DB_PWD, PA_PWD
 from utils import isLocal, print_color
 if isLocal(): import sshtunnel
@@ -49,7 +48,25 @@ def PADB_connection_sqlalchemy(tunnel):
         engine = create_engine(url_object)
         print_dbmessage('Connection with SQLAlchemy successful')
     except Exception as e:
-        # print(e)
+        print_color(e,'FAIL')
+        raise Exception(f"Error connecting to database with SQL Alchemy") from e
+    return engine
+
+
+def direct_connection_sqlalchemy():
+    engine = None
+    try:
+        url_object = URL.create(
+            "mysql+pymysql",
+            username=USERNAME,
+            password=DB_PWD, 
+            host=f"{USERNAME}.mysql.eu.pythonanywhere-services.com",
+            # port = 3306,
+            database=f'{USERNAME}$Finance',
+            )
+        engine = create_engine(url_object)
+        print('Connection with SQLAlchemy successful')
+    except Exception as e:
         print_color(e,'FAIL')
         raise Exception(f"Error connecting to database with SQL Alchemy") from e
     return engine
@@ -63,7 +80,7 @@ def PADB_connection(run_local=True):
         cnx = PADB_connection_sqlalchemy(server)
     else:
         # conn = get_connection()
-        cnx = get_connection_sqlalchemy()
+        cnx = direct_connection_sqlalchemy()
     try:
         yield cnx
     except Exception as e:
