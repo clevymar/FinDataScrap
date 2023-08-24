@@ -73,7 +73,8 @@ def direct_connection_sqlalchemy():
 
 
 @contextmanager
-def PADB_connection(run_local=True):
+def PADB_connection():
+    run_local = isLocal()
     if run_local:
         server = sshserver()
         # conn = PADB_connect(server)
