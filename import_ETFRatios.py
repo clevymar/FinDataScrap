@@ -6,7 +6,7 @@ import numpy as np
 from common import fichierTSUnderlyings, need_reimport, isLocal, last_bd
 from utils import timer, print_color
 from scrap_selenium import selenium_scrap
-from database_mysql import SQLA_last_date, databases_update
+from database_mysql import SQLA_last_date, databases_update, PADB_connection
 from classes import Scrap
 
 COLS_MORNINGSTAR=["ETF","P/E1","P/B","P/S","P/CF","DY","EG","HG","SG","CFG","BG","Composite","Last_updated","UpdateMode","URL","Name"]
@@ -50,7 +50,7 @@ def _compute_extra_ratios(ratios:pd.DataFrame):
     
         
 def update_secs():
-    with PADB_connection(isLocal()) as conn:
+    with PADB_connection() as conn:
     # with create_connection() as conn:  #TODO replace by PADB above
         dfExisting = pd.read_sql_query("SELECT * FROM ETF_RATIOS", conn)
         dfExisting['need_reimport'] = dfExisting['Last_updated'].apply(need_reimport)
