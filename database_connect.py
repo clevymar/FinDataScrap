@@ -65,7 +65,7 @@ def direct_connection_sqlalchemy():
             database=f'{USERNAME}$Finance',
             )
         engine = create_engine(url_object)
-        print('Connection with SQLAlchemy successful')
+        print_dbmessage('Connection with SQLAlchemy successful')
     except Exception as e:
         print_color(e,'FAIL')
         raise Exception(f"Error connecting to database with SQL Alchemy") from e

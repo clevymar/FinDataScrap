@@ -15,7 +15,7 @@ SECTORS =["Basic Materials","Consumer Cyclical","Financial Services", "Real Esta
               "Energy","Industrials","Technology", "Consumer Defensive", "Healthcare", "Utilities"  ]
 
 MAX_TOUPDATE = int(10 * 60 / 10) #* around 10 secs per udnerlying, want to limit to 10 mins
-MAX_TOUPDATE = 2
+# MAX_TOUPDATE = 2
 
 benchmark='ACWI'
 dictInput = json.load(open(fichierTSUnderlyings, "r"))
