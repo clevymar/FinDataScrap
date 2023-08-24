@@ -7,8 +7,7 @@ from tqdm import tqdm
 
 from common import start, end, DIR_FILES, fichierTSUnderlyings
 from utils import timer, isLocal
-from database_sqlite import DB_update,DB_last_date
-from database_mysql import SQL_update
+from database_mysql import SQLA_last_date, databases_update
 from classes import Scrap
 
 dictInput = json.load(open(fichierTSUnderlyings, "r"))
@@ -58,8 +57,7 @@ def download_clean_TS(unds: list, field: str = "Adj Close", rounding: int = None
 
 def TS_toDB(unds,table,field,verbose=True):
     resDB,res=download_clean_TS(unds,field=field,rounding=2)
-    DB_update(resDB, table,idx=False,mode='replace')
-    SQL_update(resDB, table,idx=False,mode='replace',verbose=verbose)
+    databases_update(resDB, table,idx=False,mode='replace',verbose=verbose, save_insqlite=True)
     return res
 
 
@@ -90,7 +88,7 @@ def import_yahoo(verbose=True):
 
 
 def EQTYTS_last_date():
-    return DB_last_date("EQTY_SPOTS")
+    return SQLA_last_date("EQTY_SPOTS")
 
 ScrapYahoo = Scrap("YAHOO_SPOTS", import_yahoo, EQTYTS_last_date)
 

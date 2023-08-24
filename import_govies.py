@@ -2,8 +2,7 @@
 import pandas as pd
 from common import last_bd
 from utils import timer
-from database_sqlite import DB_update,DB_last_date
-from database_mysql import SQL_update 
+from database_mysql import SQLA_last_date, databases_update 
 from classes import Scrap
 
 URL_ROOT = "http://www.worldgovernmentbonds.com/country/"
@@ -58,8 +57,7 @@ def govies_toDB(verbose=False):
     res.columns=['Date','nYears','Country','Rate']
     if verbose:
         print(res)
-    DB_update(res,"GOVIES_TS",idx=False,mode='append',verbose=verbose)
-    SQL_update(res,"GOVIES_TS",idx=False,mode='append',verbose=verbose)
+    databases_update(res,"GOVIES_TS",idx=False,mode='append',verbose=verbose, save_insqlite=True)
     return res
 
 def import_govies(argument=None):
@@ -72,7 +70,7 @@ def import_govies(argument=None):
     return msg
 
 def govies_last_date():
-    return DB_last_date("GOVIES_TS")
+    return SQLA_last_date("GOVIES_TS")
 
 ScrapGovies = Scrap("Govies", govies_toDB, govies_last_date)
 
