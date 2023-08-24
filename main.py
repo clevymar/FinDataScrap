@@ -5,43 +5,29 @@ import logging
 from import_govies import ScrapGovies
 from import_swaps import ScrapIRS
 from import_yahoo import ScrapYahoo
-from common import last_bd
+from import_ETFRatios import ScrapRatios
+from common import last_bd, need_reimport
 from utils import print_color
 
-log = logging.getLogger('logger')
-log.setLevel(logging.DEBUG)
+# log = logging.getLogger('logger')
+# log.setLevel(logging.DEBUG)
 
-formatter = logging.Formatter('%(message)s - %(levelname)s - %(asctime)s ', datefmt='%Y-%m-%d %H:%M')
+# formatter = logging.Formatter('%(message)s - %(levelname)s - %(asctime)s ', datefmt='%Y-%m-%d %H:%M')
 
-fh = logging.FileHandler('import.log', encoding='utf-8')
-fh.setLevel(logging.DEBUG)
-fh.setFormatter(formatter)
-log.addHandler(fh)
+# fh = logging.FileHandler('import.log', encoding='utf-8')
+# fh.setLevel(logging.DEBUG)
+# fh.setFormatter(formatter)
+# log.addHandler(fh)
 
-ch = logging.StreamHandler()
-ch.setLevel(logging.DEBUG)
-ch.setFormatter(formatter)
-log.addHandler(ch)
+# ch = logging.StreamHandler()
+# ch.setLevel(logging.DEBUG)
+# ch.setFormatter(formatter)
+# log.addHandler(ch)
 
 
-lstScrap = [ScrapGovies, ScrapIRS, ScrapYahoo]
+lstScrap = [ScrapGovies, ScrapIRS, ScrapYahoo, ScrapRatios]
 
-def need_reimport(last_in_DB:str):
-    try:
-        if last_in_DB=='None' or last_in_DB is None:
-            need=True
-        else:
-            if isinstance(last_in_DB, datetime.datetime):
-                latest=last_in_DB
-            else:
-                latest=datetime.datetime.strptime(last_in_DB,"%Y-%m-%d")
-            # latest=latest+pd.tseries.offsets.Day(1-type_date)
-            need=latest<datetime.datetime.strptime(last_bd,"%Y-%m-%d")
-        return need
-    except Exception as e:
-        print_color(f'Error while checking need_reimport for {last_in_DB}','FAIL')
-        print(e)
-        return False
+
 
 def scrap_main(el):
     try:
