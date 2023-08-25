@@ -90,8 +90,7 @@ def import_yahoo(verbose=True):
 def EQTYTS_last_date():
     return SQLA_last_date("EQTY_SPOTS")
 
-ScrapYahoo = Scrap("YAHOO_SPOTS", import_yahoo, EQTYTS_last_date)
-
+ScrapYahoo = Scrap("YAHOO_SPOTS", import_yahoo, EQTYTS_last_date, datetoCompare=datetime.date.today().strftime("%Y-%m-%d"))
 
 if __name__ == "__main__":
     print(import_yahoo(True))

@@ -18,7 +18,7 @@ else:
     fichierTSUnderlyings = "/home/CyrilFinanceData/FinDataScrap/TS_underlyings.json"
 
 
-def need_reimport(last_in_DB:str):
+def need_reimport(last_in_DB:str,datetoCompare:str=last_bd):
     try:
         if last_in_DB=='None' or last_in_DB is None:
             need=True
@@ -28,7 +28,7 @@ def need_reimport(last_in_DB:str):
             else:
                 latest=datetime.datetime.strptime(last_in_DB,"%Y-%m-%d")
             # latest=latest+pd.tseries.offsets.Day(1-type_date)
-            need=latest<datetime.datetime.strptime(last_bd,"%Y-%m-%d")
+            need=latest<datetime.datetime.strptime(datetoCompare,"%Y-%m-%d")
         return need
     except Exception as e:
         print_color(f'Error while checking need_reimport for {last_in_DB}','FAIL')
