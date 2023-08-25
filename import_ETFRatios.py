@@ -2,6 +2,7 @@ import json
 import pandas as pd
 from random import choices
 import numpy as np
+import datetime
 
 from common import fichierTSUnderlyings, need_reimport, isLocal, last_bd
 from utils import timer, print_color
@@ -104,7 +105,7 @@ def ETFratios_toDB(verbose=True):
 def ETFRATIOS_last_date():
     return SQLA_last_date("ETF_RATIOS")
         
-ScrapRatios = Scrap("ETF_RATIOS", ETFratios_toDB, ETFRATIOS_last_date)
+ScrapRatios = Scrap("ETF_RATIOS", ETFratios_toDB, ETFRATIOS_last_date,datetoCompare=datetime.date.today().strftime("%Y-%m-%d"))
 
 
 if __name__ == "__main__":
