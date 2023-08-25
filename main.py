@@ -32,7 +32,8 @@ lstScrap = [ScrapGovies, ScrapIRS, ScrapYahoo, ScrapRatios]
 def scrap_main(el):
     try:
         last_date = el.func_last_date()
-        need=need_reimport(last_date)
+        datetoCompare = el.datetoCompare
+        need=need_reimport(last_date,datetoCompare)
         if need:
             print_color(f'\n\nFunc {el.func_scrap} will execute as latest date in DB was {last_date}','HEADER')
             try:
@@ -48,7 +49,7 @@ def scrap_main(el):
             except Exception as e:
                 raise Exception(f'Error while scrapping with {el.func_scrap} for {el.name}') from e
         else:
-            print_color(f"Data for {el.name} already scraped as of {last_date} - no need to reimport",'COMMENT')
+            print_color(f"[i] - Data for {el.name} already scraped as of {last_date} - no need to reimport",'COMMENT')
     except Exception as e:
         raise Exception(f'Error while scrapping for {el.name}') from e
 
