@@ -72,7 +72,7 @@ def import_govies(argument=None):
 def govies_last_date():
     return SQLA_last_date("GOVIES_TS")
 
-ScrapGovies = Scrap("Govies", govies_toDB, govies_last_date)
+ScrapGovies = Scrap("GOVIES", govies_toDB, govies_last_date)
 
  
 if __name__ == '__main__' :

@@ -129,7 +129,7 @@ def import_technicals(verbose=True):
 def technicals_last_date():
     return SQLA_last_date("TECHNICALS")
 
-ScrapTechnicals = Scrap("Technicals", technicals_toDB, technicals_last_date)
+ScrapTechnicals = Scrap("TECHNICALS", technicals_toDB, technicals_last_date)
 
 
 # def SPXfut():

@@ -8,7 +8,7 @@ from import_yahoo import ScrapYahoo
 from import_ETFRatios import ScrapRatios
 from import_technicals import ScrapTechnicals
 from common import last_bd, need_reimport
-from utils import print_color
+from utils import print_color, Color
 
 # log = logging.getLogger('logger')
 # log.setLevel(logging.DEBUG)
@@ -45,12 +45,12 @@ def scrap_main(el):
                         msg = f'\t {len(item)} rows, {len(item.columns)} cols'
                         print(msg)
                 else:
-                    msg = f'Well downloaded for {el.name} - {len(res)} rows, {len(res.columns)} cols'
+                    msg = f'[+] Downloaded: {len(res)} rows, {len(res.columns)} cols for \033[6;30;42m{el.name}'
                     print_color(msg, 'RESULT')
             except Exception as e:
                 raise Exception(f'Error while scrapping with {el.func_scrap} for {el.name}') from e
         else:
-            print_color(f"[i] - Data for {el.name} already scraped as of {last_date} - no need to reimport",'COMMENT')
+            print_color(f"[i] - Data already scraped as of {last_date} - no need to reimport \033[6;30;42m{el.name}",'COMMENT')
     except Exception as e:
         raise Exception(f'Error while scrapping for {el.name}') from e
 
