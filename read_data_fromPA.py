@@ -22,7 +22,7 @@ def SQLA_last_date(sqlalchemycon,tablename):
 
 def explore(sqlalchemycon):
     
-    for table in ['GOVIES_TS','IRS_TS','EQTY_SPOTS']:
+    for table in ['GOVIES_TS','TECHNICALS']:
         lastDate = SQLA_last_date(sqlalchemycon,table)
         print(f"Last date in {table} is {lastDate}")
             
@@ -53,7 +53,7 @@ def explore(sqlalchemycon):
     
 if __name__ == "__main__":
     # PADB_run_task(explore,isLocal())
-    with PADB_connection(isLocal()) as sqlalchemycon:
+    with PADB_connection() as sqlalchemycon:
         # temp = SQLA_last_date(sqlalchemycon,'GOVIES_TS')
         # print(temp)
         explore(sqlalchemycon)
