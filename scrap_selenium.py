@@ -36,7 +36,7 @@ errs=[]
 
 
 
-def sub_getETF_Selenium(driver,ETF_name,exchange='arcx'):
+def sub_getETF_Selenium(driver,ETF_name,exchange='arcx',verbose=True):
     if exchange[:5]=='funds':
         url=f"https://www.morningstar.com/{exchange}/{ETF_name}/portfolio"
     else:  
@@ -50,7 +50,7 @@ def sub_getETF_Selenium(driver,ETF_name,exchange='arcx'):
                 break
         if not foundURL:
             raise SeleniumError('Correct Url could not be found for: '+ETF_name)
-    print_color(f'\n[+]Scrapping for {ETF_name} at {url=}','COMMENT')
+    if verbose: print_color(f'\n[+]Scrapping for {ETF_name} at {url=}','COMMENT')
     driver.get(url)
     wait = WebDriverWait(driver, 15)
     element = wait.until(EC.presence_of_element_located((By.CLASS_NAME, 'sal-sector-exposure__sector-table')))
@@ -125,7 +125,7 @@ def start_driver():
          
 
 @timer
-def selenium_scrap(secList:list):
+def selenium_scrap(secList:list,verbose=True):
     # using info from https://help.pythonanywhere.com/pages/selenium
     res=[]
     errs=[]
@@ -133,7 +133,7 @@ def selenium_scrap(secList:list):
     try:
         for sec in tqdm(secList):
             try:
-                tmp = sub_getETF_Selenium(driver,sec, exchange='arcx')
+                tmp = sub_getETF_Selenium(driver,sec, exchange='arcx',verbose=verbose)
                 res.append(tmp.copy())
             except Exception as e:
                 print_color(f'[-]Error in scrapping with selenium for {sec}: \n',"FAIL")
@@ -143,9 +143,10 @@ def selenium_scrap(secList:list):
         if len(res)>0:
             df=pd.DataFrame(res)
             print_color(f'[+] {len(df)} underlyings ratios scrapped',"RESULT")
-            print(df)
+            if verbose: print(df)
         else:
             print_color(f'[-]No data was scrapped with selenium',"RESULT")
+            
         if len(errs)>0:
             print_color(f'[-]Errors in scrapping with selenium for {len(errs)} underlyings',"FAIL")
             print(errs)

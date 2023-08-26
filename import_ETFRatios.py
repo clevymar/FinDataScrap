@@ -58,8 +58,11 @@ def update_secs():
         undsUptodate = dfExisting[dfExisting['need_reimport'] == False]['index'].tolist()
         undsToUpdate = dfExisting[dfExisting['need_reimport']]['index'].tolist()
         
-        print_color(f"{len(undsUptodate)} underlyings already updated","COMMENT")
-        print('\t',undsUptodate)
+        l=len(undsUptodate)
+        if l>0:
+            print_color(f"{l} underlyings already updated","COMMENT")
+            print('\t',undsUptodate)
+            
         l = len(undsToUpdate)
         if l==0:
             print_color("No underlyings to update","RESULT")
@@ -69,11 +72,14 @@ def update_secs():
             unds = undsToUpdate
             print('\t',unds)
         else:
-            print_color(f"{len(undsToUpdate)} underlyings to update\nChoosing {MAX_TOUPDATE} underlyings randomly","COMMENT")
-            unds = choices(undsToUpdate, k=min(MAX_TOUPDATE,len(undsToUpdate)))
+            print_color(f"{len(undsToUpdate)} underlyings to update\nChoosing {MAX_TOUPDATE} underlyings starting with the oldest ones","COMMENT")
+            dfOld = dfExisting[dfExisting['index'].isin(undsToUpdate)].sort_values('Last_updated',ascending=True)
+            if len(dfOld)>MAX_TOUPDATE:
+                dfOld = dfOld.iloc[:MAX_TOUPDATE]
+            unds = dfOld['index'].tolist()
             print('\t',unds)
         
-        ratios,errs = selenium_scrap(unds)
+        ratios,errs = selenium_scrap(unds,verbose=isLocal())
         res=_compute_extra_ratios(ratios)
         if len(res)>0:
             res=res.reset_index().rename(columns={"ETF":'index'})
