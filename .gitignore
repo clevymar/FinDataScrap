@@ -4,3 +4,9 @@ GCP_deploy.zip
 deploy.zip
 credentials.py
 Finance.db.sql
+*.pyc
+*.log
+
+/__pycache__/*
+__pycache__/*
+GCP.code-workspace

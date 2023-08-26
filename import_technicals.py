@@ -9,11 +9,11 @@ from common import last_bd
 unds = [
     ["Gold", "GLD"],
     ["SPX", "$SPX"],
-    # ["NDX", "NQ*0"],
-    # ["Dollar", "DX*0"],
-    # ["Estoxx", "FX*0"],
-    # ["Commos", "DBC"],
-    # ["Bitcoin", "BT*0"],
+    ["NDX", "NQ*0"],
+    ["Dollar", "DX*0"],
+    ["Estoxx", "FX*0"],
+    ["Commos", "DBC"],
+    ["Bitcoin", "BT*0"],
 ]
 
 user_agent = "Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.0.7) Gecko/2009021910 Firefox/3.0.7"
@@ -129,7 +129,7 @@ def import_technicals(verbose=True):
 def technicals_last_date():
     return SQLA_last_date("TECHNICALS")
 
-ScrapTechnicals = Scrap("Govies", technicals_toDB, technicals_last_date)
+ScrapTechnicals = Scrap("Technicals", technicals_toDB, technicals_last_date)
 
 
 # def SPXfut():
