@@ -7,7 +7,8 @@ from utils import isLocal, print_color
 if isLocal(): import sshtunnel
 
 def print_dbmessage(msg):
-    print_color("[DB] - "+msg,'DBCONNECT')
+    pass
+    # print_color("[DB] - "+msg,'DBCONNECT')
 
 def sshserver():
     sshtunnel.SSH_TIMEOUT = 5.0
