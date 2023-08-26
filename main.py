@@ -6,6 +6,7 @@ from import_govies import ScrapGovies
 from import_swaps import ScrapIRS
 from import_yahoo import ScrapYahoo
 from import_ETFRatios import ScrapRatios
+from import_technicals import ScrapTechnicals
 from common import last_bd, need_reimport
 from utils import print_color
 
@@ -25,7 +26,7 @@ from utils import print_color
 # log.addHandler(ch)
 
 
-lstScrap = [ScrapGovies, ScrapIRS, ScrapYahoo, ScrapRatios]
+lstScrap = [ScrapGovies, ScrapIRS, ScrapYahoo, ScrapTechnicals] # ScrapRatios   
 
 
 
