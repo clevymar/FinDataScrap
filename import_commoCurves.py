@@ -1,6 +1,4 @@
 #%%
-import time
-import numpy as np
 import pandas as pd
 from io import StringIO
 import requests
@@ -11,7 +9,7 @@ from scrap_selenium import selenium_scrap_simple
 from credentials import QUANDL_KEY
 from utils import print_color,timer
 from classes import Scrap
-from database_mysql import SQLA_last_date, databases_update
+from database_mysql import SQLA_last_date, databases_update,SQLA_read_table
 from common import last_bd
 
 import quandl
@@ -33,7 +31,7 @@ DICT_NAMES = {
  }
 
 
-def download_from_file():
+def _download_from_file():
     csv_url = "https://www.invesco.com/us/financial-products/etfs/holdings/main/holdings/0?audienceType=Advisor&action=download&ticker=DBC"
     response = requests.get(csv_url)
     df=None
@@ -56,7 +54,7 @@ def download_from_file():
     return df
 
 
-def clean_downloaded_data(df):
+def _clean_downloaded_data(df):
     df2 = df[['Name','Contract Expiry Date','Shares','$ Value','Weight']]
     df2.columns = ['Security','Expiry','NOSH','Value','%NAV']
 
@@ -76,46 +74,33 @@ def clean_downloaded_data(df):
 
     return df3
 
+
 @timer
-def saveCompo_toDB(verbose=True):
-    df = download_from_file()
-    dfCompo = clean_downloaded_data(df)
+def saveCompo_toDB(verbose=True)->pd.DataFrame:
+    """
+    The function `saveCompo_toDB` downloads DBC compositions from a csv on the provider website, cleans it, prints the cleaned data if
+    `verbose` is True, updates a database with the cleaned data, and returns the cleaned data.
+    
+    :return: the composition of DBC
+    """
+    
+    df = _download_from_file()
+    dfCompo = _clean_downloaded_data(df)
     if verbose:
         print_color(f'*** DBC latest weights ***',color='RESULT')
         print(dfCompo)
     databases_update(dfCompo.reset_index(),"COMPO_DBC",idx=False,mode='replace',verbose=verbose, save_insqlite=True)
     return dfCompo
 
-def import_commosCurves(verbose=True):
-    msg=None
-    try:
-        res = saveCompo_toDB(verbose=verbose)
-        msg = f'DBC composition well downloaded !!! \n{len(res)} rows, {len(res.columns)} cols'
-    except Exception as e:
-        raise Exception('Error while downloading DBC compo') from e
-    return msg
-
-def commosCurves_last_date():
-    return SQLA_last_date("COMPO_DBC")
-
-ScrapCommosCurves = Scrap("COMMOS CURVES", saveCompo_toDB, commosCurves_last_date)
-
-    
-    
-
-#%%        
-        
 
 
-def import_single_cdty(nom,ticker,exchange,months):
+def _import_single_cdty(nom,ticker,exchange,months):
     qroot="CHRIS/"
     qmkt=exchange+"_"
     qprod=ticker
     qmonths=months
-
-    start=time.perf_counter()
     ric=qroot+qmkt+qprod+"1"
-    print(f"QUANDL code : {ric[:-1]}")
+    # print(f"QUANDL code : {ric[:-1]}")
     df=quandl.get(ric,rows=1)
     df["TICKER"]=qprod+"1"
     df["MONTH"]=1
@@ -134,129 +119,112 @@ def import_single_cdty(nom,ticker,exchange,months):
     dfs=dfs.T 
     dfs.index=[nom]
     dfs['Timestamp']=lastdate
-    try:
-        dfs['Roll1-2']=dfs[2]/dfs[1]-1
-    except Exception as e:
-        dfs['Roll1-2']=np.NaN
-        print(f'[-] Error with {nom} : ',e)
-
-    try:
-        dfs['Roll2-3']=dfs[3]/dfs[2]-1
-    except Exception as e:
-        dfs['Roll2-3']=np.NaN
-        print(f'[-] Error with {nom} : ',e)
-
-    try:
-        dfs['Roll1-6']=(dfs[6]/dfs[1]-1)/6
-    except Exception as e:
-        dfs['Roll1-6']=np.NaN
-        print(f'[-] Error with {nom} : ',e)
-
-    time_to_run=time.perf_counter()-start
-    print(f"Time it took to run for {nom} : {time_to_run:.1f}s")
+    
+    for rollMats in [(1,2),(2,3),(1,6)]:
+        start=rollMats[0]
+        end=rollMats[1]
+        try:
+            dfs[f'Roll{start}-{end}']=dfs[end]/dfs[start]-1
+        except Exception as e:
+            dfs[f'Roll{start}-{end}']=float('nan')
+            print_color(f'[-] Error computing rolls for {nom}','FAIL')
+            print(e)
     
     return dfs
 
 
-def import_all():
-    first=True
-    DBCweights=pd.read_csv(dir_main+DBCcompo,index_col=0)
-    print("*** DBC latest weights ***")
-    print(DBCweights)
-    print("\n"*2)
-    for index, row in cmdties.iterrows():
+def import_commos_curves(verbose=True)->pd.DataFrame:
+    """
+    The function `import_commos_curves` imports commodity curves data from quandl for all futures in DBC and compute rolls.
+    :return: full term structures, and a few rolls.
+    """
+    dfDBCweights=SQLA_read_table("COMPO_DBC")
+    dfMaster = SQLA_read_table("COMMO_FUTURES_MASTER")
+    dfCommos = pd.merge(dfMaster,dfDBCweights[["Name","%NAV"]],left_on="Name",right_on="Name",how="left")
+    dfCommos.set_index("Name",inplace=True)
+    if verbose: 
+        print_color("DBC weights and futures to scrap:","COMMENT")
+        print(dfCommos)
+    
+    tab=[]
+    for index, row in dfCommos.iterrows():
         nom=index
         ticker=row['Future']
         exch=row['Quandl_EXC']
         months=row['NB contracts']
+        weight=row['%NAV']
         print("\n Importing "+nom)
-        dft=import_single_cdty(nom,ticker,exch,months)
-        try:
-            res=DBCweights.loc[nom,"%NAV"]
-        except:
-            res=0
-        dft["DBC Weight"]=res
-        if first:
-            df=dft
-            first=False
-        else:
-            df=pd.concat([df,dft])
+        dft=_import_single_cdty(nom,ticker,exch,months)
+        dft["DBC Weight"]=weight
+        tab.append(dft)
+    
+    df=pd.concat(tab)
     """move the columns """
     cols=['Roll1-2','Roll2-3','Roll1-6']+list(range(1,25))+['Timestamp']+["DBC Weight"]
     df=df[cols]
     for c in df.columns[:3]:
         df[c]=df[c].apply(lambda x:round(100*x,1))
-    print(df)
-    df.to_csv(dir_main+"DBC_results.csv")
-    clm_config.write_setting('commos_last')
+    df['Date']=last_bd
     return df
 
 
-def clm_html_table(df,red=False,show=False,nb_cols_title=1):
-    vals=df.reset_index()
-    if red:
-        font_color=[['red' if type(v) != str and v<=0 else 'black' for v in vals[col].tolist()] for col in vals.columns[1:]]
-        font_color[0]=['blue' for v in range(len(font_color[0]))]
-    else:
-        font_color='black'
-    colw=20
-    nbc=(len(vals.columns[1:])-nb_cols_title)
-    colwidth=[4*colw]*nb_cols_title+[colw]*nbc
-    fig = go.Figure(data=[go.Table(
-                                    header=dict(values=list(vals.columns[1:]),
-                                                fill_color='royalblue',
-                                                font=dict(color='white', size=12),
-                                                height=40,
-                                                align=['left']*nb_cols_title+['right']*nbc),
-                                    cells=dict(values=vals.T.values.tolist()[1:],
-                                                fill_color='lightgrey',
-                                                font = dict(color=font_color),
-                                                align=['left']*nb_cols_title+['right']*nbc),
-                                    columnwidth=colwidth )
-                     ])
-    if show:
-        fig.show(renderer='browser')
-    return fig
+@timer
+def saveCommoCurves_toDB(verbose=True):
+    df = import_commos_curves(verbose=verbose)
+    if verbose:
+        print_color(f'*** Commos future curves ***',color='RESULT')
+        print(df)
+    databases_update(df,"COMMO_FUTURES_CURVES",idx=False,mode='replace',verbose=verbose, save_insqlite=True)
+    return df
+
+
+def save_all_commos_toDB(verbose=True):
+    saveCompo_toDB(verbose=verbose)
+    saveCommoCurves_toDB(verbose=verbose)
+
+def import_commosCurves(verbose=True)->str:
+    """
+    The function `import_commosCurves` downloads DBC composition data and commodity futures curves data from the web,
+    saves the data into a database, 
+    and returns a message indicating the success or failure of the download.
+    
+    :return: a message string.
+    """
+    msg=None
+    try:
+        res = saveCompo_toDB(verbose=verbose)
+        msg = f'DBC composition well downloaded !!! \n{len(res)} rows, {len(res.columns)} cols'
+    except Exception as e:
+        msg='Error while downloading DBC compo'
+        print_color(msg,'FAIL')
+        print(e)
+    
+    try:
+        res = saveCommoCurves_toDB(verbose=verbose)
+        msg += f'Commos curves well downloaded !!! \n{len(res)} rows, {len(res.columns)} cols'
+    except Exception as e:
+        msg+='Error while commos future curves'
+        print_color('Error while commos future curves','FAIL')
+        raise e
+    
+    return msg
+
+def commosCurves_last_date():
+    return SQLA_last_date("COMPO_DBC")
 
 
 
 
-def present_results(df,load_from_file=False):
-    if load_from_file:
-        df=pd.read_csv(dir_main+"DBC_results.csv",index_col=0)
-    dft=df.reset_index()
-    cols=dft.columns.to_list()
-    newcols=cols[:5]+["Category"]+[cols[-1]]
-    dft["Category"]=dft[dft.columns[0]].apply(lambda s:cmdties.loc[s,"Category"])
-    dft=dft[newcols]
-    dft.columns=["Commodity"]+newcols[1:4]+['First fut']+newcols[-2:]
-    dft['First fut']=dft['First fut'].apply(lambda s:f"{s:,.1f}".rstrip('0').rstrip('.'))  
-    ts=df['Timestamp'].min()
-    #print(f"\n Data for : {ts} \n")
-    dfNonMissing=dft[~dft.iloc[:,1].isna()]
-    dfNonMissing['DBC Weights rec']=dfNonMissing['DBC Weight']/dfNonMissing['DBC Weight'].sum()*100
-    missingNb=dft.iloc[:,1].isna().sum()
-    missingCommos=dft[dft.iloc[:,1].isna()].iloc[:,0].to_list()
-    missingWeights=dft[dft.iloc[:,1].isna()].iloc[:,-1].sum().round(1)
-    message=f'{missingNb} commodities witout roll data : {missingCommos} accounting for {missingWeights}% of DBC composition'
-    dfc=dft[dft.columns[1:4]].fillna(0)
-    s=dft[dft.columns[-1]].T
-    res=s.dot(dfc)/100
-    dft=dft[["Commodity","Category"]+dft.columns[1:-2].to_list()+[dft.columns[-1]]]
-    fig=clm_html_table(dft,True,False,2)
-    df_group=dft.groupby(by='Category').sum()["DBC Weight"]
-    return fig, ts, res, df_group, message
+ScrapCommosCurves = Scrap("COMMOS CURVES", save_all_commos_toDB, commosCurves_last_date)
 
-def commos_for_dashboard(refresh_carry=False,update_DBC=False):
-    if update_DBC: scrap_compo_selenium()
-    if refresh_carry : import_all()
-    fig, ts, res, df_group, message = present_results(None, True)
-    return fig, ts, res, df_group, message
+
+
 
 
 if __name__ == "__main__":
-    import_commosCurves()
+    # import_commosCurves()
     # scrap_compo_selenium()
     #import_all()
     #present_results(None,True)
     # commos_for_dashboard(refresh_carry=False,update_DBC=False)
+    import_commosCurves()

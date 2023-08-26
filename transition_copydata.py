@@ -8,7 +8,8 @@ from sqlalchemy import create_engine, URL
 from database_sqlite import DB_FOLDER, read_table
 from credentials import USERNAME, DB_PWD, PA_PWD
 from database_connect import PADB_connection
-
+from common import DIR_FILES
+from database_mysql import databases_update
 
 # HOST = '127.0.0.1'
 # sshtunnel.SSH_TIMEOUT = 5.0
@@ -107,10 +108,16 @@ def transfer_table(tablename:str):
     res = _get_current_local_data(tablename)
     print('Data retrieved\n',res)
     _save_to_PA(tablename,res)
+
+def csv_to_table():
+    df=pd.read_csv(DIR_FILES + 'COMMO_master.csv')
+    print(df)
+    databases_update(df,"COMMO_FUTURES_MASTER",idx=False,mode='replace',verbose=True, save_insqlite=True)
+
     
     
 if __name__ == '__main__':
     # transfer_table('ETF_RATIOS')
-    pass
+    csv_to_table()
     
     

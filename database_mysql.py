@@ -53,6 +53,17 @@ def SQLA_last_date(tablename):
             raise Exception(errorMsg) from e
     
     
+def SQLA_read_table(tablename):
+    with PADB_connection() as engine:
+        try:
+            sql = f""" select * from {tablename} """
+            tmp = pd.read_sql_query(sql , engine)
+            return tmp
+        except Exception as e:
+            errorMsg = f"Error getting info from {tablename}"
+            print_color(errorMsg, "FAIL")
+            raise Exception(errorMsg) from e
+    
 
 
 
