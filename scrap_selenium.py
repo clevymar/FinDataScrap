@@ -35,7 +35,6 @@ errs=[]
 
 
 
-
 def sub_getETF_Selenium(driver,ETF_name,exchange='arcx',verbose=True):
     if exchange[:5]=='funds':
         url=f"https://www.morningstar.com/{exchange}/{ETF_name}/portfolio"
@@ -123,9 +122,23 @@ def start_driver():
         driver.quit()       
         raise Exception("Could not create the driver") from e
          
+@timer
+def selenium_scrap_simple(link:str):
+    html_source=None
+    driver = start_driver()
+    try:
+        driver.get(link)
+        html_source = driver.page_source
+    except Exception as e:
+        raise Exception("Could not scrap the link at {link}") from e
+    finally:
+        print_color('Quitting Selenium driver','COMMENT')
+        driver.quit()
+    return html_source
+
 
 @timer
-def selenium_scrap(secList:list,verbose=True):
+def selenium_scrap_ratios(secList:list,verbose=True):
     # using info from https://help.pythonanywhere.com/pages/selenium
     res=[]
     errs=[]

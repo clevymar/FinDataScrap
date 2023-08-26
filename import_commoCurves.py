@@ -9,12 +9,17 @@ from bs4 import BeautifulSoup
 
 from scrap_selenium import selenium_scrap_simple
 from credentials import QUANDL_KEY
+from utils import print_color,timer
+from classes import Scrap
+from database_mysql import SQLA_last_date, databases_update
+from common import last_bd
 
-# import quandl
-# quandl.ApiConfig.api_key = QUANDL_KEY
+import quandl
+quandl.ApiConfig.api_key = QUANDL_KEY
+
+pd.options.mode.chained_assignment = None
 
 URL_COMPO = "https://www.invesco.com/us/financial-products/etfs/holdings?audienceType=Advisor&ticker=DBC"
-
 
 DICT_NAMES = {
     'Brent Crude Oil':'Brent Crude',
@@ -27,9 +32,6 @@ DICT_NAMES = {
     'Soybean':'Soybeans',
  }
 
-
-        
-#%%        
 
 def download_from_file():
     csv_url = "https://www.invesco.com/us/financial-products/etfs/holdings/main/holdings/0?audienceType=Advisor&action=download&ticker=DBC"
@@ -52,14 +54,8 @@ def download_from_file():
         df=df[df['Sector']!='Collateral']    
         df=df.iloc[:,1:]
     return df
-# Fund Ticker	Security Identifier	Identifier	Shares	Weight	Name	Contract Expiry Date	Sector	$ Value	Date
-# Name,Security,Expiry,ID,NOSH,Value,%NAV,Exchange
 
 
-
-df = download_from_file()
-
-#%%
 def clean_downloaded_data(df):
     df2 = df[['Name','Contract Expiry Date','Shares','$ Value','Weight']]
     df2.columns = ['Security','Expiry','NOSH','Value','%NAV']
@@ -69,48 +65,46 @@ def clean_downloaded_data(df):
     df3=df2.groupby(['Name','Security','Exch']).agg({
                                                         'Expiry':'first',
                                                         'NOSH':sum,'Value':sum,'%NAV':sum
-    })
+                                                    })
 
     df3=df3.reset_index()
     df3['Exchange']=df3['Exch']
     df3.drop('Exch',axis=1,inplace=True)
     df3['Name']=df3['Name'].apply(lambda s:DICT_NAMES.get(s,s))
+    df3['Date']=last_bd
+    df3.set_index("Name",inplace=True)
+
     return df3
 
-df3 = clean_downloaded_data(df)
-df3
+@timer
+def saveCompo_toDB(verbose=True):
+    df = download_from_file()
+    dfCompo = clean_downloaded_data(df)
+    if verbose:
+        print_color(f'*** DBC latest weights ***',color='RESULT')
+        print(dfCompo)
+    databases_update(dfCompo.reset_index(),"COMPO_DBC",idx=False,mode='replace',verbose=verbose, save_insqlite=True)
+    return dfCompo
+
+def import_commosCurves(verbose=True):
+    msg=None
+    try:
+        res = saveCompo_toDB(verbose=verbose)
+        msg = f'DBC composition well downloaded !!! \n{len(res)} rows, {len(res.columns)} cols'
+    except Exception as e:
+        raise Exception('Error while downloading DBC compo') from e
+    return msg
+
+def commosCurves_last_date():
+    return SQLA_last_date("COMPO_DBC")
+
+ScrapCommosCurves = Scrap("COMMOS CURVES", saveCompo_toDB, commosCurves_last_date)
+
+    
+    
 
 #%%        
         
-def scrap_compo_selenium():
-    
-    html_source = selenium_scrap_simple(URL_COMPO)
-    source_data = html_source.encode('utf-8')
-    soup = BeautifulSoup(source_data, "lxml")
-
-    tbs=soup.findAll("tr", {"class": "ng-scope"})
-    res=[]
-    for tb in tbs:
-        tds=tb.findAll("td")
-        tab=[]
-        for i in range(1,len(tds)):
-            tab.append(tds[i].text)
-        if tab[0]!="" and tab[4]!='0':
-            res.append(tab)
-
-    df=pd.DataFrame(res)
-    print(df)
-    df.columns=["Name","Security","Expiry","ID","NOSH","Value","%NAV"]
-    df["Value"]=df["Value"].str.replace(',','').astype('float').round(0)
-    try:
-        df["%NAV"]=df["%NAV"].astype('float')
-    except:
-        """  %NAV empty, hence compute it manually """
-        tot=df["Value"].sum()
-        df["%NAV"]=(df["Value"]/tot).round(4)
-    df["Exchange"]=df["Security"].apply(lambda s:s.split(' ', 1)[0])
-    df.set_index("Name",inplace=True)
-    print(df)
 
 
 def import_single_cdty(nom,ticker,exchange,months):
@@ -261,7 +255,7 @@ def commos_for_dashboard(refresh_carry=False,update_DBC=False):
 
 
 if __name__ == "__main__":
-    download_from_file()
+    import_commosCurves()
     # scrap_compo_selenium()
     #import_all()
     #present_results(None,True)

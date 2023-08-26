@@ -6,7 +6,7 @@ import datetime
 
 from common import fichierTSUnderlyings, need_reimport, isLocal, last_bd
 from utils import timer, print_color
-from scrap_selenium import selenium_scrap
+from scrap_selenium import selenium_scrap_ratios
 from database_mysql import SQLA_last_date, databases_update, PADB_connection
 from classes import Scrap
 
@@ -79,7 +79,7 @@ def update_secs():
             unds = dfOld['index'].tolist()
             print('\t',unds)
         
-        ratios,errs = selenium_scrap(unds,verbose=isLocal())
+        ratios,errs = selenium_scrap_ratios(unds,verbose=isLocal())
         res=_compute_extra_ratios(ratios)
         if len(res)>0:
             res=res.reset_index().rename(columns={"ETF":'index'})
