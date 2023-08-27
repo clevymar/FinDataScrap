@@ -1,9 +1,16 @@
-
 import pandas as pd
 from common import last_bd
-from utils import timer
-from database_mysql import SQLA_last_date, databases_update 
-from classes import Scrap
+import os
+import sys
+currentdir = os.path.dirname(os.path.abspath(__file__))
+parentdir = os.path.dirname(currentdir)
+if parentdir not in sys.path:
+    sys.path.insert(0, parentdir)
+
+
+from utils.utils import timer
+from databases.database_mysql import SQLA_last_date, databases_update 
+from databases.classes import Scrap
 
 URL_ROOT = "http://www.worldgovernmentbonds.com/country/"
 COUNTRIES=['united-states','germany','france','switzerland','united-kingdom',]

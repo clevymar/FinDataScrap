@@ -2,7 +2,7 @@ import datetime
 import pandas as pd
 import os
 
-from utils import isLocal
+from utils.utils import isLocal
 
 tod = datetime.date.today().strftime("%Y-%m-%d")
 start = datetime.datetime(2007, 1, 1)

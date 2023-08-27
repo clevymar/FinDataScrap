@@ -1,9 +1,10 @@
 import pandas as pd
-import pymysql.cursors
+import sys
+sys.path.insert(0, '..')
 
 from database_connect import PADB_connection
 from database_sqlite import DB_update
-from utils import print_color
+from utils.utils import print_color
 
 
 # def check_tables(conn,cur,table):

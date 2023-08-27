@@ -1,9 +1,11 @@
 import pymysql.cursors
 from sqlalchemy import create_engine, URL
 from contextlib import contextmanager
+import sys
+sys.path.insert(0, '..')
 
 from credentials import USERNAME, DB_PWD, PA_PWD
-from utils import isLocal, print_color
+from utils.utils import isLocal, print_color
 if isLocal(): import sshtunnel
 
 def print_dbmessage(msg):
@@ -89,3 +91,4 @@ def PADB_connection():
         raise Exception(f'Error whilst creating connections') from e
     finally:
         if run_local: server.close()
+

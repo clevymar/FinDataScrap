@@ -1,10 +1,18 @@
 import pandas as pd
 import requests
 
+import os
+import sys
+currentdir = os.path.dirname(os.path.abspath(__file__))
+parentdir = os.path.dirname(currentdir)
+if parentdir not in sys.path:
+    sys.path.insert(0, parentdir)
+
+
 from common import last_bd
-from utils import timer
-from database_mysql import SQLA_last_date, databases_update 
-from classes import Scrap
+from utils.utils import timer
+from databases.database_mysql import SQLA_last_date, databases_update 
+from databases.classes import Scrap
 
 IRS_ccies={ "EUR":"Europe_Europe_EUR",
             "USD":"World_US_USD",

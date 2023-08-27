@@ -1,5 +1,7 @@
 from dataclasses import dataclass
 from typing import Callable
+import sys
+sys.path.insert(0, '..')
 
 from common import last_bd
 @dataclass()

@@ -5,10 +5,17 @@ import json
 import yfinance as yf
 from tqdm import tqdm
 
+import os
+import sys
+currentdir = os.path.dirname(os.path.abspath(__file__))
+parentdir = os.path.dirname(currentdir)
+if parentdir not in sys.path:
+    sys.path.insert(0, parentdir)
+
 from common import start, end, DIR_FILES, fichierTSUnderlyings
-from utils import timer, isLocal
-from database_mysql import SQLA_last_date, databases_update
-from classes import Scrap
+from utils.utils import timer, isLocal
+from databases.database_mysql import SQLA_last_date, databases_update
+from databases.classes import Scrap
 
 dictInput = json.load(open(fichierTSUnderlyings, "r"))
 

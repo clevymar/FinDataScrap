@@ -1,3 +1,8 @@
+"""
+seems headless version, which sia  MUST for PA, does not work for CME
+
+"""
+
 import time
 import pandas as pd
 import traceback
@@ -14,7 +19,7 @@ from selenium.common.exceptions import TimeoutException
 
 from utils import timer, print_color
 from database_mysql import SQLA_last_date, databases_update
-from classes import Scrap
+from databases.classes import Scrap
 from common import last_bd, tod
 from scrap_selenium import start_driver
 
@@ -97,7 +102,7 @@ def _get_webData(driver,coreURL: str):
             time.sleep(2)
             break
         except TimeoutException :
-            print_color(f"[-] Timeout getting button - might just not exist ! Scrolling down again instead",'FAIL')
+            print_color(f"[-] Timeout getting LOAD ALL button - might just not exist ! Scrolling down again instead",'FAIL')
             driver.execute_script("window.scrollTo(0, 1000);")
             time.sleep(1)
         except Exception as e:

@@ -1,9 +1,17 @@
 import urllib.request
 import pandas as pd
 
-from utils import timer, isLocal
-from database_mysql import SQLA_last_date, databases_update
-from classes import Scrap
+import os
+import sys
+currentdir = os.path.dirname(os.path.abspath(__file__))
+parentdir = os.path.dirname(currentdir)
+if parentdir not in sys.path:
+    sys.path.insert(0, parentdir)
+
+
+from utils.utils import timer, isLocal
+from databases.database_mysql import SQLA_last_date, databases_update
+from databases.classes import Scrap
 from common import last_bd
 
 unds = [

@@ -3,8 +3,10 @@ import sqlite3
 from sqlite3 import Error
 import pandas as pd
 import numpy as np
+import sys
+sys.path.insert(0, '..')
 
-from utils import isLocal
+from utils.utils import isLocal
 
 
 if isLocal():

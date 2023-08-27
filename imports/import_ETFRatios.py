@@ -1,14 +1,20 @@
 import json
 import pandas as pd
-from random import choices
 import numpy as np
 import datetime
 
+import os
+import sys
+currentdir = os.path.dirname(os.path.abspath(__file__))
+parentdir = os.path.dirname(currentdir)
+if parentdir not in sys.path:
+    sys.path.insert(0, parentdir)
+
 from common import fichierTSUnderlyings, need_reimport, isLocal, last_bd
-from utils import timer, print_color
+from utils.utils import timer, print_color
 from scrap_selenium import selenium_scrap_ratios
-from database_mysql import SQLA_last_date, databases_update, PADB_connection
-from classes import Scrap
+from databases.database_mysql import SQLA_last_date, databases_update, PADB_connection
+from databases.classes import Scrap
 
 COLS_MORNINGSTAR=["ETF","P/E1","P/B","P/S","P/CF","DY","EG","HG","SG","CFG","BG","Composite","Last_updated","UpdateMode","URL","Name"]
 COLS_RATIOS=["EY","B/P","S/P","DY","Compo_Zscore"]

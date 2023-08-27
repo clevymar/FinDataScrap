@@ -2,15 +2,25 @@ import datetime
 import pandas as pd
 import logging
 
-from import_govies import ScrapGovies
-from import_swaps import ScrapIRS
-from import_yahoo import ScrapYahoo
-from import_ETFRatios import ScrapRatios
-from import_technicals import ScrapTechnicals
-from import_commoCurves import ScrapCommosCurves
-from import_FXimpliedrates import ScrapFXImpliedRates
+import os
+import sys
+parentdir = os.path.dirname(os.path.abspath(__file__))
+if parentdir not in sys.path:
+    sys.path.insert(0, parentdir)
+
+from imports.import_govies import ScrapGovies
+from imports.import_swaps import ScrapIRS
+from imports.import_yahoo import ScrapYahoo
+from imports.import_ETFRatios import ScrapRatios
+from imports.import_technicals import ScrapTechnicals
+from imports.import_commoCurves import ScrapCommosCurves
+from imports.import_FXimpliedrates import ScrapFXImpliedRates
 from common import last_bd, need_reimport
-from utils import print_color, Color
+from utils.utils import print_color, Color
+
+
+
+
 
 # log = logging.getLogger('logger')
 # log.setLevel(logging.DEBUG)

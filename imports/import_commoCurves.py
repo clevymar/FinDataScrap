@@ -3,13 +3,18 @@ import pandas as pd
 from io import StringIO
 import requests
 
-from bs4 import BeautifulSoup
+import os
+import sys
+currentdir = os.path.dirname(os.path.abspath(__file__))
+parentdir = os.path.dirname(currentdir)
+if parentdir not in sys.path:
+    sys.path.insert(0, parentdir)
 
-from scrap_selenium import selenium_scrap_simple
+
 from credentials import QUANDL_KEY
-from utils import print_color,timer
-from classes import Scrap
-from database_mysql import SQLA_last_date, databases_update,SQLA_read_table
+from utils.utils import print_color,timer
+from databases.classes import Scrap
+from databases.database_mysql import SQLA_last_date, databases_update,SQLA_read_table
 from common import last_bd
 
 import quandl
@@ -222,9 +227,4 @@ ScrapCommosCurves = Scrap("COMMOS CURVES", save_all_commos_toDB, commosCurves_la
 
 
 if __name__ == "__main__":
-    # import_commosCurves()
-    # scrap_compo_selenium()
-    #import_all()
-    #present_results(None,True)
-    # commos_for_dashboard(refresh_carry=False,update_DBC=False)
     import_commosCurves()
