@@ -52,7 +52,6 @@ def _compute_extra_ratios(ratios:pd.DataFrame):
         
 def update_secs():
     with PADB_connection() as conn:
-    # with create_connection() as conn:  #TODO replace by PADB above
         dfExisting = pd.read_sql_query("SELECT * FROM ETF_RATIOS", conn)
         dfExisting['need_reimport'] = dfExisting['Last_updated'].apply(need_reimport)
         undsUptodate = dfExisting[dfExisting['need_reimport'] == False]['index'].tolist()
