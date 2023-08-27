@@ -3,6 +3,7 @@ import pandas as pd
 
 from utils import isLocal, print_color
 from database_connect import PADB_connection
+from database_mysql import SQLA_read_table, SQLA_last_date
 
 def DB_last_date(engine,tablename,include_data=False):
     sql = f""" select max(Date) from {tablename} """
@@ -24,7 +25,7 @@ def explore(sqlalchemycon):
     
     for table in ['GOVIES_TS','TECHNICALS']:
         lastDate = SQLA_last_date(sqlalchemycon,table)
-        print(f"Last date in {table} is {lastDate}")
+        print(f"\n\nLast date in {table} is {lastDate}")
             
         df=pd.read_sql_query(f"SELECT * FROM {table}" , sqlalchemycon)
         df=df[df['Date']==lastDate]
@@ -57,5 +58,9 @@ if __name__ == "__main__":
         # temp = SQLA_last_date(sqlalchemycon,'GOVIES_TS')
         # print(temp)
         explore(sqlalchemycon)
+        # print(SQLA_read_table('GOVIES_TS'))
+    latest = SQLA_read_table('ETF_RATIOS', retrieve_only_info_for_last_date=True)
+    print(f"ETF RATIOS shape: {latest.shape}")
+    
     
     

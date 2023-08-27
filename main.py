@@ -8,6 +8,7 @@ from import_yahoo import ScrapYahoo
 from import_ETFRatios import ScrapRatios
 from import_technicals import ScrapTechnicals
 from import_commoCurves import ScrapCommosCurves
+from import_FXimpliedrates import ScrapFXImpliedRates
 from common import last_bd, need_reimport
 from utils import print_color, Color
 
@@ -27,7 +28,7 @@ from utils import print_color, Color
 # log.addHandler(ch)
 
 
-lstScrap = [ScrapGovies, ScrapIRS, ScrapYahoo, ScrapTechnicals, ScrapCommosCurves, ScrapRatios] # ScrapRatios   
+lstScrap = [ScrapGovies, ScrapIRS, ScrapYahoo, ScrapTechnicals, ScrapCommosCurves, ScrapFXImpliedRates, ScrapRatios] # ScrapRatios   
 
 
 
