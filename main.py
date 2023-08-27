@@ -27,7 +27,7 @@ from utils import print_color, Color
 # log.addHandler(ch)
 
 
-lstScrap = [ScrapGovies, ScrapIRS, ScrapYahoo, ScrapTechnicals,ScrapCommosCurves] # ScrapRatios   
+lstScrap = [ScrapGovies, ScrapIRS, ScrapYahoo, ScrapTechnicals, ScrapCommosCurves, ScrapRatios] # ScrapRatios   
 
 
 
