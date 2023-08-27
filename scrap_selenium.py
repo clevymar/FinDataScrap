@@ -34,8 +34,44 @@ initDict={x:"" for x in COLS_MORNINGSTAR}
 errs=[]
 
 
+def start_driver():
+    """
+    The function `start_driver` creates a headless Chrome driver with specific options     """
+    try:
+        chrome_options = webdriver.ChromeOptions()
+        chrome_options.add_argument("--no-sandbox")
+        chrome_options.add_argument("--headless")
+        chrome_options.add_argument("--disable-gpu")
+        chrome_options.add_argument("--log-level=3")
+        driver = webdriver.Chrome(options=chrome_options)
+        return driver
+    except Exception as e:
+        driver.quit()       
+        raise Exception("Could not create the driver") from e
+         
+@timer
+def selenium_scrap_simple(link:str):
+    """
+    The function `selenium_scrap_simple` uses Selenium to scrape the HTML source code of a given link.
+    :param link: The `link` parameter is a string that represents the URL of the webpage you want to
+    scrape using Selenium
+    """
+    html_source=None
+    driver = start_driver()
+    try:
+        driver.get(link)
+        html_source = driver.page_source
+    except Exception as e:
+        raise Exception("Could not scrap the link at {link}") from e
+    finally:
+        print_color('Quitting Selenium driver','COMMENT')
+        driver.quit()
+    return html_source
 
-def sub_getETF_Selenium(driver,ETF_name,exchange='arcx',verbose=True):
+
+
+
+def _sub_getETF_Selenium(driver,ETF_name,exchange='arcx',verbose=True):
     if exchange[:5]=='funds':
         url=f"https://www.morningstar.com/{exchange}/{ETF_name}/portfolio"
     else:  
@@ -109,36 +145,19 @@ def sub_getETF_Selenium(driver,ETF_name,exchange='arcx',verbose=True):
     return row_dict
 
 
-def start_driver():
-    try:
-        chrome_options = webdriver.ChromeOptions()
-        chrome_options.add_argument("--no-sandbox")
-        chrome_options.add_argument("--headless")
-        chrome_options.add_argument("--disable-gpu")
-        chrome_options.add_argument("--log-level=3")
-        driver = webdriver.Chrome(options=chrome_options)
-        return driver
-    except Exception as e:
-        driver.quit()       
-        raise Exception("Could not create the driver") from e
-         
-@timer
-def selenium_scrap_simple(link:str):
-    html_source=None
-    driver = start_driver()
-    try:
-        driver.get(link)
-        html_source = driver.page_source
-    except Exception as e:
-        raise Exception("Could not scrap the link at {link}") from e
-    finally:
-        print_color('Quitting Selenium driver','COMMENT')
-        driver.quit()
-    return html_source
-
-
 @timer
 def selenium_scrap_ratios(secList:list,verbose=True):
+    """
+    The function `selenium_scrap_ratios` uses Selenium to scrape ratios for a list of securities, and
+    returns a DataFrame of the scraped data along with any errors encountered during scraping.
+    
+    :param secList: The `secList` parameter is a list of securities for which you want to scrape ratios
+    using Selenium. Each security in the list should be a string representing the security symbol or
+    identifier
+    :return: The function `selenium_scrap_ratios` returns two values: `df` and `errs`. `df` is a pandas
+    DataFrame containing the scrapped data for the underlyings ratios. `errs` is a list of underlyings
+    for which there were errors in scrapping with Selenium.
+    """
     # using info from https://help.pythonanywhere.com/pages/selenium
     res=[]
     errs=[]
@@ -146,7 +165,7 @@ def selenium_scrap_ratios(secList:list,verbose=True):
     try:
         for sec in tqdm(secList):
             try:
-                tmp = sub_getETF_Selenium(driver,sec, exchange='arcx',verbose=verbose)
+                tmp = _sub_getETF_Selenium(driver,sec, exchange='arcx',verbose=verbose)
                 res.append(tmp.copy())
             except Exception as e:
                 print_color(f'[-]Error in scrapping with selenium for {sec}: \n',"FAIL")
