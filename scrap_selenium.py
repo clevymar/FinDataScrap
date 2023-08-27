@@ -161,6 +161,7 @@ def selenium_scrap_ratios(secList:list,verbose=True):
     # using info from https://help.pythonanywhere.com/pages/selenium
     res=[]
     errs=[]
+    df=None
     driver = start_driver()
     try:
         for sec in tqdm(secList):
@@ -188,7 +189,3 @@ def selenium_scrap_ratios(secList:list,verbose=True):
     return df,errs
 
 
-
-if __name__ == "__main__":
-    selenium_scrap()
-    print('Scrap ended')
