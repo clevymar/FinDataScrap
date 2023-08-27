@@ -57,8 +57,13 @@ def scrap_main(el):
                         msg = f'\t {len(item)} rows, {len(item.columns)} cols'
                         print(msg)
                 else:
-                    msg = f'[+] Downloaded: {len(res)} rows, {len(res.columns)} cols for \033[6;30;42m{el.name}'
-                    print_color(msg, 'RESULT')
+                    if isinstance(res,pd.DataFrame):
+                        msg = f'[+] Downloaded: {len(res)} rows, {len(res.columns)} cols for \033[6;30;42m{el.name}'
+                        print_color(msg, 'RESULT')
+                    elif res is None:
+                        msg = f'[-] No data downloaded for \033[6;30;42m{el.name}'
+                        print_color(msg, 'RESULT')
+                    
             except Exception as e:
                 raise Exception(f'Error while scrapping with {el.func_scrap} for {el.name}') from e
         else:

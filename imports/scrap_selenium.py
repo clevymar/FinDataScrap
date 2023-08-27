@@ -169,7 +169,7 @@ def selenium_scrap_ratios(secList:list,verbose=True):
     # using info from https://help.pythonanywhere.com/pages/selenium
     res=[]
     errs=[]
-    df=None
+    df=pd.DataFrame()
     driver = start_driver()
     try:
         for sec in tqdm(secList):

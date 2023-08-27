@@ -85,8 +85,9 @@ def update_secs():
             print('\t',unds)
         
         ratios,errs = selenium_scrap_ratios(unds,verbose=isLocal())
-        res=_compute_extra_ratios(ratios)
-        if len(res)>0:
+        
+        if len(ratios)>0:
+            res=_compute_extra_ratios(ratios)
             res=res.reset_index().rename(columns={"ETF":'index'})
             res["Date"]=res['Last_updated']
             updatedUnds = res['index'].tolist()
@@ -103,14 +104,16 @@ def update_secs():
             dfNew["Compo_Zscore"] = 0.2*(dfNew["EY_Zscore"]  +dfNew["B/P_Zscore"]  +dfNew["S/P_Zscore"]  +dfNew["CFY_Zscore"] +dfNew["DY_Zscore"])  
             dfNew=dfNew.dropna(subset=["Compo_Zscore"])
             dfNew=dfNew.sort_values(["Compo_Zscore"], ascending=False)
-            
-        return dfNew
+            return dfNew
+        else:
+            return None
 
 
 @timer
 def ETFratios_toDB(verbose=True):
     dfNew = update_secs()
-    databases_update(dfNew, "ETF_RATIOS",idx=False,mode='replace',verbose=verbose,save_insqlite=True)
+    if dfNew is not None:
+        databases_update(dfNew, "ETF_RATIOS",idx=False,mode='replace',verbose=verbose,save_insqlite=True)
     return dfNew
                                                                         
 def ETFRATIOS_last_date():
