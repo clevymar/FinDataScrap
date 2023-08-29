@@ -1,5 +1,6 @@
 import pandas as pd
 from bs4 import BeautifulSoup
+import traceback
 
 import os
 import sys
@@ -54,6 +55,7 @@ def _implied_rate_oneccy(driver,ccy:str,inverse:bool=False,mult=100,verbose=True
     html_source = driver.page_source
     source_data = html_source.encode('utf-8')
     soup = BeautifulSoup(source_data, "lxml")
+    print(soup)
 
     last=soup.find('span',attrs={'id':'last_last'})
     spot=float(last.text)
@@ -62,6 +64,7 @@ def _implied_rate_oneccy(driver,ccy:str,inverse:bool=False,mult=100,verbose=True
 
     table = soup.find('table',attrs={'id':'curr_table'})
     table=table.find('tbody')
+    print(table)
     res=[]
     for l in table.findAll('tr'):
         tab=[]
@@ -107,6 +110,7 @@ def implied_rates(verbose=True)-> pd.DataFrame:
             except Exception as e:
                 print_color(f"[-] Error computing implied rates for {ccy}",'FAIL')
                 print(e)
+                print(traceback.format_exc()
     except Exception as e:
         raise Exception("Could not scrap the implied rates for {ccy}") from e
     finally:
@@ -155,5 +159,5 @@ ScrapFXImpliedRates = Scrap("FX IMPLIED RATES", saveFXImpliedRates_toDB, FXImpli
 
 
 if __name__ == "__main__":
-    saveFXImpliedRates_toDB()
+    saveFXImpliedRates_toDB(True)
     
