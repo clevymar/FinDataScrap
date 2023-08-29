@@ -2,6 +2,11 @@ import pandas as pd
 from bs4 import BeautifulSoup
 import traceback
 
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.common.exceptions import TimeoutException
+
 import os
 import sys
 currentdir = os.path.dirname(os.path.abspath(__file__))
@@ -50,12 +55,16 @@ def _implied_rate_oneccy(driver,ccy:str,inverse:bool=False,mult=100,verbose=True
         link="https://www.investing.com/currencies/"+ ccy.lower() + "-usd-forward-rates"
     else:
         link="https://www.investing.com/currencies/usd-" + ccy.lower() + "-forward-rates"
+    if verbose: print(f"\n Computing implied rates for {ccy} at {link}")
 
     html_source = driver.get(link)
+    
+    spotElement = WebDriverWait(driver, 5).until(EC.visibility_of_element_located((By.ID, 'last_last')))
+    print('spotElement:', spotElement)
+    
     html_source = driver.page_source
     source_data = html_source.encode('utf-8')
     soup = BeautifulSoup(source_data, "lxml")
-    print(soup)
 
     last=soup.find('span',attrs={'id':'last_last'})
     spot=float(last.text)
@@ -64,7 +73,6 @@ def _implied_rate_oneccy(driver,ccy:str,inverse:bool=False,mult=100,verbose=True
 
     table = soup.find('table',attrs={'id':'curr_table'})
     table=table.find('tbody')
-    print(table)
     res=[]
     for l in table.findAll('tr'):
         tab=[]
@@ -102,7 +110,6 @@ def implied_rates(verbose=True)-> pd.DataFrame:
         tab=[]
         for row in CCIES:
             ccy=row['ccy']
-            if verbose: print(f"\n Computing implied rates for {ccy}")
             try:
                 dfccy=_implied_rate_oneccy(driver,ccy,row['inverse'],row['mult'],verbose=verbose)
                 dfccy["Currency"]=ccy
