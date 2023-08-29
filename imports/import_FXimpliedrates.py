@@ -60,7 +60,8 @@ def _implied_rate_oneccy(driver,ccy:str,inverse:bool=False,mult=100,verbose=True
     html_source = driver.get(link)
     
     spotElement = WebDriverWait(driver, 5).until(EC.visibility_of_element_located((By.ID, 'last_last')))
-    print('spotElement:', spotElement)
+    print('spotElement.text:', spotElement.text)
+    print('isdisplayed:', spotElement.is_displayed())
     
     html_source = driver.page_source
     source_data = html_source.encode('utf-8')
