@@ -1,5 +1,4 @@
 import pandas as pd
-from bs4 import BeautifulSoup
 import traceback
 
 from selenium.webdriver.support import expected_conditions as EC
@@ -60,25 +59,28 @@ def _implied_rate_oneccy(driver,ccy:str,inverse:bool=False,mult=100,verbose=True
     html_source = driver.get(link)
     
     spotElement = WebDriverWait(driver, 5).until(EC.visibility_of_element_located((By.ID, 'last_last')))
+    tableElement = WebDriverWait(driver, 5).until(EC.visibility_of_element_located((By.ID, 'curr_table')))
     
-    html_source = driver.page_source
-    source_data = html_source.encode('utf-8')
-    soup = BeautifulSoup(source_data, "lxml")
+    # html_source = driver.page_source
+    # source_data = html_source.encode('utf-8')
+    # soup = BeautifulSoup(source_data, "lxml")
 
     spot=float(spotElement.text)
     if verbose:
         print(f" \n Spot for {ccy} is = {spot}")
 
-    table = soup.find('table',attrs={'id':'curr_table'})
-    table=table.find('tbody')
-    res=[]
-    for l in table.findAll('tr'):
-        tab=[]
-        for td in l.findAll('td'):
-            tab.append(td.text)
-        res.append(tab)
+    df = pd.read_html(tableElement.get_attribute('outerHTML'))
 
-    df=pd.DataFrame(res,columns=["Icon","Name","Bid","Ask","High","Low","Chg","Time"])
+    # table = soup.find('table',attrs={'id':'curr_table'})
+    # table=table.find('tbody')
+    # res=[]
+    # for l in table.findAll('tr'):
+    #     tab=[]
+    #     for td in l.findAll('td'):
+    #         tab.append(td.text)
+    #     res.append(tab)
+
+    # df=pd.DataFrame(res,columns=["Icon","Name","Bid","Ask","High","Low","Chg","Time"])
     df=df[["Name","Bid","Ask","Time"]]
     dfres=df.copy()
     """drop the first lines """
