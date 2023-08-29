@@ -61,28 +61,13 @@ def _implied_rate_oneccy(driver,ccy:str,inverse:bool=False,mult=100,verbose=True
     spotElement = WebDriverWait(driver, 5).until(EC.visibility_of_element_located((By.ID, 'last_last')))
     tableElement = WebDriverWait(driver, 5).until(EC.visibility_of_element_located((By.ID, 'curr_table')))
     
-    # html_source = driver.page_source
-    # source_data = html_source.encode('utf-8')
-    # soup = BeautifulSoup(source_data, "lxml")
-
     spot=float(spotElement.text)
     if verbose:
         print(f" \n Spot for {ccy} is = {spot}")
 
-    df = pd.read_html(tableElement.get_attribute('outerHTML'))
-
-    # table = soup.find('table',attrs={'id':'curr_table'})
-    # table=table.find('tbody')
-    # res=[]
-    # for l in table.findAll('tr'):
-    #     tab=[]
-    #     for td in l.findAll('td'):
-    #         tab.append(td.text)
-    #     res.append(tab)
-
-    # df=pd.DataFrame(res,columns=["Icon","Name","Bid","Ask","High","Low","Chg","Time"])
-    df=df[["Name","Bid","Ask","Time"]]
-    dfres=df.copy()
+    tables = pd.read_html(tableElement.get_attribute('outerHTML'))
+    df=tables[0]
+    dfres=df.loc[:,["Name","Bid","Ask","Time"]]
     """drop the first lines """
     dfres["Name"]=dfres["Name"].apply(lambda s:s[7:10].strip())
     dfres=dfres[~dfres.Name.isin(['ON','TN','SN','SW'])]
