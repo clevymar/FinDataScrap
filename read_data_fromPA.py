@@ -1,9 +1,9 @@
 # from mysql.connector import connect, Error  # not sure why but does not work, pymysql does
 import pandas as pd
 
-from utils import isLocal, print_color
-from database_connect import PADB_connection
-from database_mysql import SQLA_read_table, SQLA_last_date
+from utils.utils import isLocal, print_color
+from databases.database_connect import PADB_connection
+from databases.database_mysql import SQLA_read_table, SQLA_last_date
 
 def DB_last_date(engine,tablename,include_data=False):
     sql = f""" select max(Date) from {tablename} """
@@ -53,14 +53,11 @@ def explore(sqlalchemycon):
 
     
 if __name__ == "__main__":
-    # PADB_run_task(explore,isLocal())
-    with PADB_connection() as sqlalchemycon:
-        # temp = SQLA_last_date(sqlalchemycon,'GOVIES_TS')
-        # print(temp)
-        explore(sqlalchemycon)
-        # print(SQLA_read_table('GOVIES_TS'))
-    latest = SQLA_read_table('ETF_RATIOS', retrieve_only_info_for_last_date=True)
+    # with PADB_connection() as sqlalchemycon:
+    #     explore(sqlalchemycon)
+    latest = SQLA_read_table('ETF_RATIOS', retrieve_only_info_for_last_date=False)
     print(f"ETF RATIOS shape: {latest.shape}")
+    print(sorted(latest.iloc[:,0].to_list()))
     
     
     

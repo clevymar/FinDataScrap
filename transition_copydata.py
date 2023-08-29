@@ -5,11 +5,11 @@ import pymysql.cursors
 from sqlalchemy import create_engine, URL
 
 
-from database_sqlite import DB_FOLDER, read_table
+from databases.database_sqlite import DB_FOLDER, read_table
 from credentials import USERNAME, DB_PWD, PA_PWD
-from database_connect import PADB_connection
+from databases.database_connect import PADB_connection
 from common import DIR_FILES
-from database_mysql import databases_update
+from databases.database_mysql import databases_update
 
 # HOST = '127.0.0.1'
 # sshtunnel.SSH_TIMEOUT = 5.0
@@ -114,10 +114,29 @@ def csv_to_table():
     print(df)
     databases_update(df,"COMMO_FUTURES_MASTER",idx=False,mode='replace',verbose=True, save_insqlite=True)
 
+
+def missing_ETFs_in_Ratios():
+    dfStatic = read_table("ETF_DB")
+    undsStatic=dfStatic['ETF'].tolist()
+    dfRatios = read_table("ETF_RATIOS")
+    undsRatios=dfRatios['index'].tolist()
+    staticEquities = dfStatic[dfStatic['Asset Class']=='Equity']['ETF'].tolist()
+    print('ETF in Static: ',len(undsStatic))
+    print('ETF in Ratios: ',len(undsRatios))
+    print('Equities ETF in Static: ',len(staticEquities))
+    
+    notRatios = [c for c in staticEquities if c not in undsRatios]
+    print('Not in ratios:')
+    print(notRatios)
+    for und in notRatios:
+        print('\t',und,dfStatic[dfStatic['ETF']==und]['Name'].values[0])
+    return notRatios
     
     
 if __name__ == '__main__':
     # transfer_table('ETF_RATIOS')
-    csv_to_table()
+    # csv_to_table()
+    missing_ETFs_in_Ratios()
     
     
+# JKL, ITKY, GULF, XTH
