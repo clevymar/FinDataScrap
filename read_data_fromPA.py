@@ -56,8 +56,9 @@ if __name__ == "__main__":
     # with PADB_connection() as sqlalchemycon:
     #     explore(sqlalchemycon)
     latest = SQLA_read_table('ETF_RATIOS', retrieve_only_info_for_last_date=False)
-    print(f"ETF RATIOS shape: {latest.shape}")
-    print(sorted(latest.iloc[:,0].to_list()))
-    
+    print(f"shape: {latest.shape}")
+    print(latest)
+    print(latest.info())
+    print(latest[latest['index']=='ITKY'])
     
     

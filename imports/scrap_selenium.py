@@ -21,6 +21,7 @@ if parentdir not in sys.path:
 
 from common import last_bd, fichierTSUnderlyings
 from utils.utils import timer, print_color
+from databases.database_mysql import SQLA_read_table
 
 COLS_MORNINGSTAR=["ETF","P/E1","P/B","P/S","P/CF","DY","EG","HG","SG","CFG","BG","Composite","Last_updated","UpdateMode","URL","Name"]
 COLS_RATIOS=["EY","B/P","S/P","DY","Compo_Zscore"]
@@ -84,7 +85,7 @@ def _sub_getETF_Selenium(driver,ETF_name,exchange='arcx',verbose=True):
         url=f"https://www.morningstar.com/{exchange}/{ETF_name}/portfolio"
     else:  
         foundURL=False
-        EXCHANGE_LIST=set(['arcx','xnys','xnas','bats']+[exchange])
+        EXCHANGE_LIST=[exchange]+[c for c in ['arcx','xnys','xnas','bats'] if c!=exchange]
         for exc in EXCHANGE_LIST:
             url=f"https://www.morningstar.com/etfs/{exc}/{ETF_name}/portfolio"
             r = requests.get(url)
@@ -93,7 +94,7 @@ def _sub_getETF_Selenium(driver,ETF_name,exchange='arcx',verbose=True):
                 break
         if not foundURL:
             raise SeleniumError('Correct Url could not be found for: '+ETF_name)
-    if verbose: print_color(f'\n[+]Scrapping for {ETF_name} at {url=}','COMMENT')
+    if verbose: print_color(f'\n[+]Scrapping for {ETF_name} on {exchange=} at {url=}','COMMENT')
     driver.get(url)
     wait = WebDriverWait(driver, 15)
     element = wait.until(EC.presence_of_element_located((By.CLASS_NAME, 'sal-sector-exposure__sector-table')))
@@ -170,11 +171,19 @@ def selenium_scrap_ratios(secList:list,verbose=True):
     res=[]
     errs=[]
     df=pd.DataFrame()
+    dfETFRef = SQLA_read_table('ETF_REF')
+
     driver = start_driver()
     try:
         for sec in tqdm(secList):
+            exc='arcx'
+            if sec in dfETFRef['ETF'].tolist():
+                if dfETFRef.loc[dfETFRef['ETF']==sec,'DoNotRatio'].iloc[0]:
+                    continue
+                elif (special:=dfETFRef.loc[dfETFRef['ETF']==sec,'specialRatio'].iloc[0]) != "0":
+                    exc=special.split('_')[0]
             try:
-                tmp = _sub_getETF_Selenium(driver,sec, exchange='arcx',verbose=verbose)
+                tmp = _sub_getETF_Selenium(driver,sec, exchange=exc,verbose=verbose)
                 res.append(tmp.copy())
             except Exception as e:
                 print_color(f'[-]Error in scrapping with selenium for {sec}: \n',"FAIL")

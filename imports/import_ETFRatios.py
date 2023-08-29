@@ -13,7 +13,7 @@ if parentdir not in sys.path:
 from common import fichierTSUnderlyings, need_reimport, isLocal, last_bd
 from utils.utils import timer, print_color
 from scrap_selenium import selenium_scrap_ratios
-from databases.database_mysql import SQLA_last_date, databases_update, PADB_connection
+from databases.database_mysql import SQLA_last_date, databases_update, PADB_connection,SQLA_read_table
 from databases.classes import Scrap
 
 COLS_MORNINGSTAR=["ETF","P/E1","P/B","P/S","P/CF","DY","EG","HG","SG","CFG","BG","Composite","Last_updated","UpdateMode","URL","Name"]
@@ -25,13 +25,15 @@ MAX_TOUPDATE = int(10 * 60 / 10) #* around 10 secs per udnerlying, want to limit
 # MAX_TOUPDATE = 2
 
 benchmark='ACWI'
-dictInput = json.load(open(fichierTSUnderlyings, "r"))
-secList = dictInput["EQTY_SPOTS"]
+# dictInput = json.load(open(fichierTSUnderlyings, "r"))
+# secList = dictInput["EQTY_SPOTS"]
     
-ratios=[]
+    
+# ratios=[]
 row_dict={x:"" for x in COLS_MORNINGSTAR}
 errs=[]
 pd.set_option('mode.chained_assignment', None)
+
 
 def _compute_extra_ratios(ratios:pd.DataFrame):
     if len(ratios)>0:
@@ -146,9 +148,9 @@ ScrapRatios = Scrap("ETF_RATIOS", ETFratios_toDB, ETFRATIOS_last_date,datetoComp
 
 
 if __name__ == "__main__":
-    add_missing_unds(newList=newList)
+    # add_missing_unds(newList=newList)
     
-    # print(ETFRATIOS_last_date())
-    # res = ETFratios_toDB()
-    # print("full DB:\n",res) 
-    # print("updated:\n",res[res['Date']==last_bd])
+    print(ETFRATIOS_last_date())
+    res = ETFratios_toDB()
+    print("full DB:\n",res) 
+    print("updated:\n",res[res['Date']==last_bd])

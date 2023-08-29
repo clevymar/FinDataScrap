@@ -79,7 +79,6 @@ def _implied_rate_oneccy(driver,ccy:str,inverse:bool=False,mult=100,verbose=True
     if inverse:
        dfres["Implied rate spread"]=dfres["Implied rate spread"]*-1     
     dfres.set_index("Name",inplace=True)
-    print(dfres)
     return dfres
 
 

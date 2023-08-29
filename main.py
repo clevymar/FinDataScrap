@@ -72,8 +72,15 @@ def scrap_main(el):
         raise Exception(f'Error while scrapping for {el.name}') from e
 
 
-for el in lstScrap:
-    scrap_main(el)
+def scrap_all():
+    for el in lstScrap:
+        try:
+            scrap_main(el)
+        except Exception as e:
+            print_color(f'Error while scrapping {el.name}','FAIL')
+            print(e)
 
+if __name__ == "__main__":
+    scrap_all()
 
 

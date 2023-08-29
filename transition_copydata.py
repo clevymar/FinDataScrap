@@ -134,9 +134,9 @@ def missing_ETFs_in_Ratios():
     
     
 if __name__ == '__main__':
-    # transfer_table('ETF_RATIOS')
+    transfer_table('ETF_DB')
     # csv_to_table()
-    missing_ETFs_in_Ratios()
+    # missing_ETFs_in_Ratios()
     
     
 # JKL, ITKY, GULF, XTH
