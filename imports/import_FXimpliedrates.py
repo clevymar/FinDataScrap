@@ -110,7 +110,7 @@ def implied_rates(verbose=True)-> pd.DataFrame:
             except Exception as e:
                 print_color(f"[-] Error computing implied rates for {ccy}",'FAIL')
                 print(e)
-                print(traceback.format_exc()
+                print(traceback.format_exc())
     except Exception as e:
         raise Exception("Could not scrap the implied rates for {ccy}") from e
     finally:
