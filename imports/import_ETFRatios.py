@@ -21,7 +21,7 @@ COLS_RATIOS=["EY","B/P","S/P","DY","Compo_Zscore"]
 SECTORS =["Basic Materials","Consumer Cyclical","Financial Services", "Real Estate","Communication Services",
               "Energy","Industrials","Technology", "Consumer Defensive", "Healthcare", "Utilities"  ]
 
-MAX_TOUPDATE = int(10 * 60 / 10) #* around 10 secs per udnerlying, want to limit to 10 mins
+MAX_TOUPDATE = int(10 * 60 / 6) #* around 6 secs per udnerlying, want to limit to 10 mins
 # MAX_TOUPDATE = 2
 
 benchmark='ACWI'
@@ -121,8 +121,8 @@ def _refresh_existing_unds():
         dfOld = dfExisting[dfExisting['index'].isin(undsToUpdate)].sort_values('Last_updated',ascending=True)
         if len(dfOld)>MAX_TOUPDATE:
             dfOld = dfOld.iloc[:MAX_TOUPDATE]
-        unds = dfOld['index'].tolist()
-        print('\t',unds)
+        unds = (list(set(dfOld['index'].tolist()))
+        print(f'\tscrapping {len(unds)} unds:', unds)
     return unds, dfExisting
 
         
