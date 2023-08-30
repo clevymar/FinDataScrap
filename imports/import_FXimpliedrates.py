@@ -119,7 +119,7 @@ def implied_rates(verbose=True)-> pd.DataFrame:
 
 
 @timer
-def saveFXImpliedRates_toDB(verbose=True):
+def saveFXImpliedRates_toDB(verbose=False):
     df = implied_rates(verbose=verbose)
     if verbose:
         print_color(f'*** FX Implied rates ***',color='RESULT')
