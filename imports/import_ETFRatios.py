@@ -121,7 +121,7 @@ def _refresh_existing_unds():
         dfOld = dfExisting[dfExisting['index'].isin(undsToUpdate)].sort_values('Last_updated',ascending=True)
         if len(dfOld)>MAX_TOUPDATE:
             dfOld = dfOld.iloc[:MAX_TOUPDATE]
-        unds = (list(set(dfOld['index'].tolist()))
+        unds = list(set(dfOld['index'].tolist()))
         print(f'\tscrapping {len(unds)} unds:', unds)
     return unds, dfExisting
 
