@@ -58,10 +58,9 @@ def one_last_and_Fibo(und):
     return df
 
 
-def one_all(und_row):
+def one_all(und_row,verbose=True):
     und = und_row[1]
-    print(f"Processing {und} - {und_row[0]} ")
-    # name=und_row[0]
+    if verbose: print(f"Processing {und} - {und_row[0]} ")
     df1 = one_last_and_Fibo(und)
     last = df1.loc["Last Price", 1]
     if str(last)[-1] == "s":
@@ -106,26 +105,26 @@ def one_all(und_row):
     return df
 
 
-def create_technicals():
+def create_technicals(verbose=True):
     tab=[]
     for und_row in unds:
-        dft = one_all(und_row)
+        dft = one_all(und_row,verbose=verbose)
         tab.append(dft)
     df=pd.concat(tab)
-    print(df.T)
+    if verbose: print(df.T)
     # df.to_csv(dir_main + "technicals.csv")
     return df
 
 @timer
 def technicals_toDB(verbose=False):
-    df=create_technicals()
+    df=create_technicals(verbose=verbose)
     df['Date']=last_bd
     if verbose:
         print(df)
     databases_update(df.reset_index(),"TECHNICALS",idx=False,mode='replace',verbose=verbose, save_insqlite=True)
     return df
     
-def import_technicals(verbose=True):
+def import_technicals(verbose=False):
     msg=None
     try:
         res = technicals_toDB(verbose=verbose)

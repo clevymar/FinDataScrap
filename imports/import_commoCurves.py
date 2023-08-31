@@ -183,7 +183,7 @@ def saveCommoCurves_toDB(verbose=True):
     return df
 
 
-def save_all_commos_toDB(verbose=True):
+def save_all_commos_toDB(verbose=False):
     saveCompo_toDB(verbose=verbose)
     saveCommoCurves_toDB(verbose=verbose)
 
