@@ -16,7 +16,7 @@ from imports.import_technicals import ScrapTechnicals
 from imports.import_commoCurves import ScrapCommosCurves
 from imports.import_FXimpliedrates import ScrapFXImpliedRates
 from common import last_bd, need_reimport
-from utils.utils import print_color, Color
+from utils.utils import print_color, Color, isLocal, timer
 
 
 
@@ -71,14 +71,20 @@ def scrap_main(el):
     except Exception as e:
         raise Exception(f'Error while scrapping for {el.name}') from e
 
-
+@timer
 def scrap_all():
+    if not isLocal():
+        print('\n\n\n','-'*30)
     for el in lstScrap:
         try:
             scrap_main(el)
         except Exception as e:
             print_color(f'Error while scrapping {el.name}','FAIL')
             print(e)
+
+    if not isLocal():
+        print('\n\n\n','*** IMPORT ENDED ***')
+
 
 if __name__ == "__main__":
     scrap_all()
