@@ -111,7 +111,7 @@ def _refresh_existing_unds():
     l = len(undsToUpdate)
     if l==0:
         print_color("No underlyings to update","RESULT")
-        return
+        return None, dfExisting
     elif l<=MAX_TOUPDATE:
         print_color(f"{l} underlyings to update","COMMENT")
         unds = undsToUpdate
@@ -128,8 +128,11 @@ def _refresh_existing_unds():
         
 def update_secs():
     undsToRefresh, dfExisting = _refresh_existing_unds()
-    ratios,errs = selenium_scrap_ratios(undsToRefresh,verbose=isLocal())
-    dfNew = _prep_ratios(ratios,dfExisting)    
+    if undsToRefresh:
+        ratios,errs = selenium_scrap_ratios(undsToRefresh,verbose=isLocal())
+        dfNew = _prep_ratios(ratios,dfExisting)   
+    else:
+        dfNew = None 
     return dfNew
 
 
@@ -150,7 +153,8 @@ ScrapRatios = Scrap("ETF_RATIOS", ETFratios_toDB, ETFRATIOS_last_date,datetoComp
 if __name__ == "__main__":
     # add_missing_unds(newList=newList)
     
-    print(ETFRATIOS_last_date())
+    print('Latest date in ETF_RATIOS: ',ETFRATIOS_last_date())
     res = ETFratios_toDB()
-    print("full DB:\n",res) 
-    print("updated:\n",res[res['Date']==last_bd])
+    if res:
+        print("full DB:\n",res) 
+        print("updated:\n",res[res['Date']==last_bd])
