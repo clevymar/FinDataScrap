@@ -173,8 +173,9 @@ def govies_report():
     return goviesLast,goviesDiff
 
 def technicals_report():
-    df = SQLA_read_table("TECHNICALS")
+    df = SQLA_read_table("TECHNICALS").set_index('Underlying')
     technical_last = df['Date'].max()
+    df.drop('Date',inplace=True,axis=1)
     df1 = df.copy()
     df2 = df.copy()
     for col in df.columns.to_list():
