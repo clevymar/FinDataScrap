@@ -18,6 +18,8 @@ else:
     fichierTSUnderlyings = "/home/CyrilFinanceData/FinDataScrap/TS_underlyings.json"
 
 
+
+
 def need_reimport(last_in_DB:str,datetoCompare:str=last_bd):
     try:
         if last_in_DB=='None' or last_in_DB is None:

@@ -1,10 +1,14 @@
-import os
-import sys
-parentdir = os.path.dirname(os.path.abspath(__file__))
-if parentdir not in sys.path:
-    sys.path.insert(0, parentdir)
+#%%
+import pandas as pd
+from pathlib import Path 
+import os, sys
+# print(os.getcwd())
 
-import databases.classes
+# os.chdir(r'c:\Users\clevy\OneDrive\Python Scripts\Finance\FinDashboard\ImportData\GCP')
 
-for el in sys.path:
-    print(el) 
+from databases.database_mysql import SQLA_read_table
+
+# %%
+
+dfTech = SQLA_read_table("TECHNICALS")
+print(dfTech)
