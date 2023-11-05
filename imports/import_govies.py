@@ -1,13 +1,16 @@
-import pandas as pd
-from common import last_bd
 import os
 import sys
+
+import pandas as pd
+import requests
+from bs4 import BeautifulSoup
+
 currentdir = os.path.dirname(os.path.abspath(__file__))
 parentdir = os.path.dirname(currentdir)
 if parentdir not in sys.path:
     sys.path.insert(0, parentdir)
 
-
+from common import last_bd
 from utils.utils import timer
 from databases.database_mysql import SQLA_last_date, databases_update 
 from databases.classes import Scrap
@@ -29,13 +32,27 @@ def maturity_string_to_nyears(s:str)->float:
     return res   
 
 
-def get_curve(country): 
-    DFs=pd.read_html(URL_ROOT+country+'/')
-    df=DFs[0]
-    df=df.iloc[:,[1,2]]
-    df.columns=['Maturity','Yield']
-    df.loc[:,'Yield']=df.loc[:,'Yield'].apply(lambda x: float(x.replace('%','')))
-    return df
+def get_curve(country:str)->pd.DataFrame:
+    url = f"{URL_ROOT}{country}/"
+    response = requests.get(url)
+    if response.status_code == 200:
+        # print(f"Successfully fetched the content ")
+        content = response.text
+        soup = BeautifulSoup(content, 'html.parser')
+        res = soup.find("table",{'class':"w3-table"})
+        tab=[]
+        for row in res.find_all('tr'):
+            data = row.find_all('td')
+            if len(data)>=2:
+                tmp={'Maturity':data[1].text.strip(),
+                    'Yield':data[2].text.strip()}
+                tab.append(tmp)
+        df=pd.DataFrame(tab)
+        df['Yield']=df['Yield'].apply(lambda x: float(x.replace('%','')))
+        return df
+    else:
+        print(f'Could not access govie curve for {country}')
+        return None
 
 def scrap_govies(save_to_file=True):
     dfAll=pd.DataFrame()

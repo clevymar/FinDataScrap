@@ -15,6 +15,7 @@ from imports.import_ETFRatios import ScrapRatios
 from imports.import_technicals import ScrapTechnicals
 from imports.import_commoCurves import ScrapCommosCurves
 from imports.import_FXimpliedrates import ScrapFXImpliedRates
+from imports.import_creditETF import ScrapCreditETF
 from common import last_bd, need_reimport
 from utils.utils import print_color, Color, isLocal, timer
 
@@ -38,7 +39,7 @@ from utils.utils import print_color, Color, isLocal, timer
 # log.addHandler(ch)
 
 
-lstScrap = [ScrapGovies, ScrapIRS, ScrapYahoo, ScrapTechnicals, ScrapCommosCurves, ScrapFXImpliedRates, ScrapRatios] # ScrapRatios   
+lstScrap = [ScrapGovies, ScrapIRS, ScrapYahoo, ScrapTechnicals, ScrapCommosCurves, ScrapFXImpliedRates, ScrapCreditETF, ScrapRatios] 
 
 
 
