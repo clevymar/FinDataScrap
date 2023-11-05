@@ -18,6 +18,7 @@ from imports.import_FXimpliedrates import ScrapFXImpliedRates
 from imports.import_creditETF import ScrapCreditETF
 from common import last_bd, need_reimport
 from utils.utils import print_color, Color, isLocal, timer
+from email_report import send_report
 
 
 
@@ -89,5 +90,7 @@ def scrap_all():
 
 if __name__ == "__main__":
     scrap_all()
+    send_report()
+    
 
 
