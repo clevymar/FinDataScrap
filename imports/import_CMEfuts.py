@@ -27,7 +27,7 @@ from utils.utils import timer, print_color
 from databases.database_mysql import SQLA_last_date, databases_update
 from databases.classes import Scrap
 from common import last_bd, tod
-# from scrap_selenium import start_driver
+from scrap_selenium import start_driver
 
 #TODO add Eurex and CHF
 # import eurex_curves
@@ -75,24 +75,6 @@ BTN_XPATH = "/html/body/main/div/div[3]/div[3]/div/div/div/div/div/div[2]/div/di
 
 
 
-def start_driver(): #TODO delete
-    """
-    The function `start_driver` creates a headless Chrome driver with specific options     """
-    from selenium import webdriver
-    from selenium.webdriver.chrome.options import Options
-
-    try:
-        chrome_options = webdriver.ChromeOptions()
-        chrome_options.add_argument("--no-sandbox")
-        # chrome_options.add_argument("--headless")
-        chrome_options.add_argument("--disable-gpu")
-        chrome_options.add_argument("--log-level=3")
-        driver = webdriver.Chrome(options=chrome_options)
-        print_color('Selenium driver created','COMMENT')
-        return driver
-    except Exception as e:
-        driver.quit()       
-        raise Exception("Could not create the driver") from e
 
 def _clean_price(s):
     try:
@@ -205,7 +187,7 @@ def compose_html_msg(messages):
 
 
 def refresh_data(verbose=True):
-    driver=start_driver()
+    driver=start_driver(headless=True)
     tab=[]
     try:
         for asset in dictAssets.keys():
@@ -225,9 +207,20 @@ def refresh_data(verbose=True):
                         else:
                             msg=f"No data returned for {asset}"
                             print_color(msg,'FAIL')
+                except KeyboardInterrupt:
+                    print_color('Quitting Selenium driver','COMMENT')
+                    driver.quit()
+                    print_color('Exiting...','COMMENT')
+                    exit(0)
                 except Exception as e:
                     msg=f"Error scraping {asset}: {e}"  
                     print_color(msg,'FAIL')
+    
+    except KeyboardInterrupt:
+        print_color('Quitting Selenium driver','COMMENT')
+        driver.quit()
+        print_color('Exiting...','COMMENT')
+        exit(0)
 
     finally:
         print_color('Quitting Selenium driver','COMMENT')
@@ -296,4 +289,6 @@ ScrapYahoo = Scrap("FUTURES_CURVES", import_futs_curves, CMEFUTS_last_date)
 
 
 if __name__ == "__main__":
+    refresh_data(True)
+    exit(0)
     import_futs_curves(True)
