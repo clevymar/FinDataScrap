@@ -187,6 +187,7 @@ def compose_html_msg(messages):
 
 
 def refresh_data(verbose=True):
+    driver=None
     driver=start_driver(headless=True)
     tab=[]
     try:
@@ -217,14 +218,15 @@ def refresh_data(verbose=True):
                     print_color(msg,'FAIL')
     
     except KeyboardInterrupt:
-        print_color('Quitting Selenium driver','COMMENT')
-        driver.quit()
+        if driver:
+            print_color('Quitting Selenium driver','COMMENT')
+            driver.quit()
         print_color('Exiting...','COMMENT')
         exit(0)
 
     finally:
         print_color('Quitting Selenium driver','COMMENT')
-        driver.quit()
+        if driver: driver.quit()
 
     if len(tab)>0:
         df=pd.concat(tab)
