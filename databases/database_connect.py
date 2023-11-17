@@ -80,10 +80,8 @@ def PADB_connection():
     run_local = isLocal()
     if run_local:
         server = sshserver()
-        # conn = PADB_connect(server)
         cnx = PADB_connection_sqlalchemy(server)
     else:
-        # conn = get_connection()
         cnx = direct_connection_sqlalchemy()
     try:
         yield cnx
