@@ -16,6 +16,7 @@ from imports.import_technicals import ScrapTechnicals
 from imports.import_commoCurves import ScrapCommosCurves
 from imports.import_FXimpliedrates import ScrapFXImpliedRates
 from imports.import_creditETF import ScrapCreditETF
+from imports.import_CMEfuts import ScrapCMEFuts
 from common import last_bd, need_reimport
 from utils.utils import print_color, Color, isLocal, timer
 from email_report import send_report
@@ -40,7 +41,7 @@ from email_report import send_report
 # log.addHandler(ch)
 
 
-lstScrap = [ScrapGovies, ScrapIRS, ScrapYahoo, ScrapTechnicals, ScrapCommosCurves, ScrapFXImpliedRates, ScrapCreditETF, ScrapRatios] 
+lstScrap = [ScrapGovies, ScrapIRS, ScrapYahoo, ScrapTechnicals, ScrapCommosCurves, ScrapFXImpliedRates, ScrapCreditETF, ScrapRatios, ScrapCMEFuts] 
 
 
 
