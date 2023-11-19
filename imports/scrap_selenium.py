@@ -43,17 +43,23 @@ initDict={x:"" for x in COLS_MORNINGSTAR}
 errs=[]
 
 
-def start_driver(headless=True):
+def start_driver(headless=True,forCME=False):
     """
     The function `start_driver` creates a headless Chrome driver with specific options     """
+    from selenium import webdriver
     try:
         driver=None
         chrome_options = webdriver.ChromeOptions()
         chrome_options.add_argument("--no-sandbox")
-        if headless: 
-            chrome_options.add_argument("--headless")
-            # chrome_options.add_argument('--window-size=1920,1080')
-            # chrome_options.add_argument("--headless=new")
+        if forCME:
+            chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.125 Safari/537.36")
+            chrome_options.add_argument("--window-size=1920,1080")
+            # chrome_options.add_argument("--start-maximized")
+            chrome_options.add_argument("--headless=new")
+            
+        else:
+            if headless: 
+                chrome_options.add_argument("--headless")
         chrome_options.add_argument("--disable-gpu")
         chrome_options.add_argument("--log-level=3")
         driver = webdriver.Chrome(options=chrome_options)
@@ -62,6 +68,7 @@ def start_driver(headless=True):
     except Exception as e:
         if driver: driver.quit()       
         raise Exception("Could not create the driver") from e
+
          
 @timer
 def selenium_scrap_simple(link:str):
