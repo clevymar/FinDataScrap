@@ -46,20 +46,20 @@ dictAssets={
     'SOFR':ProductDef("SR","interest-rates/stirs/three-month-sofr",'IRF'), #SOFR futures
     'FF':ProductDef("FF","interest-rates/stirs/30-day-federal-fund",'IRF'),
 
-    # 'Gold':ProductDef("GC","metals/precious/gold",'Commo'),
-    # 'Silver':ProductDef("SI","metals/precious/silver",'Commo'),
-    # 'Oil':ProductDef("CL","energy/crude-oil/light-sweet-crude",'Commo'),
-    # 'Gas':ProductDef("CL","energy/natural-gas/natural-gas",'Commo'),
+    'Gold':ProductDef("GC","metals/precious/gold",'Commo'),
+    'Silver':ProductDef("SI","metals/precious/silver",'Commo'),
+    'Oil':ProductDef("CL","energy/crude-oil/light-sweet-crude",'Commo'),
+    'Gas':ProductDef("CL","energy/natural-gas/natural-gas",'Commo'),
     
-    # 'Corn':ProductDef("ZC","agriculture/grains/corn",'Commo'),
-    # 'Wheat':ProductDef("ZW","agriculture/grains/wheat",'Commo'),
-    # 'Soybean':ProductDef("ZS","agriculture/oilseeds/soybean",'Commo'),
-    # 'Cattle':ProductDef("LE","agriculture/livestock/live-cattle",'Commo'),
-    # 'Hogs':ProductDef("HE","agriculture/livestock/lean-hogs",'Commo'),
-    # 'Sugar':ProductDef("YO","agriculture/lumber-and-softs/sugar-no11",'Commo'),
+    'Corn':ProductDef("ZC","agriculture/grains/corn",'Commo'),
+    'Wheat':ProductDef("ZW","agriculture/grains/wheat",'Commo'),
+    'Soybean':ProductDef("ZS","agriculture/oilseeds/soybean",'Commo'),
+    'Cattle':ProductDef("LE","agriculture/livestock/live-cattle",'Commo'),
+    'Hogs':ProductDef("HE","agriculture/livestock/lean-hogs",'Commo'),
+    'Sugar':ProductDef("YO","agriculture/lumber-and-softs/sugar-no11",'Commo'),
     
-    # 'Aluminium':ProductDef("ALI","metals/base/aluminum",'Commo'),
-    # 'Copper':ProductDef("HG","metals/base/copper",'Commo'),
+    'Aluminium':ProductDef("ALI","metals/base/aluminum",'Commo'),
+    'Copper':ProductDef("HG","metals/base/copper",'Commo'),
 
     # 'ER':ProductDef("ER",None,'IRF'), #scrapped from Eurex
     # 'CH':ProductDef("CH",None,'IRF'), #scrapped from ICE
@@ -304,6 +304,6 @@ ScrapCMEFuts = Scrap("FUTURES_CURVES", import_futs_curves, CMEFUTS_last_date)
 
 
 if __name__ == "__main__":
-    print(refresh_data(True))
-    exit(0)
+    # print(refresh_data(True))
+    # exit(0)
     import_futs_curves(True)
