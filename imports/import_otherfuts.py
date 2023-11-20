@@ -98,7 +98,6 @@ def euribor_futures(driver):
     html = driver.page_source
     dfs=pd.read_html(StringIO(html))
     df=dfs[0]
-    print(df)
     df.rename(columns={'Date':'Expiry','Contract Date':'Expiry','D. Settle':'Settle'},inplace=True)
     dfSettlement=df[['Expiry','Last','Settle']]
     dfSettlement['Expiry']=pd.to_datetime(dfSettlement['Expiry'],dayfirst=True).dt.strftime('%b %Y').str.upper()
