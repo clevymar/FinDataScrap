@@ -43,6 +43,17 @@ initDict={x:"" for x in COLS_MORNINGSTAR}
 errs=[]
 
 
+def _clean_price(s):
+    try:
+        if s == "-":
+            return 0
+        s = s.replace("'", ".")
+        return float(s[:5])
+    except Exception as e:
+        print(e)
+        return None
+    
+
 def start_driver(headless=True,forCME=False):
     """
     The function `start_driver` creates a headless Chrome driver with specific options     """

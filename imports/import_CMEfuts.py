@@ -27,7 +27,8 @@ from utils.utils import timer, print_color
 from databases.database_mysql import SQLA_last_date, databases_update
 from databases.classes import Scrap
 from common import last_bd, tod
-from scrap_selenium import start_driver
+from scrap_selenium import start_driver, _clean_price
+from import_otherfuts import scrap_otherAsset
 
 #TODO add Eurex and CHF
 # import eurex_curves
@@ -42,26 +43,26 @@ class ProductDef:
     assetType: str 
     
 dictAssets={
-    'SOFR':ProductDef("SR","interest-rates/stirs/three-month-sofr",'IRF'), #SOFR futures
-    'FF':ProductDef("FF","interest-rates/stirs/30-day-federal-fund",'IRF'),
+    # 'SOFR':ProductDef("SR","interest-rates/stirs/three-month-sofr",'IRF'), #SOFR futures
+    # 'FF':ProductDef("FF","interest-rates/stirs/30-day-federal-fund",'IRF'),
 
-    'Gold':ProductDef("GC","metals/precious/gold",'Commo'),
-    'Silver':ProductDef("SI","metals/precious/silver",'Commo'),
-    'Oil':ProductDef("CL","energy/crude-oil/light-sweet-crude",'Commo'),
-    'Gas':ProductDef("CL","energy/natural-gas/natural-gas",'Commo'),
+    # 'Gold':ProductDef("GC","metals/precious/gold",'Commo'),
+    # 'Silver':ProductDef("SI","metals/precious/silver",'Commo'),
+    # 'Oil':ProductDef("CL","energy/crude-oil/light-sweet-crude",'Commo'),
+    # 'Gas':ProductDef("CL","energy/natural-gas/natural-gas",'Commo'),
     
-    'Corn':ProductDef("ZC","agriculture/grains/corn",'Commo'),
-    'Wheat':ProductDef("ZW","agriculture/grains/wheat",'Commo'),
-    'Soybean':ProductDef("ZS","agriculture/oilseeds/soybean",'Commo'),
-    'Cattle':ProductDef("LE","agriculture/livestock/live-cattle",'Commo'),
-    'Hogs':ProductDef("HE","agriculture/livestock/lean-hogs",'Commo'),
-    'Sugar':ProductDef("YO","agriculture/lumber-and-softs/sugar-no11",'Commo'),
+    # 'Corn':ProductDef("ZC","agriculture/grains/corn",'Commo'),
+    # 'Wheat':ProductDef("ZW","agriculture/grains/wheat",'Commo'),
+    # 'Soybean':ProductDef("ZS","agriculture/oilseeds/soybean",'Commo'),
+    # 'Cattle':ProductDef("LE","agriculture/livestock/live-cattle",'Commo'),
+    # 'Hogs':ProductDef("HE","agriculture/livestock/lean-hogs",'Commo'),
+    # 'Sugar':ProductDef("YO","agriculture/lumber-and-softs/sugar-no11",'Commo'),
     
-    'Aluminium':ProductDef("ALI","metals/base/aluminum",'Commo'),
-    'Copper':ProductDef("HG","metals/base/copper",'Commo'),
+    # 'Aluminium':ProductDef("ALI","metals/base/aluminum",'Commo'),
+    # 'Copper':ProductDef("HG","metals/base/copper",'Commo'),
 
-    # 'ER':ProductDef("ER",None,'IRF'), #scrapped from Eurex
-    # 'CH':ProductDef("CH",None,'IRF'), #scrapped from ICE
+    'ER':ProductDef("ER",None,'IRF'), #scrapped from Eurex
+    'CH':ProductDef("CH",None,'IRF'), #scrapped from ICE
 
 
 }
@@ -79,15 +80,7 @@ BTN_COOKIES = '//*[@id="onetrust-accept-btn-handler"]'
 
 
 
-def _clean_price(s):
-    try:
-        if s == "-":
-            return 0
-        s = s.replace("'", ".")
-        return float(s[:5])
-    except Exception as e:
-        print(e)
-        return None
+
 
 #%%
 
@@ -199,13 +192,35 @@ def refresh_data(verbose=True):
     tab=[]
     need_to_click_cookies=True
     try:
-        for asset in dictAssets.keys():
-            if asset in ['ER','CH']:
-                pass
+        for asset, product in dictAssets.items():
+            if asset in ['ER', 'CH']:
+                try:
+                    if verbose: 
+                        print_color(f'\nScrapping data for {asset} ','COMMENT')
+                    df = scrap_otherAsset(driver,asset,verbose=False)
+                    if len(df)>0: 
+                        df['asset']=asset
+                        tab.append(df)
+                    if verbose:
+                        if len(df)>0: 
+                            msg=f"Scraped {asset} - {len(df)} maturities returned"
+                            print_color(msg,'RESULT')
+                        else:
+                            msg=f"No data returned for {asset}"
+                            print_color(msg,'FAIL')
+                except KeyboardInterrupt:
+                    print_color('Quitting Selenium driver','COMMENT')
+                    driver.quit()
+                    print_color('Exiting...','COMMENT')
+                    exit(0)
+                except Exception as e:
+                    msg=f"Error scraping {asset}: {e}"  
+                    print_color(msg,'FAIL')
             else:
                 try:   
-                    if verbose: print_color(f'\nScrapping data for {asset} at {STEM + dictAssets[asset].coreURL + TAIL}','COMMENT')
-                    df, hasClickedCookies=scrap_asset(driver,asset,verbose=False, need_to_click_cookies=need_to_click_cookies)
+                    if verbose: 
+                        print_color(f'\nScrapping data for {asset} at {STEM + product.coreURL + TAIL}','COMMENT')
+                    df, hasClickedCookies=scrap_asset(driver, asset, verbose=False, need_to_click_cookies=need_to_click_cookies)
                     if len(df)>0: 
                         df['asset']=asset
                         tab.append(df)
@@ -244,40 +259,6 @@ def refresh_data(verbose=True):
         df=pd.concat(tab)
         df['Date']=last_bd
         return df
-
-    # asset='ER'
-    # try:
-    #     dfFuts=eurex_curves.scrap_asset(asset)
-    #     save_data(dfFuts, asset)
-    #     l=len(dfFuts)
-    #     msg=f"Scraped {asset} - {l} maturities returned"
-    #     LOGGER.info(msg)
-    # except Exception as e:
-    #     msg=f"Error scraping {asset}: {e}"
-    #     LOGGER.error(msg)
-    #     isError=True
-    # messages.append(msg)
-
-    # asset='CH'
-    # try:
-    #     dfFuts=CHF_curve.scrap_curve()
-    #     save_data(dfFuts, asset)
-    #     l=len(dfFuts)
-    #     msg=f"Scraped {asset} - {l} maturities returned"
-    #     LOGGER.info(msg)
-    # except Exception as e:
-    #     msg=f"Error scraping {asset}: {e}"
-    #     LOGGER.error(msg)
-    #     isError=True
-    # messages.append(msg)
-    
-    # #*send email with the messages
-    
-    # if isError:
-    #     title = "Attention ERROR - Futures curves scrapping"
-    # else:
-    #     title = "Futures curves scrapping"
-    # send_email(title,compose_html_msg(messages))
 
 
 def TS_toDB(data,table,verbose=True):

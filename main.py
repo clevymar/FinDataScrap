@@ -95,21 +95,27 @@ def scrap_all():
     if not isLocal():
         print('\n\n\n','-'*30)
     msg=""
+    hasError=False
     for el in lstScrap:
         errorMessage = f'Error while scrapping for {el.name}'
         try:
             tmp = scrap_main(el)
             if tmp is None:
                 tmp=errorMessage
+                hasError=True
             msg+=tmp+'\n'
         except Exception as e:
             print_color(errorMessage,'FAIL')
             msg+=errorMessage+'\n'
+            hasError=True
             print(e)
 
     print('\n\n')
     console.print(Panel(msg, title="Import Report",box=box.DOUBLE_EDGE,style="bold green"))
-    send_email(subject='Daily financial scrapping' ,body=msg)
+    subject='Daily financial scrapping'
+    if hasError:
+        subject+=' - some Error while importing data'
+    send_email(subject=subject ,body=msg)
 
     if not isLocal():
         print('\n\n\n','*** IMPORT ENDED ***')
