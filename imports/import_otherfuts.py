@@ -13,6 +13,8 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.common.exceptions import TimeoutException
 from bs4 import BeautifulSoup
 
+from icecream import ic
+
 from scrap_selenium import start_driver, _clean_price
 from utils.utils import timer, print_color
 
@@ -85,17 +87,18 @@ def euribor_futures(driver):
                 for _ in range(5):
                     python_button.click()
             except Exception as e:
-                raise e
+                print_color(e,'FAIL')
         except TimeoutException :
             print(f"[-] Timeout getting button - might just not exist ! Scrolling down again instead")
             driver.execute_script("window.scrollBy(0, 1000)")
-            time.sleep(0.5)
+            time.sleep(1)
     except Exception as e:
         print(f"[-] Error processing: {e}")
         print(traceback.format_exc())
     html = driver.page_source
     dfs=pd.read_html(StringIO(html))
     df=dfs[0]
+    print(df)
     df.rename(columns={'Date':'Expiry','Contract Date':'Expiry','D. Settle':'Settle'},inplace=True)
     dfSettlement=df[['Expiry','Last','Settle']]
     dfSettlement['Expiry']=pd.to_datetime(dfSettlement['Expiry'],dayfirst=True).dt.strftime('%b %Y').str.upper()
