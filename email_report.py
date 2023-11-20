@@ -330,7 +330,7 @@ def create_html_report(dfEquity, dfRatios, perf_eq,perf_ccy,perf_commos, technic
 def send_report():
     STYLE='bold blue'
     print('\n\n')
-    console.print(Rule(title='***Preparing email report for markets action ***',style='bold blue on white'))
+    console.print(Rule(title='***Preparing email report for markets action ***',style='bold blue on white',))
     console.log('Getting data...',style=STYLE)
     dfEquity, dfRatios, perf_eq,perf_ccy,perf_commos, technical_last, df1 = prep_all_data()
     console.log('Formatting html report...',style=STYLE)
