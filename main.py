@@ -25,6 +25,7 @@ from imports.import_CMEfuts import ScrapCMEFuts
 from common import last_bd, need_reimport
 from utils.utils import print_color, Color, isLocal, timer
 from email_report import send_report, send_email
+from databases.classes import Scrap
 
 
 
@@ -50,7 +51,12 @@ lstScrap = [ScrapGovies, ScrapIRS, ScrapYahoo, ScrapTechnicals, ScrapCommosCurve
 
 
 
-def scrap_main(el):
+def scrap_main(el:Scrap):
+    def output_string(el:Scrap,start:str,type_:str):
+        nicestr = f"{start} \033[6;30;42m{el.name}\033[0m", 
+        print_color(nicestr,type_)
+        return f"{start} {el.name}" 
+        
     try:
         msg=""
         last_date = el.func_last_date()
@@ -67,11 +73,9 @@ def scrap_main(el):
                         print(msg)
                 else:
                     if isinstance(res,pd.DataFrame):
-                        msg = f'[+] Downloaded: {len(res)} rows, {len(res.columns)} cols for \033[6;30;42m{el.name}\033[0m'
-                        print_color(msg, 'RESULT')
+                        msg = output_string(el,f'[+] Downloaded: {len(res)} rows, {len(res.columns)} cols for ','RESULT')
                     elif res is None:
-                        msg = f'[-] No data downloaded for \033[6;30;42m{el.name}\033[0m'
-                        print_color(msg, 'COMMENT')
+                        msg = output_string(el,f'[-] No data downloaded for ','RESULT')
                     elif isinstance(res,str):
                         msg=str
                     
@@ -79,8 +83,8 @@ def scrap_main(el):
                 msg=f'Error while scrapping with {el.func_scrap} for {el.name}'
                 raise Exception(msg) from e
         else:
-            msg = f"[i] - Data already scraped as of {last_date} - no need to reimport \033[6;30;42m{el.name}\033[0m"
-            print_color(msg,'COMMENT')
+            msg = output_string(el,f"[i] - Data already scraped as of {last_date} - no need to reimport ",'RESULT')
+            
         return msg
     except Exception as e:
         raise Exception(f'Error while scrapping for {el.name}') from e
