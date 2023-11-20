@@ -4,6 +4,9 @@ import os, sys
 from datetime import timedelta as td
 
 from rich.console import Console
+from rich.panel import Panel
+from rich import box
+from rich.rule import Rule
 from icecream import ic
 
 from utils.email_CLM import send_email, nice_table,send_cyril_andrea
@@ -225,7 +228,7 @@ def prep_all_data():
     dfRatios = ETF_ratios_report()
 
     #concatenates the EQUITY tables
-    console.log('Preping Equity data')
+    console.log('Preparing  Equity data')
     dfEquity=pd.concat([dfRatios,perf_eq],axis=1)
     dfEquity.sort_index(inplace=True)
     cols=perf_eq.columns.to_list()
@@ -239,7 +242,8 @@ def prep_all_data():
     dfxl.dropna(axis=0,subset=['P/B'],inplace=True)
     try:
         dfxl.to_csv(DIR_FILES+"\\ETF_RATIOS.csv")
-        dfxl.to_csv(os.environ['ONEDRIVECONSUMER'] + "\\#Money_top\\ETF_RATIOS.csv")
+        if 'ONEDRIVECONSUMER' in os.environ:
+            dfxl.to_csv(os.environ['ONEDRIVECONSUMER'] + "\\#Money_top\\ETF_RATIOS.csv")
     except Exception as e:
         print('Error saving file ETF_RATIOS.csv')
         print(e)
@@ -325,6 +329,8 @@ def create_html_report(dfEquity, dfRatios, perf_eq,perf_ccy,perf_commos, technic
 
 def send_report():
     STYLE='bold blue'
+    print('\n\n')
+    console.print(Rule(title='***Preparing email report for markets action ***',style='bold blue on white'))
     console.log('Getting data...',style=STYLE)
     dfEquity, dfRatios, perf_eq,perf_ccy,perf_commos, technical_last, df1 = prep_all_data()
     console.log('Formatting html report...',style=STYLE)

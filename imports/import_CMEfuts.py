@@ -15,14 +15,13 @@ import traceback
 from dataclasses import dataclass
 
 from bs4 import BeautifulSoup
-
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException, ElementClickInterceptedException
 from selenium.webdriver.common.keys import Keys
-
+from loguru import logger 
 
 from utils.utils import timer, print_color
 from databases.database_mysql import SQLA_last_date, databases_update
@@ -210,7 +209,7 @@ def refresh_data(verbose=True):
                     if len(df)>0: 
                         df['asset']=asset
                         tab.append(df)
-                        if not need_to_click_cookies:
+                        if need_to_click_cookies:
                             need_to_click_cookies = not hasClickedCookies
                         else:
                             need_to_click_cookies = False
@@ -295,6 +294,17 @@ def import_futs_curves(verbose=False):
         print_color(f"[-] No data was scrapped for {missingUnds}",'FAIL')
     print_color(f'[+]{len(scrappedUnds)} future curves scrapped,  {len(resDB)} lines saved in DB',"RESULT")
     databases_update(resDB.reset_index(), "FUTURES_CURVES",idx=False,mode='append',verbose=verbose, save_insqlite=True)
+    # generate the string to be used in the email
+    if len(missingUnds)>0:
+        msg='Future curves scraped with some errors'
+        for el in missingUnds:
+            msg+=f'\n\tERROR with {el}'
+        msg+='-----\n'
+    else:
+        msg='Future curves scraped perfectly\n'
+    for und in scrappedUnds:
+        msg+=f'\n\t{und}: {len(resDB[resDB.asset==und])} maturities scrapped'
+    return msg
 
 
 def CMEFUTS_last_date():
