@@ -44,20 +44,20 @@ class ProductDef:
     
 dictAssets={
     'SOFR':ProductDef("SR","interest-rates/stirs/three-month-sofr",'IRF'), #SOFR futures
-    # 'FF':ProductDef("FF","interest-rates/stirs/30-day-federal-fund",'IRF'),
+    'FF':ProductDef("FF","interest-rates/stirs/30-day-federal-fund",'IRF'),
 
-    # 'Gold':ProductDef("GC","metals/precious/gold",'Commo'),
-    # 'Silver':ProductDef("SI","metals/precious/silver",'Commo'),
-    # 'Oil':ProductDef("CL","energy/crude-oil/light-sweet-crude",'Commo'),
-    # 'Gas':ProductDef("CL","energy/natural-gas/natural-gas",'Commo'),
+    'Gold':ProductDef("GC","metals/precious/gold",'Commo'),
+    'Silver':ProductDef("SI","metals/precious/silver",'Commo'),
+    'Oil':ProductDef("CL","energy/crude-oil/light-sweet-crude",'Commo'),
+    'Gas':ProductDef("CL","energy/natural-gas/natural-gas",'Commo'),
 
-    # 'Aluminium':ProductDef("ALI","metals/base/aluminum",'Commo'),
-    # 'Copper':ProductDef("HG","metals/base/copper",'Commo'),
+    'Aluminium':ProductDef("ALI","metals/base/aluminum",'Commo'),
+    'Copper':ProductDef("HG","metals/base/copper",'Commo'),
     
-    # 'Corn':ProductDef("ZC","agriculture/grains/corn",'Commo'),
-    # 'Wheat':ProductDef("ZW","agriculture/grains/wheat",'Commo'),
-    # 'Soybean':ProductDef("ZS","agriculture/oilseeds/soybean",'Commo'),
-    # 'Cattle':ProductDef("LE","agriculture/livestock/live-cattle",'Commo'),
+    'Corn':ProductDef("ZC","agriculture/grains/corn",'Commo'),
+    'Wheat':ProductDef("ZW","agriculture/grains/wheat",'Commo'),
+    'Soybean':ProductDef("ZS","agriculture/oilseeds/soybean",'Commo'),
+    'Cattle':ProductDef("LE","agriculture/livestock/live-cattle",'Commo'),
     'Hogs':ProductDef("HE","agriculture/livestock/lean-hogs",'Commo'),
     'Sugar':ProductDef("YO","agriculture/lumber-and-softs/sugar-no11",'Commo'),
     
@@ -113,7 +113,7 @@ def _get_webData(driver,coreURL: str,clickCookies:bool=True):
 
     for _ in range(2):
         try:
-            python_button = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.XPATH, BTN_XPATH)))
+            python_button = WebDriverWait(driver, 5).until(EC.element_to_be_clickable((By.XPATH, BTN_XPATH)))
             python_button.click()
             time.sleep(2)
             break
@@ -260,11 +260,6 @@ def refresh_data(verbose=True):
         df['Date']=last_bd
         return df
 
-
-def TS_toDB(data,table,verbose=True):
-    resDB = refresh_data(verbose=verbose)
-    databases_update(resDB, table,idx=False,mode='replace',verbose=verbose, save_insqlite=True)
-    return res
 
 
 def import_futs_curves(verbose=False):

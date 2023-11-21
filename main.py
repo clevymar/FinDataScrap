@@ -51,7 +51,7 @@ lstScrap = [ScrapGovies, ScrapIRS, ScrapYahoo, ScrapTechnicals, ScrapCommosCurve
 
 
 
-def scrap_main(el:Scrap):
+def scrap_main(el:Scrap)->str:
     def output_string(el:Scrap,start:str,type_:str):
         nicestr = f"{start} \033[6;30;42m{el.name}\033[0m", 
         print_color(nicestr,type_)
@@ -77,7 +77,7 @@ def scrap_main(el:Scrap):
                     elif res is None:
                         msg = output_string(el,f'[-] No data downloaded for ','RESULT')
                     elif isinstance(res,str):
-                        msg=str
+                        msg=res
                     
             except Exception as e:
                 msg=f'Error while scrapping with {el.func_scrap} for {el.name}'
@@ -105,7 +105,7 @@ def scrap_all():
                 hasError=True
             msg+=tmp+'\n'
         except Exception as e:
-            print_color(errorMessage,'FAIL')
+            print_color('MAJOR - '+errorMessage,'FAIL')
             msg+=errorMessage+'\n'
             hasError=True
             print(e)
