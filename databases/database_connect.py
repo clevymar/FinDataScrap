@@ -1,6 +1,7 @@
 import pymysql.cursors
 from sqlalchemy import create_engine, URL
 from contextlib import contextmanager
+import traceback
 import sys
 sys.path.insert(0, '..')
 
@@ -86,7 +87,9 @@ def PADB_connection():
     try:
         yield cnx
     except Exception as e:
+        # traceback.print_exc()
         raise Exception(f'Error whilst creating connections') from e
+        
     finally:
         if run_local: server.close()
 
