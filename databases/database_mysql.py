@@ -2,35 +2,20 @@ import pandas as pd
 import sys
 sys.path.insert(0, '..')
 
+from sqlalchemy import text
+
 from database_connect import PADB_connection
 from database_sqlite import DB_update
 from utils.utils import print_color
 
 
-# def check_tables(conn,cur,table):
-#     CHECK_QUERY = """
-#     SELECT ORDINAL_POSITION, COLUMN_NAME, DATA_TYPE 
-#     FROM INFORMATION_SCHEMA.COLUMNS
-#     WHERE TABLE_NAME = '{}'
-#     """
-#     cur.execute("SHOW TABLES")
-#     for row in cur.fetchall():
-#         print(row)
-#     cur.execute(CHECK_QUERY.format(table))
-#     lstColumns=[]
-#     for row in cur.fetchall():
-#         lstColumns.append(row)
-#     lstColumns = sorted(lstColumns,key=lambda d: d['ORDINAL_POSITION'])
-#     for col in lstColumns:
-#         print(f"{col['ORDINAL_POSITION']} - {col['COLUMN_NAME']} - {col['DATA_TYPE']}")
-
-
+"""  UPDATE PROCEDURES """
 
 def SQLA_update(df,tablename,mode="replace",idx=True,verbose=True):
     with PADB_connection() as engine:
         try:
             df.to_sql(tablename, con=engine, if_exists=mode,index=idx)
-            if verbose: print(f" {len(df)} records saved with Alchemy to {tablename}")
+            if verbose: print(f" {len(df)} records saved with pandas to SQL DB table {tablename}")
         except Exception as e:
             errorMsg = f"Error saving {tablename} to SQL DB"
             print_color(errorMsg, "FAIL")
@@ -42,10 +27,14 @@ def databases_update(df:pd.DataFrame,tablename:str,mode:str="replace",idx:bool=T
         DB_update(df,tablename,mode=mode,idx=idx,verbose=verbose)
 
 
-def SQLA_last_date(tablename):
+
+
+""" READ PROCEDURES """""
+
+def SQLA_last_date(tablename:str, field:str='Date'):
     with PADB_connection() as engine:
         try:
-            sql = f""" select max(Date) from {tablename} """
+            sql = f""" select max({field}) from {tablename} """
             tmp = pd.read_sql_query(sql , engine)
             return tmp.iloc[0,0]
         except Exception as e:
@@ -54,7 +43,17 @@ def SQLA_last_date(tablename):
             raise Exception(errorMsg) from e
     
     
-def SQLA_read_table(tablename,retrieve_only_info_for_last_date:bool=False):
+def SQLA_dates(tablename:str):
+    sql = text(f""" SELECT DISTINCT Date from {tablename} ORDER BY Date desc""")
+    with PADB_connection() as engine:
+        with engine.connect() as connection:
+            result = connection.execute(sql)
+            rows = result.fetchall()
+    return [rows[0][0],rows[1][0]]
+
+
+    
+def SQLA_read_table(tablename:str,retrieve_only_info_for_last_date:bool=False):
     with PADB_connection() as engine:
         try:
             if retrieve_only_info_for_last_date:

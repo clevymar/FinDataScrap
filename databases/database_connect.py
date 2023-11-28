@@ -5,6 +5,8 @@ import traceback
 import sys
 sys.path.insert(0, '..')
 
+from icecream import ic
+
 from credentials import USERNAME, DB_PWD, PA_PWD
 from utils.utils import isLocal, print_color
 if isLocal(): import sshtunnel
