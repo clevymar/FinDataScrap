@@ -35,6 +35,12 @@ errs=[]
 pd.set_option('mode.chained_assignment', None)
 
 
+def regenerate_ETF_list()->list:
+    existing = pd.read_csv("ratios_20231130.csv")
+    etfs=existing['index'].tolist()
+    return etfs
+
+
 def _compute_extra_ratios(ratios:pd.DataFrame):
     if len(ratios)>0:
         tab=pd.DataFrame(ratios, columns=COLS_MORNINGSTAR+SECTORS)
@@ -64,8 +70,11 @@ def _prep_ratios(ratios:pd.DataFrame, dfExisting:pd.DataFrame)->pd.DataFrame:
         res=res.reset_index().rename(columns={"ETF":'index'})
         res["Date"]=res['Last_updated']
         updatedUnds = res['index'].tolist()
-        dfOld = dfExisting[~dfExisting['index'].isin(updatedUnds)].drop('need_reimport',axis=1)
-        dfNew = pd.concat([dfOld,res],axis=0).reset_index(drop=True)
+        if dfExisting is not None:
+            dfOld = dfExisting[~dfExisting['index'].isin(updatedUnds)].drop('need_reimport',axis=1)
+            dfNew = pd.concat([dfOld,res],axis=0).reset_index(drop=True)
+        else:
+            dfNew = res
         #* now recreates the composite table 
         #TODO should I do it only when ACWI updated ?
         for col in ["EY","B/P","S/P","CFY","DY"]: 
@@ -100,30 +109,36 @@ def add_missing_unds(newList:list):
 def _refresh_existing_unds():
     with PADB_connection() as conn:
         dfExisting = pd.read_sql_query("SELECT * FROM ETF_RATIOS", conn)
-    dfExisting['need_reimport'] = dfExisting['Last_updated'].apply(need_reimport)
-    undsUptodate = dfExisting[dfExisting['need_reimport'] == False]['index'].tolist()
-    undsToUpdate = dfExisting[dfExisting['need_reimport']]['index'].tolist()
-    l=len(undsUptodate)
-    if l>0:
-        print_color(f"{l} underlyings already updated","COMMENT")
-        print('\t',undsUptodate)
+    if len(dfExisting) ==0:
+        print_color(f"[-] Big problem, ETF_RATIOS is empty ! Will regenerate from saved list in Nov 2023","red")
+        unds= regenerate_ETF_list()
+        return unds, None
         
-    l = len(undsToUpdate)
-    if l==0:
-        print_color("No underlyings to update","RESULT")
-        return None, dfExisting
-    elif l<=MAX_TOUPDATE:
-        print_color(f"{l} underlyings to update","COMMENT")
-        unds = undsToUpdate
-        print('\t',unds)
     else:
-        print_color(f"{len(undsToUpdate)} underlyings to update\nChoosing {MAX_TOUPDATE} underlyings starting with the oldest ones","COMMENT")
-        dfOld = dfExisting[dfExisting['index'].isin(undsToUpdate)].sort_values('Last_updated',ascending=True)
-        if len(dfOld)>MAX_TOUPDATE:
-            dfOld = dfOld.iloc[:MAX_TOUPDATE]
-        unds = list(set(dfOld['index'].tolist()))
-        print(f'\tscrapping {len(unds)} unds:', unds)
-    return unds, dfExisting
+        dfExisting['need_reimport'] = dfExisting['Last_updated'].apply(need_reimport)
+        undsUptodate = dfExisting[dfExisting['need_reimport'] == False]['index'].tolist()
+        undsToUpdate = dfExisting[dfExisting['need_reimport']]['index'].tolist()
+        l=len(undsUptodate)
+        if l>0:
+            print_color(f"{l} underlyings already updated","COMMENT")
+            print('\t',undsUptodate)
+        
+        l = len(undsToUpdate)
+        if l==0:
+            print_color("No underlyings to update","RESULT")
+            return None, dfExisting
+        elif l<=MAX_TOUPDATE:
+            print_color(f"{l} underlyings to update","COMMENT")
+            unds = undsToUpdate
+            print('\t',unds)
+        else:
+            print_color(f"{len(undsToUpdate)} underlyings to update\nChoosing {MAX_TOUPDATE} underlyings starting with the oldest ones","COMMENT")
+            dfOld = dfExisting[dfExisting['index'].isin(undsToUpdate)].sort_values('Last_updated',ascending=True)
+            if len(dfOld)>MAX_TOUPDATE:
+                dfOld = dfOld.iloc[:MAX_TOUPDATE]
+            unds = list(set(dfOld['index'].tolist()))
+            print(f'\tscrapping {len(unds)} unds:', unds)
+        return unds, dfExisting
 
         
 def update_secs():
@@ -140,8 +155,11 @@ def update_secs():
 @timer
 def ETFratios_toDB(verbose=True):
     dfNew = update_secs()
-    if dfNew is not None:
+    if dfNew is not None and len(dfNew)>0:
         databases_update(dfNew, "ETF_RATIOS",idx=False,mode='replace',verbose=verbose,save_insqlite=True)
+    else:
+        print_color("No data was returned by the scrapping process","RESULT")
+        return None
     return dfNew
                                                                         
 def ETFRATIOS_last_date():
