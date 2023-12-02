@@ -4,7 +4,7 @@ from datetime import timedelta as td
 import pandas as pd
 from rich.console import Console
 from rich.rule import Rule
-from icecream import ic
+# from icecream import ic
 
 from utils.email_CLM import send_email, nice_table, send_cyril_andrea
 from databases.database_mysql import SQLA_read_table
@@ -258,20 +258,25 @@ def govies_report():
     last_bd = dates[-1]
     goviesLast = sub_pivot(last_bd)
 
-    # prev_bd=dates[-2]
-    # week_bd=dates[-6]
-    # IRSprev=sub_pivot(prev_bd)
-    # IRSweek=sub_pivot(week_bd)
-    # IRSdiff1=(IRSlast-IRSprev).round(2)
-    # IRSdiff1=IRSdiff1.applymap(lambda x:f"{x:.2f}").applymap(lambda s:" "*(5-len(s))+s)
+    prev_bd = dates[-2]
+    week_bd = dates[-6]
+    goviesprev = sub_pivot(prev_bd)
+    goviesweek = sub_pivot(week_bd)
+    goviesdiff1 = (goviesLast - goviesprev).round(2)
+    goviesdiff1 = goviesdiff1.applymap(lambda x: f"{x:.2f}").applymap(lambda s: " " * (5 - len(s)) + s)
 
-    # IRSdiff2=(IRSlast-IRSweek).round(2)
-    # IRSdiff2=IRSdiff2.applymap(lambda x:f"{x:.2f}").applymap(lambda s:" "*(5-len(s))+s)
+    goviesdiff2 = (goviesLast - goviesweek).round(2)
+    goviesdiff2 = goviesdiff2.applymap(lambda x: f"{x:.2f}").applymap(lambda s: " " * (5 - len(s)) + s)
 
-    # IRSdiff=IRSdiff1+" | "+IRSdiff2
-    goviesDiff = None
+    goviesDiff = goviesdiff1 + " | " + goviesdiff2
 
     return goviesLast, goviesDiff
+
+
+def credit_report():
+    df = SQLA_read_table("CREDIT_ETF_TS")
+    dfLast = df[df["Date"] == df["Date"].max()]
+    return dfLast.set_index("name").loc[:, ["YtM", "OAS"]]
 
 
 def technicals_report():
@@ -356,8 +361,12 @@ def prep_all_data():
 
 
 def create_html_report(dfEquity, dfRatios, perf_eq, perf_ccy, perf_commos, technical_last, df1):
-    res = f"<h2>Technical signals, last imported on {technical_last}</h2><br> "
-    res += nice_table(df1, min_chars=10)
+    try:
+        res = f"<h2>Technical signals, last imported on {technical_last}</h2><br> "
+        res += nice_table(df1, min_chars=10)
+
+    except:
+        res = "<h2>Technical signals - ERROR </h2><br> "
 
     # Cem signals - deprecated
     # lastDate,lastSpot,twentydma,hvol,width,band=technicals.SPXfut()
@@ -365,60 +374,85 @@ def create_html_report(dfEquity, dfRatios, perf_eq, perf_ccy, perf_commos, techn
     # res+=f'last ES spot {lastSpot}\t 20dMA {twentydma}\t 20d vol {hvol:,.1%} \n\t low band {band[0]}, high band {band[1]}<br><br>'
 
     """                     IRS   & Govies              """
-    IRSlast, IRSdiff = IRS_report()
-    res += "<h2>IRS rates and changes</h2>"
-    res += nice_table(IRSlast, min_chars=12, title="Latest swap rates", digits=2)
-    res += nice_table(IRSdiff, min_chars=12, title="1d|5d changes", digits=2)
+    try:
+        IRSlast, IRSdiff = IRS_report()
+        res += "<h2>IRS rates and changes</h2>"
+        res += nice_table(IRSlast, min_chars=12, title="Latest swap rates", digits=2)
+        res += nice_table(IRSdiff, min_chars=12, title="1d|5d changes", digits=2)
+    except:
+        res += "<h2>IRS - ERROR </h2><br> "
 
-    goviesLast, goviesDiff = govies_report()
-    res += "<h2>Govies rates and changes</h2>"
-    res += nice_table(goviesLast, min_chars=12, title="Latest Govies rates", digits=2)
-    # res+=nice_table(IRSdiff,min_chars=12,title="1d|5d changes",digits=2)
+    try:
+        goviesLast, goviesDiff = govies_report()
+        res += "<h2>Govies rates and changes</h2>"
+        res += nice_table(goviesLast, min_chars=12, title="Latest Govies rates", digits=2)
+        res += nice_table(goviesDiff, min_chars=12, title="1d|5d changes", digits=2)
+    except:
+        res += "<h2>GOVIES - ERROR </h2><br> "
 
-    dfall = pd.concat([perf_eq, perf_ccy, perf_commos], axis=0)
-    dfall.index.rename("Asset", inplace=True)
-    dfall2 = dfall.copy()
-    dfall.dropna(subset=["1d return"], inplace=True)
-    dfall["1d return"] = dfall["1d return"].apply(lambda x: float(str(x)[:-1]))
-    dfall.sort_values(by="1d return", inplace=True)
-    dfall["1d return"] = dfall["1d return"].apply(lambda x: str(x) + "%")
-    res += "<h2>Biggest 1 days movers</h2>"
-    res += nice_table(dfall.head(5), min_chars=12, title="Losers")
-    res += nice_table(dfall.tail(5), min_chars=12, title="Winners")
+    try:
+        creditLast = credit_report()
+        res += "<h2>Credit ETF rates and spreads</h2>"
+        res += nice_table(creditLast, min_chars=12, title="Latest US Credit rates", digits=2)
+    except:
+        res += "<h2>CREDIT - ERROR </h2><br> "
 
-    dfall = dfall2.copy()
-    dfall.dropna(subset=["5d return"], inplace=True)
-    dfall["5d return"] = dfall["5d return"].apply(lambda x: float(str(x)[:-1]))
-    dfall.sort_values(by="5d return", inplace=True)
-    dfall["5d return"] = dfall["5d return"].apply(lambda x: str(x) + "%")
-    res += "<h2>Biggest 5 days movers</h2>"
-    res += nice_table(dfall.head(5), min_chars=12, title="Losers")
-    res += nice_table(dfall.tail(5), min_chars=12, title="Winners")
+    try:
+        dfall = pd.concat([perf_eq, perf_ccy, perf_commos], axis=0)
+        dfall.index.rename("Asset", inplace=True)
+        dfall2 = dfall.copy()
+        dfall.dropna(subset=["1d return"], inplace=True)
+        dfall["1d return"] = dfall["1d return"].apply(lambda x: float(str(x)[:-1]))
+        dfall.sort_values(by="1d return", inplace=True)
+        dfall["1d return"] = dfall["1d return"].apply(lambda x: str(x) + "%")
+        res += "<h2>Biggest 1 days movers</h2>"
+        res += nice_table(dfall.head(5), min_chars=12, title="Losers")
+        res += nice_table(dfall.tail(5), min_chars=12, title="Winners")
 
-    res += "<br><br>" + "<h2>FX and commos</h2>"
-    for dfl in [perf_ccy, perf_commos]:
-        dfl.drop(["Name"], axis=1, inplace=True)
-        dfl.sort_values("5d return", inplace=True)
-    res += nice_table(perf_ccy, min_chars=10, title="FX- USD vs each currency")
-    res += "<br>" + nice_table(perf_commos, min_chars=10, title="Commodities")
+        dfall = dfall2.copy()
+        dfall.dropna(subset=["5d return"], inplace=True)
+        dfall["5d return"] = dfall["5d return"].apply(lambda x: float(str(x)[:-1]))
+        dfall.sort_values(by="5d return", inplace=True)
+        dfall["5d return"] = dfall["5d return"].apply(lambda x: str(x) + "%")
+        res += "<h2>Biggest 5 days movers</h2>"
+        res += nice_table(dfall.head(5), min_chars=12, title="Losers")
+        res += nice_table(dfall.tail(5), min_chars=12, title="Winners")
+    except:
+        res += "<h2>Equity perf - ERRROR</h2><br>"
 
-    res += "<br><br>" + "<h2>Valuation ratios and spot moves for major underlyings</h2>"
-    for famille in reports_colls:
-        try:
-            etfs = assets_coll[famille]
-            extract = dfEquity.loc[etfs, :]
-            extract.sort_values(by="zscore", inplace=True)
-            extract.index.rename("Asset", inplace=True)
-            tab = nice_table(extract, min_chars=6, title=famille)
-            res += tab + "<br>"
-        except:
-            res += f"<p>ERROR with {famille.upper()} list of underlyings</p>"
+    try:
+        res += "<br><br>" + "<h2>FX and commos</h2>"
+        for dfl in [perf_ccy, perf_commos]:
+            dfl.drop(["Name"], axis=1, inplace=True)
+            dfl.sort_values("5d return", inplace=True)
+        res += nice_table(perf_ccy, min_chars=10, title="FX- USD vs each currency")
+        res += "<br>" + nice_table(perf_commos, min_chars=10, title="Commodities")
+    except:
+        res += "<h2>FX+COMMOS - ERRROR</h2><br>"
 
-    dfEquity.dropna(subset=["zscore"], inplace=True)
-    dfEquity.sort_values(by="zscore", inplace=True)
-    res += "<h2>Cheapest and most expensive</h2><br> "
-    res += nice_table(dfEquity.head(5), min_chars=6, title="Dearest")
-    res += nice_table(dfEquity.tail(5), min_chars=6, title="Cheapest")
+    try:
+        res += "<br><br>" + "<h2>Valuation ratios and spot moves for major underlyings</h2>"
+        for famille in reports_colls:
+            try:
+                etfs = assets_coll[famille]
+                extract = dfEquity.loc[etfs, :]
+                extract.sort_values(by="zscore", inplace=True)
+                extract.index.rename("Asset", inplace=True)
+                tab = nice_table(extract, min_chars=6, title=famille)
+                res += tab + "<br>"
+            except:
+                res += f"<p>ERROR with {famille.upper()} list of underlyings</p>"
+    except:
+        res += "<h2>Valuation - ERRROR</h2><br>"
+
+    try:
+        dfEquity.dropna(subset=["zscore"], inplace=True)
+        dfEquity.sort_values(by="zscore", inplace=True)
+        res += "<h2>Cheapest and most expensive</h2><br> "
+        res += nice_table(dfEquity.head(5), min_chars=6, title="Dearest")
+        res += nice_table(dfEquity.tail(5), min_chars=6, title="Cheapest")
+    except:
+        res += "<h2>Cheapest and most expensive - ERROR</h2><br> "
 
     return res
 
