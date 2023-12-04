@@ -1,6 +1,7 @@
 import pandas as pd
 import sys
-sys.path.insert(0, '..')
+
+sys.path.insert(0, "..")
 
 from sqlalchemy import text
 
@@ -11,65 +12,63 @@ from utils.utils import print_color
 
 """  UPDATE PROCEDURES """
 
-def SQLA_update(df,tablename,mode="replace",idx=True,verbose=True):
+
+def SQLA_update(df, tablename, mode="replace", idx=True, verbose=True):
     with PADB_connection() as engine:
         try:
-            df.to_sql(tablename, con=engine, if_exists=mode,index=idx)
-            if verbose: print(f" {len(df)} records saved with pandas to SQL DB table {tablename}")
+            df.to_sql(tablename, con=engine, if_exists=mode, index=idx)
+            if verbose:
+                print(f" {len(df)} records saved with pandas to SQL DB table {tablename}")
         except Exception as e:
             errorMsg = f"Error saving {tablename} to SQL DB"
             print_color(errorMsg, "FAIL")
             raise Exception(errorMsg) from e
 
-def databases_update(df:pd.DataFrame,tablename:str,mode:str="replace",idx:bool=True,verbose:bool=True, save_insqlite:bool=True):
-    SQLA_update(df,tablename,mode=mode,idx=idx,verbose=verbose)
+
+def databases_update(df: pd.DataFrame, tablename: str, mode: str = "replace", idx: bool = True, verbose: bool = True, save_insqlite: bool = True):
+    SQLA_update(df, tablename, mode=mode, idx=idx, verbose=verbose)
     if save_insqlite:
-        DB_update(df,tablename,mode=mode,idx=idx,verbose=verbose)
+        DB_update(df, tablename, mode=mode, idx=idx, verbose=verbose)
 
 
+""" READ PROCEDURES """ ""
 
 
-""" READ PROCEDURES """""
-
-def SQLA_last_date(tablename:str, field:str='Date'):
+def SQLA_last_date(tablename: str, field: str = "Date") -> str:
     with PADB_connection() as engine:
         try:
             sql = f""" select max({field}) from {tablename} """
-            tmp = pd.read_sql_query(sql , engine)
-            return tmp.iloc[0,0]
+            tmp = pd.read_sql_query(sql, engine)
+            return str(tmp.iloc[0, 0])
         except Exception as e:
             errorMsg = f"Error getting info from {tablename}"
             print_color(errorMsg, "FAIL")
             raise Exception(errorMsg) from e
-    
-    
-def SQLA_dates(tablename:str):
+
+
+def SQLA_dates(tablename: str)->list[str]:
     sql = text(f""" SELECT DISTINCT Date from {tablename} ORDER BY Date desc""")
     with PADB_connection() as engine:
         with engine.connect() as connection:
             result = connection.execute(sql)
             rows = result.fetchall()
-    return [rows[0][0],rows[1][0]]
+    return [rows[0][0], rows[1][0]]
 
 
-    
-def SQLA_read_table(tablename:str,retrieve_only_info_for_last_date:bool=False):
+def SQLA_read_table(tablename: str, retrieve_only_info_for_last_date: bool = False) -> pd.DataFrame:
     with PADB_connection() as engine:
         try:
             if retrieve_only_info_for_last_date:
                 sql = f""" select * from {tablename} where Date = (select max(Date) from {tablename}) """
             else:
                 sql = f""" select * from {tablename} """
-            tmp = pd.read_sql_query(sql , engine)
+            tmp = pd.read_sql_query(sql, engine)
             return tmp
         except Exception as e:
             errorMsg = f"Error getting info from {tablename}"
             print_color(errorMsg, "FAIL")
             raise Exception(errorMsg) from e
-    
 
 
-
-
-
-
+if __name__ == "__main__":
+    print(SQLA_last_date("IRS_TS"))
