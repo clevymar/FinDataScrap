@@ -20,12 +20,11 @@ MYPYTHON_ROOT = os.environ["ONEDRIVECONSUMER"] + "\\Python Scripts\\"
 DIR_COMMOS = MYPYTHON_ROOT + "Finance\\Commos\\"
 sys.path.append(DIR_COMMOS)
 
-from credentials import QUANDL_KEY
 from utils.utils import print_color, timer
 from databases.classes import Scrap
 from databases.database_mysql import SQLA_last_date, databases_update, SQLA_read_table
 from common import last_bd
-from commos_definitions import DEFINITIONS, URL_COMPO_DBC, DICT_NAMES, DICT_REPLACE_FUTURES
+from commos_definitions import  URL_COMPO_DBC, DICT_NAMES, DICT_REPLACE_FUTURES
 
 pd.options.mode.chained_assignment = None
 
