@@ -16,15 +16,42 @@ currentdir = os.path.dirname(os.path.abspath(__file__))
 parentdir = os.path.dirname(currentdir)
 if parentdir not in sys.path:
     sys.path.insert(0, parentdir)
-MYPYTHON_ROOT = os.environ["ONEDRIVECONSUMER"] + "\\Python Scripts\\"
-DIR_COMMOS = MYPYTHON_ROOT + "Finance\\Commos\\"
-sys.path.append(DIR_COMMOS)
+
 
 from utils.utils import print_color, timer
 from databases.classes import Scrap
 from databases.database_mysql import SQLA_last_date, databases_update, SQLA_read_table
 from common import last_bd
-from commos_definitions import  URL_COMPO_DBC, DICT_NAMES, DICT_REPLACE_FUTURES
+from utils.utils import isLocal
+
+if isLocal():
+    MYPYTHON_ROOT = os.environ["ONEDRIVECONSUMER"] + "\\Python Scripts\\"
+    DIR_COMMOS = MYPYTHON_ROOT + "Finance\\Commos\\"
+    sys.path.append(DIR_COMMOS)
+    from commos_definitions_local import URL_COMPO_DBC, DICT_NAMES, DICT_REPLACE_FUTURES
+else:
+    """for pythonanywhere need to copy manually the definitions here from commos_definitions_local.py"""
+    URL_COMPO_DBC = "https://www.invesco.com/us/financial-products/etfs/holdings/main/holdings/0?audienceType=Advisor&action=download&ticker=DBC"
+    DICT_NAMES = {
+        "Brent Crude Oil": "Brent Crude",
+        "CSC Number 11 World Sugar": "Sugar",
+        "Gold 100 Troy Ounces": "Gold",
+        "Henry Hub Natural Gas": "Natural Gas",
+        "Light Sweet Crude Oil": "WTI Crude",
+        "Primary Aluminum": "Aluminium",
+        "Reformulated Gasoline Blendstock for Oxygen Blending": "Gasoline",
+        "Soybean": "Soybeans",
+    }
+
+    DICT_REPLACE_FUTURES = {
+        "WTI Crude": "Oil",
+        "Gasoline": "Oil",
+        "Brent Crude": "Oil",
+        "NY Harbor ULSD": "Oil",
+        "Natural Gas": "Gas",
+        "Soybeans": "Soybean",
+    }
+
 
 pd.options.mode.chained_assignment = None
 
@@ -58,7 +85,7 @@ def _clean_downloaded_data(df):
 
     df2["Exch"] = df2["Security"].apply(lambda s: s.split()[0])
     df2["Name"] = df2["Security"].apply(lambda s: " ".join(s.split()[1:-1]))
-    df3 = df2.groupby(["Name", "Security", "Exch"]).agg({"Expiry": "first", "NOSH": 'sum', "Value": 'sum', "%NAV": 'sum'})
+    df3 = df2.groupby(["Name", "Security", "Exch"]).agg({"Expiry": "first", "NOSH": "sum", "Value": "sum", "%NAV": "sum"})
 
     df3 = df3.reset_index()
     df3["Exchange"] = df3["Exch"]
