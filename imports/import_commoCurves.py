@@ -204,8 +204,11 @@ def save_rolldown_toDB(verbose=True) -> pd.DataFrame:
 
 
 def save_all_commos_toDB(verbose=False) -> None:
-    saveCompo_toDB(verbose=verbose)
-    save_rolldown_toDB(verbose=verbose)
+    dfCompo = saveCompo_toDB(verbose=verbose)
+    dfRollDown = save_rolldown_toDB(verbose=verbose)
+    msg=f"DBC composition well downloaded for {len(dfCompo)} underlyings. "
+    msg+=f"Rolldown computed for {len(dfRollDown)} futures"
+    return msg
 
 
 def import_commosCurves(verbose=True) -> str:

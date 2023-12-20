@@ -72,10 +72,10 @@ def scrap_main(el: Scrap) -> str:
                 else:
                     if isinstance(res, pd.DataFrame):
                         msg = output_string(el, f"[+] Downloaded: {len(res)} rows, {len(res.columns)} cols for ", "RESULT")
-                    elif res is None:
-                        msg = output_string(el, "[-] No data downloaded for ", "RESULT")
                     elif isinstance(res, str):
                         msg = res
+                    elif res is None:
+                        msg = output_string(el, "[-] No data downloaded for ", "RESULT")
 
             except Exception as e:
                 msg = f"Error while scrapping with {el.func_scrap} for {el.name}"
