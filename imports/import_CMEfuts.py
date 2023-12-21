@@ -60,7 +60,7 @@ dictAssets = {
     "Soybean": ProductDef("ZS", "agriculture/oilseeds/soybean", "Commo"),
     "Cattle": ProductDef("LE", "agriculture/livestock/live-cattle", "Commo"),
     "Hogs": ProductDef("HE", "agriculture/livestock/lean-hogs", "Commo"),
-    "Sugar": ProductDef("YO", "agriculture/lumber-and-softs/sugar-no11", "Commo"),
+    # "Sugar": ProductDef("YO", "agriculture/lumber-and-softs/sugar-no11", "Commo"),
     "ER": ProductDef("ER", None, "IRF"),  # scrapped from Eurex
     "CH": ProductDef("CH", None, "IRF"),  # scrapped from ICE
 }
@@ -272,9 +272,11 @@ def import_futs_curves(verbose=False)->str:
         msg += "-----\n"
     else:
         msg = "Future curves scraped perfectly\n"
+        
+    msgDetails=""
     for und in scrappedUnds:
         msg += f"\n\t{und}: {len(resDB[resDB.asset==und])} maturities scrapped"
-    return msg
+    return (msg, msgDetails)
 
 
 def CMEFUTS_last_date():

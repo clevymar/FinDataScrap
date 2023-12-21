@@ -65,23 +65,24 @@ def scrap_main(el: Scrap) -> str:
             try:
                 res = el.func_scrap()
                 if isinstance(res, list):
-                    msg = f"Well downloaded for {el.name} - {len(res)} tables"
+                    msg = f"[+] Well downloaded for {el.name} - {len(res)} tables"
                     for item in res:
                         msg += f"\n\t {len(item)} rows, {len(item.columns)} cols"
                         print(msg)
-                else:
-                    if isinstance(res, pd.DataFrame):
-                        msg = output_string(el, f"[+] Downloaded: {len(res)} rows, {len(res.columns)} cols for ", "RESULT")
-                    elif isinstance(res, str):
-                        msg = res
-                    elif res is None:
-                        msg = output_string(el, "[-] No data downloaded for ", "RESULT")
+                elif isinstance(res, tuple):
+                    msg = res[0]
+                elif isinstance(res, pd.DataFrame):
+                    msg = output_string(el, f"[+] Downloaded: {len(res)} rows, {len(res.columns)} cols for ", "RESULT")
+                elif isinstance(res, str):
+                    msg = res
+                elif res is None:
+                    msg = output_string(el, "[-] No data downloaded for ", "RESULT")
 
             except Exception as e:
-                msg = f"Error while scrapping with {el.func_scrap} for {el.name}"
+                msg = f"[-] Error while scrapping with {el.func_scrap} for {el.name}"
                 raise Exception(msg) from e
         else:
-            msg = output_string(el, f"[i] - Data already scraped as of {last_date} - no need to reimport ", "RESULT")
+            msg = output_string(el, f"[i] Data already scraped as of {last_date} - no need to reimport ", "RESULT")
 
         return msg
     except Exception as e:

@@ -203,12 +203,12 @@ def save_rolldown_toDB(verbose=True) -> pd.DataFrame:
     return df
 
 
-def save_all_commos_toDB(verbose=False) -> None:
-    dfCompo = saveCompo_toDB(verbose=verbose)
-    dfRollDown = save_rolldown_toDB(verbose=verbose)
-    msg=f"DBC composition well downloaded for {len(dfCompo)} underlyings. "
-    msg+=f"Rolldown computed for {len(dfRollDown)} futures"
-    return msg
+# def save_all_commos_toDB(verbose=False) -> None:
+#     dfCompo = saveCompo_toDB(verbose=verbose)
+#     dfRollDown = save_rolldown_toDB(verbose=verbose)
+#     msg=f"DBC composition well downloaded for {len(dfCompo)} underlyings. "
+#     msg+=f"Rolldown computed for {len(dfRollDown)} futures"
+#     return msg
 
 
 def import_commosCurves(verbose=True) -> str:
@@ -222,18 +222,18 @@ def import_commosCurves(verbose=True) -> str:
     msg = None
     try:
         res = saveCompo_toDB(verbose=verbose)
-        msg = f"DBC composition well downloaded !!! \n{len(res)} rows, {len(res.columns)} cols"
+        msg = f"[+] DBC composition well downloaded for {len(res)} underlyings"
     except Exception as e:
-        msg = "Error while downloading DBC compo"
+        msg = "[-] Error while downloading DBC compo"
         print_color(msg, "FAIL")
         print(e)
 
     try:
         res = save_rolldown_toDB(verbose=verbose)
-        msg += f"Commos curves well downloaded !!! \n{len(res)} rows, {len(res.columns)} cols"
+        msg += f"[+] Rolldown computed for \n{len(res)} commo futures"
     except Exception as e:
-        msg += "Error while commos future curves"
-        print_color("Error while commos future curves", "FAIL")
+        msg += "[-] Error while computing rolldowns"
+        print_color(msg, "FAIL")
         raise e
 
     return msg
@@ -243,10 +243,10 @@ def commosCurves_last_date():
     return SQLA_last_date("COMPO_DBC")
 
 
-ScrapCommosCurves = Scrap("COMMOS CURVES", save_all_commos_toDB, commosCurves_last_date)
+ScrapCommosCurves = Scrap("COMMOS CURVES", import_commosCurves, commosCurves_last_date)
 
 
 if __name__ == "__main__":
     # import_commos_curves()
     # import_commosCurves()
-    save_all_commos_toDB()
+    import_commosCurves(True)
