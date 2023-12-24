@@ -1,11 +1,18 @@
 # from mysql.connector import connect, Error  # not sure why but does not work, pymysql does
+import os, sys
+currentdir = os.path.dirname(os.path.abspath(__file__))
+parentdir = os.path.dirname(currentdir)
+if parentdir not in sys.path:
+    sys.path.insert(0, parentdir)
+    
 import pandas as pd
 
 from utils.utils import isLocal, print_color
 from databases.database_connect import PADB_connection
 from databases.database_mysql import SQLA_read_table, SQLA_last_date
 
-def DB_last_date(engine,tablename,include_data=False):
+
+def DB_last_date(engine, tablename, include_data=False):
     sql = f""" select max(Date) from {tablename} """
     cur = engine.cursor()
     cur.execute(sql)
@@ -13,25 +20,22 @@ def DB_last_date(engine,tablename,include_data=False):
     last_date = rows[0][0]
     return last_date
 
-def SQLA_last_date(sqlalchemycon,tablename):
-    sql = f""" select max(Date) from {tablename} """
-    tmp = pd.read_sql_query(sql , sqlalchemycon)
-    # last_date = rows[0][0]
-    return tmp.iloc[0,0]
 
+def SQLA_last_date(sqlalchemycon, tablename):
+    sql = f""" select max(Date) from {tablename} """
+    tmp = pd.read_sql_query(sql, sqlalchemycon)
+    # last_date = rows[0][0]
+    return tmp.iloc[0, 0]
 
 
 def explore(sqlalchemycon):
-    
-    for table in ['GOVIES_TS','TECHNICALS']:
-        lastDate = SQLA_last_date(sqlalchemycon,table)
+    for table in ["GOVIES_TS", "TECHNICALS"]:
+        lastDate = SQLA_last_date(sqlalchemycon, table)
         print(f"\n\nLast date in {table} is {lastDate}")
-            
-        df=pd.read_sql_query(f"SELECT * FROM {table}" , sqlalchemycon)
-        df=df[df['Date']==lastDate]
-        print(df)
-            
 
+        df = pd.read_sql_query(f"SELECT * FROM {table}", sqlalchemycon)
+        df = df[df["Date"] == lastDate]
+        print(df)
 
 
 # def PADB_run_task(func,run_local=True):
@@ -43,7 +47,7 @@ def explore(sqlalchemycon):
 #         conn = get_connection()
 #         cnx = get_connection_sqlalchemy()
 
-#     try:    
+#     try:
 #         func(conn,cnx)
 #     except Exception as e:
 #         raise Exception(f'Error whilst running {func}') from e
@@ -51,14 +55,12 @@ def explore(sqlalchemycon):
 #         conn.close()
 #         if run_local: server.close()
 
-    
+
 if __name__ == "__main__":
     # with PADB_connection() as sqlalchemycon:
     #     explore(sqlalchemycon)
-    latest = SQLA_read_table('ETF_RATIOS', retrieve_only_info_for_last_date=False)
+    latest = SQLA_read_table("IRS_TS", retrieve_only_info_for_last_date=False)
     print(f"shape: {latest.shape}")
     print(latest)
     print(latest.info())
-    print(latest[latest['index']=='ITKY'])
-    
-    
+    # print(latest[latest['index']=='ITKY'])
