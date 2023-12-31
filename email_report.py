@@ -223,6 +223,12 @@ def IRS_report():
     tenor_list = ["2Y", "10Y", "20Y"]
     res = sub_data1DB("IRS_TS")
     res.reset_index(inplace=True)
+    
+    data=res[res['Tenor'].isin(tenor_list)]
+    pt = pd.pivot_table(data=data, values="Rate", index="Date", columns=["CCY",'Tenor'])
+    res = pt.ffill().stack().stack().reset_index().rename(columns={0:'Rate'})
+    res=res[['Date','CCY','Tenor','Rate']]
+    
     dates = res["Date"].unique()
     dates.sort()
     last_bd = dates[-1]
