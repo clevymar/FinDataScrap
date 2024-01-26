@@ -17,7 +17,7 @@ from utils.utils import timer
 from databases.database_mysql import SQLA_last_date, databases_update
 from databases.classes import Scrap
 from scrap_selenium import start_driver, SeleniumError, WebDriverWait, EC, By, details_element, WebElement
-
+from common import last_bd
 
 IRS_ccies = ["EUR", "USD", "JPY", "CHF", "GBP"]
 
@@ -116,7 +116,8 @@ def scrap_allIRS(verbose=True):
         df = df.iloc[:, [0, 1, 3, -2]]
         df.columns = ["CCY", "Tenor", "Rate", "Date"]
         df = df[["Date", "CCY", "Tenor", "Rate"]]
-        df["Date"] = pd.to_datetime(df["Date"].apply(lambda s: s.replace(",", "")), dayfirst=True).dt.strftime("%Y-%m-%d")
+        # df["Date"] = pd.to_datetime(df["Date"].apply(lambda s: s.replace(",", "")), dayfirst=True).dt.strftime("%Y-%m-%d")
+        df['Date']=last_bd
 
         return df
 
