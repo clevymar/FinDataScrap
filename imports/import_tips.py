@@ -2,7 +2,9 @@ import os
 import sys
 import datetime
 import time
+from pathlib import Path
 import warnings
+
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 import pandas as pd
@@ -13,10 +15,13 @@ from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common import exceptions
+import undetected_chromedriver as uc
 
+from tqdm import tqdm
+from icecream import ic
 from rich.console import Console
 
 console = Console()
@@ -33,7 +38,7 @@ from databases.classes import Scrap
 # from scrap_selenium import start_driver, SeleniumError, WebDriverWait, EC, By, details_element, WebElement
 
 
-DIR_DOWNLOAD = "D:\\Downloads"
+DIR_DOWNLOAD = Path(__file__).parent / "Files"
 
 
 @timer
@@ -69,18 +74,36 @@ def german_tips() -> float | None:
     return None
 
 
-def _load_latest_french_file():
+def has_file_been_downloaded() -> str | bool:
     files = os.listdir(DIR_DOWNLOAD)
     # Get the most recently added file
     latest_file = max(files, key=lambda x: os.path.getctime(os.path.join(DIR_DOWNLOAD, x)))
-    console.log(f"Loading {latest_file}")
-    df = pd.read_excel(os.path.join(DIR_DOWNLOAD, latest_file), skiprows=5)
-    df.set_index(df.columns[0], inplace=True)
-    lastDate = str(df.index[-1])[:10]
-    realYield = float(df.iloc[-1, 3]) * 100
-    res = (lastDate, realYield)
-    console.print(res)
-    return res
+    if latest_file.endswith(".xls") or latest_file.endswith(".xlsx"):
+        current_time = time.time()
+        creation_time = os.path.getctime(os.path.join(DIR_DOWNLOAD, latest_file))
+        if (current_time - creation_time) <= 30:
+            console.log(f"{latest_file} has been downloaded {current_time - creation_time:.0f} seconds ago")
+            return latest_file
+        else:
+            console.log(f"File is too old - {latest_file} has been downloaded {current_time - creation_time:.1f} seconds ago")
+    else:
+        console.log("No xls file found")
+    return False
+
+
+def _load_latest_french_file() -> tuple[str, float] | None:
+    console.log("Loading latest file")
+    if latest_file := has_file_been_downloaded():
+        console.log(f"Loading data from file")
+        df = pd.read_excel(os.path.join(DIR_DOWNLOAD, latest_file), skiprows=5)
+        df.set_index(df.columns[0], inplace=True)
+        lastDate = str(df.index[-1])[:10]
+        realYield = float(df.iloc[-1, 3]) * 100
+        res = (lastDate, realYield)
+        console.print(res)
+        return res
+    else:
+        return None
 
 
 def _scrap_french_tips(verbose: bool = True) -> bool | None:
@@ -99,25 +122,25 @@ def _scrap_french_tips(verbose: bool = True) -> bool | None:
             else:
                 if verbose:
                     console.log("Cookies button not found")
-        except exceptions.TimeoutException as e:
+        except exceptions.TimeoutException:
             console.log("Cookies button not found after waitTime")
-
+        except exceptions.ElementClickInterceptedException:
+            console.log("Cookies button not clickable")
+        except Exception as e:
+            console.log(f"Error while trying to click on cookies button: {e}")
         return
 
     # Setup Chrome options
-    chrome_options = Options()
-    # Specify your download directory
-    prefs = {"download.default_directory": DIR_DOWNLOAD}
+    chrome_options = uc.ChromeOptions()
+    prefs = {"download.default_directory": str(DIR_DOWNLOAD.resolve())}
     chrome_options.add_experimental_option("prefs", prefs)
-    user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-    chrome_options.add_argument(f"user-agent={user_agent}")
-
     # Initialize the WebDriver
-    driver = webdriver.Chrome(options=chrome_options)
+    driver = uc.Chrome(headless=False, options=chrome_options)  # ,use_subprocess=False
     wait = WebDriverWait(driver, 20)
 
     try:
         # Open the webpage
+        console.log("Opening page for French tips")
         driver.get("https://www.aft.gouv.fr/en/oatis-key-figures#rendement")
 
         # click on cookie button if needed
@@ -127,24 +150,24 @@ def _scrap_french_tips(verbose: bool = True) -> bool | None:
         download_button = driver.find_element(By.LINK_TEXT, "Téléchargez les données / Download the data")
         # Click the button to start the download
         download_button.click()
+        time.sleep(15)
+        if has_file_been_downloaded():
+            return True
 
         # pb with checkbox ?
         try:
-            holder = wait.until(EC.presence_of_element_located((By.CLASS_NAME,"ctp-checkbox-container")))
-            print(holder)
+            wait.until(
+                EC.frame_to_be_available_and_switch_to_it((By.CSS_SELECTOR, "iframe[title='Widget containing a Cloudflare security challenge']"))
+            )
+            holder = wait.until(EC.presence_of_element_located((By.CLASS_NAME, "ctp-checkbox-container")))
+            ic(holder.text)
             checkbox = driver.find_element(By.CSS_SELECTOR, 'div input[type="checkbox"]')
-            print(checkbox)
-            # checkbox = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "#challenge-stage > div > label > input[type=checkbox]")))
-            # checkbox = wait.until(EC.element_to_be_clickable((By.XPATH, '//*[@id="challenge-stage"]/div/label/input')))
-            # checkbox = wait.until(EC.presence_of_element_located((By.CLASS_NAME, 'ctp-label')))
-            """
-            //*[@id="challenge-stage"]/div/label/input
-            #challenge-stage > div > label > input[type=checkbox]
-            ctp-label
-            """
+            ic(checkbox.text)
             # Click the checkbox
             checkbox.click()
-            time.sleep(5)
+            print("Button clicked")
+            for _ in tqdm(range(30)):
+                time.sleep(1)
             return True
         except exceptions.TimeoutException:
             print("Checkbox not found")
@@ -158,7 +181,7 @@ def _scrap_french_tips(verbose: bool = True) -> bool | None:
 
 
 @timer
-def french_tips():
+def french_tips() -> tuple[str, float] | None:
     try:
         if _scrap_french_tips():
             res = _load_latest_french_file()
@@ -166,25 +189,28 @@ def french_tips():
     except Exception as e:
         console.print_exception()
         raise Exception("Could not scrap French Tips") from e
+    return None
 
 
-def scrap_allTIPS():
+def scrap_allTIPS() -> pd.DataFrame | None:
     results = []
     prev_bd = pd.bdate_range(end=pd.Timestamp.now(), periods=2)[-2].strftime("%Y-%m-%d")
+    console.log("Importing German tips")
     try:
         yield_de = german_tips()
         temp = {"Country": "Germany", "Date_data": datetime.date.today().strftime("%Y-%m-%d"), "Real Yield": yield_de, "Date": prev_bd}
         results.append(temp)
-    except Exception as e:
+    except Exception:
         console.print_exception()
         console.log("[-]Could not scrap German Tips")
 
+    console.log("Importing French tips")
     try:
         res = french_tips()
         if res:
             temp = {"Country": "France", "Date_data": res[0], "Real Yield": res[1], "Date": prev_bd}
             results.append(temp)
-    except Exception as e:
+    except Exception:
         console.print_exception()
         console.log("[-]Could not scrap French Tips")
 
@@ -192,10 +218,9 @@ def scrap_allTIPS():
     if len(results) > 0:
         df = pd.DataFrame(results)
         return df
+    return None
 
 
 if __name__ == "__main__":
-    # console.log("Importing German tips")
-    # console.print(german_tips())
     df = scrap_allTIPS()
     print(df)
