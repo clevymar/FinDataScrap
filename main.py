@@ -24,8 +24,10 @@ from imports.import_commoCurves import ScrapCommosCurves
 from imports.import_FXimpliedrates import ScrapFXImpliedRates
 from imports.import_creditETF import ScrapCreditETF
 from imports.import_CMEfuts import ScrapCMEFuts
-from common import last_bd, need_reimport
-from utils.utils import print_color, Color, isLocal, timer
+from imports.import_tips import ScrapTIPS
+
+from common import need_reimport
+from utils.utils import print_color, isLocal, timer
 from email_report import send_report, send_email
 from databases.classes import Scrap
 
@@ -46,7 +48,18 @@ from databases.classes import Scrap
 # log.addHandler(ch)
 
 
-lstScrap = [ScrapGovies, ScrapIRS, ScrapYahoo, ScrapTechnicals, ScrapFXImpliedRates, ScrapCreditETF, ScrapRatios, ScrapCMEFuts, ScrapCommosCurves]
+lstScrap = [
+    ScrapGovies,
+    ScrapTIPS,
+    ScrapIRS,
+    ScrapYahoo,
+    ScrapTechnicals,
+    ScrapFXImpliedRates,
+    ScrapCreditETF,
+    ScrapRatios,
+    ScrapCMEFuts,
+    ScrapCommosCurves,
+]
 
 
 def scrap_main(el: Scrap) -> str:
