@@ -39,9 +39,9 @@ from databases.classes import Scrap
 
 
 DIR_DOWNLOAD = Path(__file__).parent / "Files"
+STYLE_ERROR = "bold red"
 
 
-@timer
 def german_tips() -> float | None:
     # URL of the page
     url = "https://www.deutsche-finanzagentur.de/en/federal-securities/factsheet/isin/DE0001030575/"
@@ -65,13 +65,32 @@ def german_tips() -> float | None:
                 data = float(data.replace("%", ""))
                 return data
             except:
-                console.log("Could not extract number found for German tips")
+                console.log("Could not extract number found for German tips", style=STYLE_ERROR)
 
         else:
-            console.log("No data found for German tips")
+            console.log("No data found for German tips", style=STYLE_ERROR)
     else:
-        console.log(f"Failed to retrieve the German tips webpage. Status code: {response.status_code}")
+        console.log(f"Failed to retrieve the German tips webpage. Status code: {response.status_code}", style=STYLE_ERROR)
     return None
+
+
+"""
+now French
+"""
+
+
+def clean_folder():
+    files = os.listdir(DIR_DOWNLOAD)
+    latest_file = max(files, key=lambda x: os.path.getctime(os.path.join(DIR_DOWNLOAD, x)))
+    for f in files:
+        if f != latest_file:
+            os.remove(os.path.join(DIR_DOWNLOAD, f))
+    files = os.listdir(DIR_DOWNLOAD)
+    if len(files) > 1:
+        console.log(f"[-]Too many files remaining in folder: {files}")
+    else:
+        console.log(f"Only file remaining in folder: {files[0]}", style=STYLE_ERROR)
+    return
 
 
 def has_file_been_downloaded() -> str | bool:
@@ -85,9 +104,9 @@ def has_file_been_downloaded() -> str | bool:
             console.log(f"{latest_file} has been downloaded {current_time - creation_time:.0f} seconds ago")
             return latest_file
         else:
-            console.log(f"File is too old - {latest_file} has been downloaded {current_time - creation_time:.1f} seconds ago")
+            console.log(f"File is too old - {latest_file} has been downloaded {current_time - creation_time:.1f} seconds ago", style=STYLE_ERROR)
     else:
-        console.log("No xls file found")
+        console.log("No xls file found", style=STYLE_ERROR)
     return False
 
 
@@ -100,7 +119,11 @@ def _load_latest_french_file() -> tuple[str, float] | None:
         lastDate = str(df.index[-1])[:10]
         realYield = float(df.iloc[-1, 3]) * 100
         res = (lastDate, realYield)
-        console.print(res)
+        # console.print(res)
+        try:
+            clean_folder()
+        except:
+            console.log("Could not clean folder", style=STYLE_ERROR)
         return res
     else:
         return None
@@ -123,12 +146,34 @@ def _scrap_french_tips(verbose: bool = True) -> bool | None:
                 if verbose:
                     console.log("Cookies button not found")
         except exceptions.TimeoutException:
-            console.log("Cookies button not found after waitTime")
+            console.log("Cookies button not found after waitTime", style=STYLE_ERROR)
         except exceptions.ElementClickInterceptedException:
-            console.log("Cookies button not clickable")
+            console.log("Cookies button not clickable", style=STYLE_ERROR)
         except Exception as e:
-            console.log(f"Error while trying to click on cookies button: {e}")
+            console.log(f"Error while trying to click on cookies button: {e}", style=STYLE_ERROR)
         return
+
+    def pb_with_cloudflare_checkbox():
+        try:
+            wait.until(
+                EC.frame_to_be_available_and_switch_to_it((By.CSS_SELECTOR, "iframe[title='Widget containing a Cloudflare security challenge']"))
+            )
+            holder = wait.until(EC.presence_of_element_located((By.CLASS_NAME, "ctp-checkbox-container")))
+            ic(holder.text)
+            checkbox = driver.find_element(By.CSS_SELECTOR, 'div input[type="checkbox"]')
+            ic(checkbox.text)
+            # Click the checkbox
+            checkbox.click()
+            console.log("Button clicked")
+            for _ in tqdm(range(30)):
+                time.sleep(1)
+            return True
+        except exceptions.TimeoutException:
+            console.log("Checkbox not found", style=STYLE_ERROR)
+        except exceptions.ElementClickInterceptedException:
+            console.log("Checkbox not clickable", style=STYLE_ERROR)
+        except Exception as e:
+            console.print_exception()
 
     # Setup Chrome options
     chrome_options = uc.ChromeOptions()
@@ -146,41 +191,21 @@ def _scrap_french_tips(verbose: bool = True) -> bool | None:
         # click on cookie button if needed
         go_through_cookies()
 
-        # Locate the download button (adjust the selector as per the actual page structure)
-        download_button = driver.find_element(By.LINK_TEXT, "Téléchargez les données / Download the data")
         # Click the button to start the download
+        download_button = driver.find_element(By.LINK_TEXT, "Téléchargez les données / Download the data")
         download_button.click()
         time.sleep(15)
         if has_file_been_downloaded():
             return True
 
         # pb with checkbox ?
-        try:
-            wait.until(
-                EC.frame_to_be_available_and_switch_to_it((By.CSS_SELECTOR, "iframe[title='Widget containing a Cloudflare security challenge']"))
-            )
-            holder = wait.until(EC.presence_of_element_located((By.CLASS_NAME, "ctp-checkbox-container")))
-            ic(holder.text)
-            checkbox = driver.find_element(By.CSS_SELECTOR, 'div input[type="checkbox"]')
-            ic(checkbox.text)
-            # Click the checkbox
-            checkbox.click()
-            print("Button clicked")
-            for _ in tqdm(range(30)):
-                time.sleep(1)
-            return True
-        except exceptions.TimeoutException:
-            print("Checkbox not found")
-        except exceptions.ElementClickInterceptedException:
-            print("Checkbox not clickable")
-        except Exception as e:
-            print(e)
+        pb_with_cloudflare_checkbox()
+
     finally:
         driver.quit()
     return None
 
 
-@timer
 def french_tips() -> tuple[str, float] | None:
     try:
         if _scrap_french_tips():
@@ -192,7 +217,7 @@ def french_tips() -> tuple[str, float] | None:
     return None
 
 
-def scrap_allTIPS() -> pd.DataFrame | None:
+def scrap_allTIPS() -> pd.DataFrame:
     results = []
     prev_bd = pd.bdate_range(end=pd.Timestamp.now(), periods=2)[-2].strftime("%Y-%m-%d")
     console.log("Importing German tips")
@@ -202,7 +227,7 @@ def scrap_allTIPS() -> pd.DataFrame | None:
         results.append(temp)
     except Exception:
         console.print_exception()
-        console.log("[-]Could not scrap German Tips")
+        console.log("[-]Could not scrap German Tips", style=STYLE_ERROR)
 
     console.log("Importing French tips")
     try:
@@ -212,15 +237,46 @@ def scrap_allTIPS() -> pd.DataFrame | None:
             results.append(temp)
     except Exception:
         console.print_exception()
-        console.log("[-]Could not scrap French Tips")
+        console.log("[-]Could not scrap French Tips", style=STYLE_ERROR)
 
-    print(results)
     if len(results) > 0:
         df = pd.DataFrame(results)
         return df
-    return None
+    return pd.DataFrame()
+
+
+@timer
+def tips_toDB(verbose=False) -> pd.DataFrame:
+    res = scrap_allTIPS()
+    if len(res) > 0:
+        if verbose:
+            print(res)
+        databases_update(res, "TIPS_TS", idx=False, mode="append", verbose=verbose, save_insqlite=True)
+    else:
+        console.log("No TIPS data to update", style=STYLE_ERROR)
+        res = pd.DataFrame()
+    return res
+
+
+def import_TIPS(argument=None):
+    msg = None
+    try:
+        res = tips_toDB(True)
+        if len(res) > 0:
+            msg = f"Well downloaded !!! \n{len(res)} rows"
+        else:
+            msg = "No TIPS data to update"
+    except Exception as e:
+        raise Exception("Error while downloading TIPS") from e
+    return msg
+
+
+def tips_last_date():
+    return SQLA_last_date("TIPS_TS")
+
+
+ScrapTIPS = Scrap("TIPS", tips_toDB, tips_last_date)
 
 
 if __name__ == "__main__":
-    df = scrap_allTIPS()
-    print(df)
+    import_TIPS()
