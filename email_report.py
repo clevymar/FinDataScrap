@@ -285,6 +285,12 @@ def credit_report():
     return dfLast.set_index("name").loc[:, ["YtM", "OAS"]]
 
 
+def TIPS_report():
+    df = SQLA_read_table("TIPS_TS")
+    dfLast = df[df["Date"] == df["Date"].max()].drop_duplicates().set_index('Country')
+    return dfLast
+
+
 def technicals_report():
     df = SQLA_read_table("TECHNICALS").set_index("Underlying")
     technical_last = df["Date"].max()
@@ -397,6 +403,14 @@ def create_html_report(dfEquity, dfRatios, perf_eq, perf_ccy, perf_commos, techn
         res += "<h2>GOVIES - ERROR </h2><br> "
 
     try:
+        tipsLast = TIPS_report()
+        res += "<h2>EUR TIPS real yields</h2>"
+        res += nice_table(tipsLast, min_chars=12, title="Latest real yields", digits=2)
+    except:
+        res += "<h2>TIPS - ERROR </h2><br> "
+
+
+    try:
         creditLast = credit_report()
         res += "<h2>Credit ETF rates and spreads</h2>"
         res += nice_table(creditLast, min_chars=12, title="Latest US Credit rates", digits=2)
@@ -484,3 +498,4 @@ def send_report():
 
 if __name__ == "__main__":
     send_report()
+    # print(TIPS_report())
