@@ -2,6 +2,7 @@
 seems headless version, which sia  MUST for PA, does not work for CME
 
 """
+
 import os
 import sys
 
@@ -18,11 +19,9 @@ from dataclasses import dataclass
 from bs4 import BeautifulSoup
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.wait import WebDriverWait
 from selenium.common.exceptions import TimeoutException, ElementClickInterceptedException
 from selenium.webdriver.common.keys import Keys
-from loguru import logger
 
 from utils.utils import timer, print_color
 from databases.database_mysql import SQLA_last_date, databases_update
@@ -63,6 +62,7 @@ dictAssets = {
     # "Sugar": ProductDef("YO", "agriculture/lumber-and-softs/sugar-no11", "Commo"),
     "ER": ProductDef("ER", None, "IRF"),  # scrapped from Eurex
     "CH": ProductDef("CH", None, "IRF"),  # scrapped from ICE
+    "HSCEI": ProductDef("HHI", None, "Equity"),  # scrapped from HKEX
 }
 
 # TODO  1) Zinc missing 2) replace CME for Sugar, WHeat...by correct exchange ?
@@ -180,14 +180,14 @@ def compose_html_msg(messages):
     return msg
 
 
-def refresh_data(verbose=True)->pd.DataFrame:
+def refresh_data(verbose=True) -> pd.DataFrame:
     driver = None
     driver = start_driver(headless=True, forCME=True)
     tab = []
     need_to_click_cookies = True
     try:
         for asset, product in dictAssets.items():
-            if asset in ["ER", "CH"]:
+            if asset in ["ER", "CH",'HSCEI']:
                 try:
                     if verbose:
                         print_color(f"\nScrapping data for {asset} ", "COMMENT")
@@ -254,9 +254,10 @@ def refresh_data(verbose=True)->pd.DataFrame:
         df = pd.concat(tab)
         df["Date"] = last_bd
         return df
+    return pd.DataFrame()
 
 
-def import_futs_curves(verbose=False)->str:
+def import_futs_curves(verbose=False) -> str:
     resDB = refresh_data(verbose=verbose)
     scrappedUnds = resDB["asset"].unique().tolist()
     missingUnds = [c for c in dictAssets.keys() if c not in scrappedUnds]
@@ -272,8 +273,8 @@ def import_futs_curves(verbose=False)->str:
         msg += "-----\n"
     else:
         msg = "Future curves scraped perfectly\n"
-        
-    msgDetails=""
+
+    msgDetails = ""
     for und in scrappedUnds:
         msg += f"\n\t{und}: {len(resDB[resDB.asset==und])} maturities scrapped"
     return (msg, msgDetails)
