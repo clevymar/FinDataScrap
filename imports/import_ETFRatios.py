@@ -93,7 +93,7 @@ def _compute_extra_ratios(ratios: pd.DataFrame):
         return tabf
 
 
-def _prep_ratios(ratios: pd.DataFrame, dfExisting: pd.DataFrame) -> pd.DataFrame:
+def _prep_ratios(ratios: pd.DataFrame, dfExisting: pd.DataFrame) -> pd.DataFrame | None:
     if len(ratios) > 0:
         res = _compute_extra_ratios(ratios)
         res = res.reset_index().rename(columns={"ETF": "index"})
@@ -120,10 +120,10 @@ def _prep_ratios(ratios: pd.DataFrame, dfExisting: pd.DataFrame) -> pd.DataFrame
         return None
 
 
-newList = ["ERUS", "GULF", "ITKY", "JKL", "RSX", "XTH"]
+# newList = ["ERUS", "GULF", "ITKY", "JKL", "RSX", "XTH"]
+newList = ['XOP','GXG','CEE']
 
-
-def add_missing_unds(newList: list):
+def add_missing_unds(newList: list) -> None:
     with PADB_connection() as conn:
         dfExisting = pd.read_sql_query("SELECT * FROM ETF_RATIOS", conn)
         dfExisting["need_reimport"] = False  # need this for compatibility
@@ -136,7 +136,7 @@ def add_missing_unds(newList: list):
         databases_update(dfNew, "ETF_RATIOS", idx=False, mode="replace", verbose=True, save_insqlite=True)
 
 
-def _refresh_existing_unds():
+def _refresh_existing_unds() -> tuple[list | None, pd.DataFrame | None]:
     with PADB_connection() as conn:
         dfExisting = pd.read_sql_query("SELECT * FROM ETF_RATIOS", conn)
     if dfExisting is None or len(dfExisting) == 0:
@@ -181,6 +181,13 @@ def update_secs():
     return dfNew
 
 
+def check_underlyings() -> list:
+    with PADB_connection() as conn:
+        dfExisting = pd.read_sql_query("SELECT * FROM ETF_RATIOS", conn)
+    res = dfExisting["index"].tolist()
+    return sorted(res)
+
+
 @timer
 def ETFratios_toDB(verbose=True):
     dfNew = update_secs()
@@ -203,6 +210,9 @@ if __name__ == "__main__":
     # add_missing_unds(newList=newList)
 
     print("Latest date in ETF_RATIOS: ", ETFRATIOS_last_date())
+    # print(check_underlyings())
+    add_missing_unds(newList=newList)
+    exit(0)
     res = ETFratios_toDB()
     if res is not None:
         print("full DB:\n", res)
