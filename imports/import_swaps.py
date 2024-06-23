@@ -37,7 +37,8 @@ def scrap_allIRS(verbose=True):
 
         # * deal with accept
         time.sleep(1)
-        chkBoxAccept = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, ".css-95vv2o")))
+        # chkBoxAccept = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, ".css-cdisvn e1nwqvt62")))
+        chkBoxAccept = wait.until(EC.presence_of_element_located((By.XPATH, '//div[@role="checkbox"]')))
         if chkBoxAccept:
             if verbose:
                 console.log("Checkbox found")
@@ -59,8 +60,11 @@ def scrap_allIRS(verbose=True):
                 console.log("Button Accept not found")
 
         # click on top of screen otherwise creates issues
-        btnBS = wait.until(EC.presence_of_element_located((By.XPATH, "/html/body/div[2]/main/div[2]/div/nav/div[1]/div/div/ul/li[3]/a")))
-        btnBS.click()
+        try:
+            btnBS = wait.until(EC.presence_of_element_located((By.XPATH, "/html/body/div[2]/main/div[2]/div/nav/div[1]/div/div/ul/li[3]/a")))
+            btnBS.click()
+        except:
+            console.log("Could not click on top of screen - a priori should be ok")
 
     def scrap_ccy(section: WebElement, button: WebElement, verbose: bool = True) -> WebElement:
         def handle_showMore(btnShowMore: WebElement):
@@ -109,15 +113,15 @@ def scrap_allIRS(verbose=True):
 
     def create_df_from_section(section: WebElement) -> pd.DataFrame:
         s = section.text.replace("IRS\n", "IRS ")
-        s = s.split("\n")[6:-1]
+        s = s.split("\n")[11:-1]
         s = "\n".join(s)
         data_io = StringIO(s)
-        df = pd.read_csv(data_io, sep="\s+", engine="python")
+        df = pd.read_csv(data_io, sep="\s+", engine="python", header=None)
         df = df.iloc[:, [0, 1, 3, -2]]
         df.columns = ["CCY", "Tenor", "Rate", "Date"]
         df = df[["Date", "CCY", "Tenor", "Rate"]]
         # df["Date"] = pd.to_datetime(df["Date"].apply(lambda s: s.replace(",", "")), dayfirst=True).dt.strftime("%Y-%m-%d")
-        df['Date']=last_bd
+        df["Date"] = last_bd
 
         return df
 
