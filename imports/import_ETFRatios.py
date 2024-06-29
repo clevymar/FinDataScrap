@@ -121,7 +121,8 @@ def _prep_ratios(ratios: pd.DataFrame, dfExisting: pd.DataFrame) -> pd.DataFrame
 
 
 # newList = ["ERUS", "GULF", "ITKY", "JKL", "RSX", "XTH"]
-newList = ['XOP','GXG','CEE']
+# newList = ['XOP','GXG','CEE']
+newList = ['FYLD','AVDV']
 
 def add_missing_unds(newList: list) -> None:
     with PADB_connection() as conn:
@@ -134,6 +135,8 @@ def add_missing_unds(newList: list) -> None:
         ratios, errs = selenium_scrap_ratios(undstoAdd, verbose=isLocal())
         dfNew = _prep_ratios(ratios, dfExisting)
         databases_update(dfNew, "ETF_RATIOS", idx=False, mode="replace", verbose=True, save_insqlite=True)
+    else:
+        print("No ETFs to add")
 
 
 def _refresh_existing_unds() -> tuple[list | None, pd.DataFrame | None]:
@@ -181,7 +184,7 @@ def update_secs():
     return dfNew
 
 
-def check_underlyings() -> list:
+def check_underlyings() -> list[str]:
     with PADB_connection() as conn:
         dfExisting = pd.read_sql_query("SELECT * FROM ETF_RATIOS", conn)
     res = dfExisting["index"].tolist()
@@ -210,7 +213,7 @@ if __name__ == "__main__":
     # add_missing_unds(newList=newList)
 
     print("Latest date in ETF_RATIOS: ", ETFRATIOS_last_date())
-    # print(check_underlyings())
+    print(check_underlyings())
     add_missing_unds(newList=newList)
     exit(0)
     res = ETFratios_toDB()
