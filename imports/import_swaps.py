@@ -5,6 +5,7 @@ import time
 
 import pandas as pd
 from rich.console import Console
+from icecream import ic
 
 console = Console()
 
@@ -151,7 +152,9 @@ def scrap_allIRS(verbose=True):
         res = []
         for button in buttons:
             try:
+                # ic(button.text)
                 section = scrap_ccy(section, button, verbose=verbose)
+                # ic(section)
                 df = create_df_from_section(section)
                 res.append(df)
             except:
@@ -168,7 +171,7 @@ def scrap_allIRS(verbose=True):
 
     except Exception as e:
         console.print_exception()
-        raise Exception("Could not scrap the link at {link}") from e
+        raise Exception(f"Could not scrap the link at {URL}") from e
     finally:
         console.log("Quitting Selenium driver", "INFO")
         driver.quit()
@@ -203,4 +206,4 @@ ScrapIRS = Scrap("IRS", IRS_toDB, swaps_last_date)
 
 
 if __name__ == "__main__":
-    print(IRS_toDB())
+    print(IRS_toDB(verbose=True))
