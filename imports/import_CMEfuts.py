@@ -187,7 +187,7 @@ def refresh_data(verbose=True) -> pd.DataFrame:
     need_to_click_cookies = True
     try:
         for asset, product in dictAssets.items():
-            if asset in ["ER", "CH",'HSCEI']:
+            if asset in ["ER", "CH", "HSCEI"]:
                 try:
                     if verbose:
                         print_color(f"\nScrapping data for {asset} ", "COMMENT")
@@ -258,20 +258,21 @@ def refresh_data(verbose=True) -> pd.DataFrame:
 
 
 def import_futs_curves(verbose=False) -> str:
-    tries=0
+    tries = 0
     MAX_TRIES = 2
     while tries <= MAX_TRIES:
-        tries+=1
+        tries += 1
         resDB = refresh_data(verbose=verbose)
         scrappedUnds = resDB["asset"].unique().tolist()
         missingUnds = [c for c in dictAssets.keys() if c not in scrappedUnds]
         if len(missingUnds) > 0:
             print_color(f"[-] No data was scrapped for {missingUnds}", "FAIL")
-            if tries <= MAX_TRIES:
-                print_color("Trying again...")
-            time.sleep(10)
-            
-            
+            if tries <= MAX_TRIES and len(missingUnds) > 3:
+                print_color("Trying again...","COMMENT")
+                time.sleep(10)
+            else:
+                tries = MAX_TRIES,
+
     print_color(f"[+]{len(scrappedUnds)} future curves scrapped,  {len(resDB)} lines saved in DB", "RESULT")
     databases_update(resDB.reset_index(), "FUTURES_CURVES", idx=False, mode="append", verbose=verbose, save_insqlite=True)
     # generate the string to be used in the email
