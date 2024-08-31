@@ -4,6 +4,7 @@ from datetime import timedelta as td
 import pandas as pd
 from rich.console import Console
 from rich.rule import Rule
+
 # from icecream import ic
 
 from utils.email_CLM import send_email, nice_table, send_cyril_andrea
@@ -223,12 +224,12 @@ def IRS_report():
     tenor_list = ["2Y", "10Y", "20Y"]
     res = sub_data1DB("IRS_TS")
     res.reset_index(inplace=True)
-    
-    data=res[res['Tenor'].isin(tenor_list)]
-    pt = pd.pivot_table(data=data, values="Rate", index="Date", columns=["CCY",'Tenor'])
-    res = pt.ffill().stack().stack().reset_index().rename(columns={0:'Rate'})
-    res=res[['Date','CCY','Tenor','Rate']]
-    
+
+    data = res[res["Tenor"].isin(tenor_list)]
+    pt = pd.pivot_table(data=data, values="Rate", index="Date", columns=["CCY", "Tenor"])
+    res = pt.ffill().stack().stack().reset_index().rename(columns={0: "Rate"})
+    res = res[["Date", "CCY", "Tenor", "Rate"]]
+
     dates = res["Date"].unique()
     dates.sort()
     last_bd = dates[-1]
@@ -287,7 +288,7 @@ def credit_report():
 
 def TIPS_report():
     df = SQLA_read_table("TIPS_TS")
-    dfLast = df[df["Date"] == df["Date"].max()].drop_duplicates().set_index('Country')
+    dfLast = df[df["Date"] == df["Date"].max()].drop_duplicates().set_index("Country")
     return dfLast
 
 
@@ -408,7 +409,6 @@ def create_html_report(dfEquity, dfRatios, perf_eq, perf_ccy, perf_commos, techn
         res += nice_table(tipsLast, min_chars=12, title="Latest real yields", digits=2)
     except:
         res += "<h2>TIPS - ERROR </h2><br> "
-
 
     try:
         creditLast = credit_report()
