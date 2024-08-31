@@ -101,7 +101,7 @@ def _get_webData(driver, coreURL: str, clickCookies: bool = True):
             python_button.click()
             hasClickedCookies = True
         except Exception as e:
-            print_color("[-] Cant find cookies button", "COMMENT")
+            print_color("[-] Cant find cookies button", "FAIL")
 
     _scroll_down()
     time.sleep(1)
@@ -185,12 +185,15 @@ def refresh_data(verbose=True) -> pd.DataFrame:
     driver = start_driver(headless=True, forCME=True)
     tab = []
     need_to_click_cookies = True
+    counter=0
+    totalAssets = len(dictAssets)
     try:
         for asset, product in dictAssets.items():
+            counter+=1
             if asset in ["ER", "CH", "HSCEI"]:
                 try:
                     if verbose:
-                        print_color(f"\nScrapping data for {asset} ", "COMMENT")
+                        print_color(f"\nScrapping data for {asset} [{counter}/{totalAssets}] ", "COMMENT")
                     df = scrap_otherAsset(driver, asset, verbose=False)
                     if len(df) > 0:
                         df["asset"] = asset
@@ -213,7 +216,7 @@ def refresh_data(verbose=True) -> pd.DataFrame:
             else:
                 try:
                     if verbose:
-                        print_color(f"\nScrapping data for {asset} at {STEM}{product.coreURL}{TAIL}", "COMMENT")
+                        print_color(f"\nScrapping data for {asset} [{counter}/{totalAssets}] at {STEM}{product.coreURL}{TAIL}", "COMMENT")
                     df, hasClickedCookies = scrap_asset(driver, asset, verbose=False, need_to_click_cookies=need_to_click_cookies)
                     if len(df) > 0:
                         df["asset"] = asset
@@ -271,13 +274,15 @@ def import_futs_curves(verbose=False) -> str:
                 print_color("Trying again...","COMMENT")
                 time.sleep(10)
             else:
-                tries = MAX_TRIES,
+                tries = MAX_TRIES + 1
+        else:
+            tries = MAX_TRIES + 1
 
     print_color(f"[+]{len(scrappedUnds)} future curves scrapped,  {len(resDB)} lines saved in DB", "RESULT")
     databases_update(resDB.reset_index(), "FUTURES_CURVES", idx=False, mode="append", verbose=verbose, save_insqlite=True)
     # generate the string to be used in the email
     if len(missingUnds) > 0:
-        msg = "Future curves scraped with some errors"
+        msg = f"Future curves scraped with some errors - {len(missingUnds)} missing"
         for el in missingUnds:
             msg += f"\n\tERROR with {el}"
         msg += "-----\n"

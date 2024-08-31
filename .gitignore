@@ -6,6 +6,10 @@ credentials.py
 Finance.db.sql
 *.pyc
 *.log
+*.xls
+*.xlsx
+imports/Files/*
+
 
 /__pycache__/*
 __pycache__/*
