@@ -22,6 +22,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.common.exceptions import TimeoutException, ElementClickInterceptedException
 from selenium.webdriver.common.keys import Keys
+from loguru import logger
 
 from utils.utils import timer, print_color
 from databases.database_mysql import SQLA_last_date, databases_update
@@ -33,6 +34,12 @@ from import_otherfuts import scrap_otherAsset
 # TODO add Eurex and CHF
 # import eurex_curves
 # import CHF_curve
+
+
+fmt = "<green>{time:DD/MM HH:mm:ss}</green> | <level>{level}</level> | <cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>"
+logger.remove()
+logger.add(sys.stderr, format=fmt, level="DEBUG",backtrace=True, diagnose=False)
+logger.add("Files/import_CMEfuts.log",  format=fmt,level="DEBUG", rotation="1 week", backtrace=True, diagnose=False)
 
 
 # * COPIED from CME_common - not great
@@ -93,15 +100,15 @@ def _get_webData(driver, coreURL: str, clickCookies: bool = True):
     hasClickedCookies = False
 
     if clickCookies:
-        print_color("Looking for cookies button", "COMMENT")
+        logger.info("Looking for cookies button")
         try:
             _scroll_down()
             python_button = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.ID, "onetrust-accept-btn-handler")))
-            print_color("Clicking on cookies button", "COMMENT")
+            logger.info("Clicking on cookies button")
             python_button.click()
             hasClickedCookies = True
         except Exception as e:
-            print_color("[-] Cant find cookies button", "FAIL")
+            logger.warning("[-] Cant find cookies button")
 
     _scroll_down()
     time.sleep(1)
@@ -113,16 +120,16 @@ def _get_webData(driver, coreURL: str, clickCookies: bool = True):
             time.sleep(2)
             break
         except TimeoutException:
-            print_color("[-] Timeout getting LOAD ALL button - might just not exist ! Scrolling down again instead", "FAIL")
+            logger.warning("[-] Timeout getting LOAD ALL button - might just not exist ! Scrolling down again instead")
             _scroll_down()
             time.sleep(1)
         except ElementClickInterceptedException:
-            print_color("[-] Could not click the button - might just not exist ! Scrolling down again instead", "FAIL")
+            logger.warning("[-] Could not click the button - might just not exist ! Scrolling down again instead")
             _scroll_down()
             time.sleep(1)
         except Exception as e:
-            print_color(f"[-] Error processing: {e}", "FAIL")
-            print(traceback.format_exc())
+            logger.exception(f"[-] Error processing: {e}")
+            # print(traceback.format_exc())
 
     html = driver.page_source
     soup = BeautifulSoup(html, "html.parser")
@@ -156,18 +163,21 @@ def scrap_asset(driver, asset: str, verbose=True, need_to_click_cookies=True):
         try:
             table_body, hasClickedCookies = _get_webData(driver, coreURL, need_to_click_cookies)
         except:
-            print_color(f"[-] Error getting data for {asset}", "FAIL")
-            print(traceback.format_exc())
+            logger.exception(f"[-] Error getting data for {asset}")
+            # print(traceback.format_exc())
             return None
         try:
             dfFuts = _process_results(table_body)
         except:
-            print_color(f"[-] Error processing data for {asset}", "FAIL")
-            print(traceback.format_exc())
+            logger.exception(f"[-] Error processing data for {asset}", "FAIL")
+            # print(traceback.format_exc())
             return None
         if verbose:
-            print_color(f"\n\n\***************************\n{asset} - {assetDef.ticker} futures curve", "RESULT")
+            # print_color(f"\n\n\***************************\n{asset} - {assetDef.ticker} futures curve", "RESULT")
+            logger.success(f"{asset} - {assetDef.ticker} future curve scrapped")
             print(dfFuts)
+        else:
+            logger.success(f"*** {asset} - {assetDef.ticker} future curve scrapped ***")
         return dfFuts, hasClickedCookies
     else:
         return None, False
@@ -185,15 +195,15 @@ def refresh_data(verbose=True) -> pd.DataFrame:
     driver = start_driver(headless=True, forCME=True)
     tab = []
     need_to_click_cookies = True
-    counter=0
+    counter = 0
     totalAssets = len(dictAssets)
     try:
         for asset, product in dictAssets.items():
-            counter+=1
+            counter += 1
             if asset in ["ER", "CH", "HSCEI"]:
                 try:
                     if verbose:
-                        print_color(f"\nScrapping data for {asset} [{counter}/{totalAssets}] ", "COMMENT")
+                        logger.info(f"\nScrapping data for {asset} [{counter}/{totalAssets}] ")
                     df = scrap_otherAsset(driver, asset, verbose=False)
                     if len(df) > 0:
                         df["asset"] = asset
@@ -201,23 +211,25 @@ def refresh_data(verbose=True) -> pd.DataFrame:
                     if verbose:
                         if len(df) > 0:
                             msg = f"Scraped {asset} - {len(df)} maturities returned"
-                            print_color(msg, "RESULT")
+                            logger.success(msg)
                         else:
                             msg = f"No data returned for {asset}"
-                            print_color(msg, "FAIL")
+                            logger.warning(msg)
                 except KeyboardInterrupt:
-                    print_color("Quitting Selenium driver", "COMMENT")
+                    logger.info("Quitting Selenium driver")
                     driver.quit()
-                    print_color("Exiting...", "COMMENT")
+                    logger.info("Exiting...")
                     exit(0)
                 except Exception as e:
                     msg = f"Error scraping {asset}: {e}"
-                    print_color(msg, "FAIL")
+                    logger.exception(msg)
             else:
                 try:
                     if verbose:
-                        print_color(f"\nScrapping data for {asset} [{counter}/{totalAssets}] at {STEM}{product.coreURL}{TAIL}", "COMMENT")
+                        logger.info(f"\nScrapping data for {asset} [{counter}/{totalAssets}] at {STEM}{product.coreURL}{TAIL}")
                     df, hasClickedCookies = scrap_asset(driver, asset, verbose=False, need_to_click_cookies=need_to_click_cookies)
+                    if df is None:
+                        df = pd.DataFrame()
                     if len(df) > 0:
                         df["asset"] = asset
                         tab.append(df)
@@ -228,28 +240,28 @@ def refresh_data(verbose=True) -> pd.DataFrame:
                     if verbose:
                         if len(df) > 0:
                             msg = f"Scraped {asset} - {len(df)} maturities returned"
-                            print_color(msg, "RESULT")
+                            logger.success(msg)
                         else:
                             msg = f"No data returned for {asset}"
-                            print_color(msg, "FAIL")
+                            logger.warning(msg)
                 except KeyboardInterrupt:
-                    print_color("Quitting Selenium driver", "COMMENT")
+                    logger.info("Quitting Selenium driver")
                     driver.quit()
-                    print_color("Exiting...", "COMMENT")
+                    logger.info("Exiting...")
                     exit(0)
                 except Exception as e:
                     msg = f"Error scraping {asset}: {e}"
-                    print_color(msg, "FAIL")
+                    logger.exception(msg)
 
     except KeyboardInterrupt:
         if driver:
-            print_color("Quitting Selenium driver", "COMMENT")
+            logger.info("Quitting Selenium driver")
             driver.quit()
-        print_color("Exiting...", "COMMENT")
+        logger.info("Exiting...")
         exit(0)
 
     finally:
-        print_color("Quitting Selenium driver", "COMMENT")
+        logger.info("Quitting Selenium driver")
         if driver:
             driver.quit()
 
@@ -259,8 +271,8 @@ def refresh_data(verbose=True) -> pd.DataFrame:
         return df
     return pd.DataFrame()
 
-
-def import_futs_curves(verbose=False) -> str:
+@logger.catch
+def import_futs_curves(verbose=False) -> tuple[str, str]:
     tries = 0
     MAX_TRIES = 2
     while tries <= MAX_TRIES:
@@ -269,17 +281,18 @@ def import_futs_curves(verbose=False) -> str:
         scrappedUnds = resDB["asset"].unique().tolist()
         missingUnds = [c for c in dictAssets.keys() if c not in scrappedUnds]
         if len(missingUnds) > 0:
-            print_color(f"[-] No data was scrapped for {missingUnds}", "FAIL")
+            logger.error(f"[-] No data was scrapped for {missingUnds}")
             if tries <= MAX_TRIES and len(missingUnds) > 3:
-                print_color("Trying again...","COMMENT")
+                logger.info("Trying again...")
                 time.sleep(10)
             else:
                 tries = MAX_TRIES + 1
         else:
             tries = MAX_TRIES + 1
 
-    print_color(f"[+]{len(scrappedUnds)} future curves scrapped,  {len(resDB)} lines saved in DB", "RESULT")
     databases_update(resDB.reset_index(), "FUTURES_CURVES", idx=False, mode="append", verbose=verbose, save_insqlite=True)
+    
+    logger.success(f"[+]{len(scrappedUnds)} future curves scrapped,  {len(resDB)} lines saved in DB")
     # generate the string to be used in the email
     if len(missingUnds) > 0:
         msg = f"Future curves scraped with some errors - {len(missingUnds)} missing"
