@@ -177,7 +177,7 @@ def scrap_asset(driver, asset: str, verbose=True, need_to_click_cookies=True):
             logger.success(f"{asset} - {assetDef.ticker} future curve scrapped")
             print(dfFuts)
         else:
-            logger.success(f"*** {asset} - {assetDef.ticker} future curve scrapped ***")
+            logger.success(f"*** {asset} - {assetDef.ticker} future curve scrapped - {len(dfFuts)} rows***")
         return dfFuts, hasClickedCookies
     else:
         return None, False
@@ -226,7 +226,7 @@ def refresh_data(verbose=True) -> pd.DataFrame:
             else:
                 try:
                     if verbose:
-                        logger.info(f"\nScrapping data for {asset} [{counter}/{totalAssets}] at {STEM}{product.coreURL}{TAIL}")
+                        logger.info(f"\nScrapping data for {asset} [{counter}/{totalAssets}] \n\tat {STEM}{product.coreURL}{TAIL}")
                     df, hasClickedCookies = scrap_asset(driver, asset, verbose=False, need_to_click_cookies=need_to_click_cookies)
                     if df is None:
                         df = pd.DataFrame()
