@@ -156,6 +156,12 @@ def selenium_scrap_simple(link: str):
 
 
 def _sub_getETF_Selenium(driver, ETF_name, exchange="arcx", verbose=True):
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"
+    }
+    session = requests.Session()
+    session.headers.update(headers)
+    
     if exchange[:5] == "funds":
         url = f"https://www.morningstar.com/{exchange}/{ETF_name}/portfolio"
     else:
@@ -163,10 +169,13 @@ def _sub_getETF_Selenium(driver, ETF_name, exchange="arcx", verbose=True):
         EXCHANGE_LIST = [exchange] + [c for c in ["arcx", "xnys", "xnas", "bats"] if c != exchange]
         for exc in EXCHANGE_LIST:
             url = f"https://www.morningstar.com/etfs/{exc}/{ETF_name}/portfolio"
-            r = requests.get(url)
+            print(url)
+            r = session.get(url)
             if r.status_code == 200:
                 foundURL = True
                 break
+            else:
+                print(f'Could not get a positive answer at {url} - {r.status_code}')
         if not foundURL:
             raise SeleniumError("Correct Url could not be found for: " + ETF_name)
     if verbose:

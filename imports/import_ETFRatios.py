@@ -213,9 +213,10 @@ if __name__ == "__main__":
     # add_missing_unds(newList=newList)
 
     print("Latest date in ETF_RATIOS: ", ETFRATIOS_last_date())
-    print(check_underlyings())
-    add_missing_unds(newList=newList)
-    exit(0)
+    unds = check_underlyings()
+    print(f"Existing ({len(unds)}) underlyings:\n",unds)
+    # add_missing_unds(newList=newList)
+    # exit(0)
     res = ETFratios_toDB()
     if res is not None:
         print("full DB:\n", res)
