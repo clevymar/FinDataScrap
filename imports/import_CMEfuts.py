@@ -38,8 +38,8 @@ from import_otherfuts import scrap_otherAsset
 
 fmt = "<green>{time:DD/MM HH:mm:ss}</green> | <level>{level}</level> | <cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>"
 logger.remove()
-logger.add(sys.stderr, format=fmt, level="DEBUG",backtrace=True, diagnose=False)
-logger.add("Files/import_CMEfuts.log",  format=fmt,level="DEBUG", rotation="1 week", backtrace=True, diagnose=False)
+logger.add(sys.stderr, format=fmt, level="DEBUG", backtrace=True, diagnose=False)
+logger.add("Files/import_CMEfuts.log", format=fmt, level="DEBUG", rotation="1 week", backtrace=True, diagnose=False)
 
 
 # * COPIED from CME_common - not great
@@ -96,7 +96,7 @@ def _get_webData(driver, coreURL: str, clickCookies: bool = True):
 
     url = STEM + coreURL + TAIL
     driver.get(url)
-    time.sleep(2)
+    _ = WebDriverWait(driver, 20).until(EC.visibility_of_element_located((By.CLASS_NAME, "main-table-wrapper")))
     hasClickedCookies = False
 
     if clickCookies:
@@ -135,6 +135,8 @@ def _get_webData(driver, coreURL: str, clickCookies: bool = True):
     soup = BeautifulSoup(html, "html.parser")
     table = soup.find(attrs={"class": "main-table-wrapper"})
     table_body = table.find("tbody")
+    if table_body is None:
+        logger.warning("[-] No data found on the webpage")
     return table_body, hasClickedCookies
 
 
@@ -271,6 +273,7 @@ def refresh_data(verbose=True) -> pd.DataFrame:
         return df
     return pd.DataFrame()
 
+
 @logger.catch
 def import_futs_curves(verbose=False) -> tuple[str, str]:
     tries = 0
@@ -291,7 +294,7 @@ def import_futs_curves(verbose=False) -> tuple[str, str]:
             tries = MAX_TRIES + 1
 
     databases_update(resDB.reset_index(), "FUTURES_CURVES", idx=False, mode="append", verbose=verbose, save_insqlite=True)
-    
+
     logger.success(f"[+]{len(scrappedUnds)} future curves scrapped,  {len(resDB)} lines saved in DB")
     # generate the string to be used in the email
     if len(missingUnds) > 0:
