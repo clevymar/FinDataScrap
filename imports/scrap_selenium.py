@@ -175,7 +175,8 @@ def _sub_getETF_Selenium(driver, ETF_name, exchange="arcx", verbose=True):
                 foundURL = True
                 break
             else:
-                print(f'Could not get a positive answer at {url} - {r.status_code}')
+                pass
+                # print(f'Could not get a positive answer at {url} - {r.status_code}')
         if not foundURL:
             raise SeleniumError("Correct Url could not be found for: " + ETF_name)
     if verbose:
