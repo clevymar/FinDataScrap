@@ -1,14 +1,12 @@
-import datetime
-import pandas as pd
-import logging
-
 import os
 import sys
+from time import perf_counter
 
 parentdir = os.path.dirname(os.path.abspath(__file__))
 if parentdir not in sys.path:
     sys.path.insert(0, parentdir)
 
+import pandas as pd
 from rich.console import Console
 from rich.panel import Panel
 from rich import box
@@ -30,22 +28,6 @@ from common import need_reimport
 from utils.utils import print_color, isLocal, timer
 from email_report import send_report, send_email
 from databases.classes import Scrap
-
-
-# log = logging.getLogger('logger')
-# log.setLevel(logging.DEBUG)
-
-# formatter = logging.Formatter('%(message)s - %(levelname)s - %(asctime)s ', datefmt='%Y-%m-%d %H:%M')
-
-# fh = logging.FileHandler('import.log', encoding='utf-8')
-# fh.setLevel(logging.DEBUG)
-# fh.setFormatter(formatter)
-# log.addHandler(fh)
-
-# ch = logging.StreamHandler()
-# ch.setLevel(logging.DEBUG)
-# ch.setFormatter(formatter)
-# log.addHandler(ch)
 
 
 lstScrap = [
@@ -75,6 +57,7 @@ def scrap_main(el: Scrap) -> str:
         need = need_reimport(last_date, datetoCompare)
         if need:
             print_color(f"\n\nFunc {el.func_scrap} will execute as latest date in DB was {last_date}", "HEADER")
+            t0=perf_counter()
             try:
                 res = el.func_scrap()
                 if isinstance(res, list):
@@ -94,6 +77,8 @@ def scrap_main(el: Scrap) -> str:
             except Exception as e:
                 msg = f"[-] Error while scrapping with {el.func_scrap} for {el.name}"
                 raise Exception(msg) from e
+            finally
+            msg+=f"\n\t - run in {perf_counter()-t0:.0f} seconds"
         else:
             msg = output_string(el, f"[i] Data already scraped as of {last_date} - no need to reimport ", "RESULT")
 

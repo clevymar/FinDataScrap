@@ -179,8 +179,8 @@ def _scrap_french_tips(verbose: bool = True) -> bool | None:
     chrome_options = uc.ChromeOptions()
     prefs = {"download.default_directory": str(DIR_DOWNLOAD.resolve())}
     chrome_options.add_experimental_option("prefs", prefs)
-    # Initialize the WebDriver
-    driver = uc.Chrome(headless=False, options=chrome_options)  # ,use_subprocess=False
+    # Initialize the WebDriver - force the version otherwise PythonANywhere wont work
+    driver = uc.Chrome(headless=False, version_main=90, options=chrome_options)  # ,use_subprocess=False
     wait = WebDriverWait(driver, 20)
 
     try:
