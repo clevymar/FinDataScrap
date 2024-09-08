@@ -169,7 +169,6 @@ def _sub_getETF_Selenium(driver, ETF_name, exchange="arcx", verbose=True):
         EXCHANGE_LIST = [exchange] + [c for c in ["arcx", "xnys", "xnas", "bats"] if c != exchange]
         for exc in EXCHANGE_LIST:
             url = f"https://www.morningstar.com/etfs/{exc}/{ETF_name}/portfolio"
-            print(url)
             r = session.get(url)
             if r.status_code == 200:
                 foundURL = True
