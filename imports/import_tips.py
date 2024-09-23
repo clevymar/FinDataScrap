@@ -164,14 +164,14 @@ def _scrap_french_tips(verbose: bool = True) -> bool | None:
             ic(checkbox.text)
             # Click the checkbox
             checkbox.click()
-            console.log("Button clicked")
+            console.log("Cloudflare button clicked")
             for _ in tqdm(range(30)):
                 time.sleep(1)
             return True
         except exceptions.TimeoutException:
-            console.log("Checkbox not found", style=STYLE_ERROR)
+            console.log("Cloudflare checkbox not found", style=STYLE_ERROR)
         except exceptions.ElementClickInterceptedException:
-            console.log("Checkbox not clickable", style=STYLE_ERROR)
+            console.log("Cloudflare checkbox not clickable", style=STYLE_ERROR)
         except Exception as e:
             console.print_exception()
 
@@ -195,13 +195,18 @@ def _scrap_french_tips(verbose: bool = True) -> bool | None:
 
         # Click the button to start the download
         download_button = driver.find_element(By.LINK_TEXT, "Téléchargez les données / Download the data")
+        console.log("Button found - clicking")
         download_button.click()
         time.sleep(15)
         if has_file_been_downloaded():
             return True
-
         # pb with checkbox ?
         pb_with_cloudflare_checkbox()
+
+    except exceptions.TimeoutException:
+        console.log("Timeout", style=STYLE_ERROR)
+    except Exception as e:
+        console.print_exception()
 
     finally:
         driver.quit()

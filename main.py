@@ -1,6 +1,7 @@
 import os
 import sys
 from time import perf_counter
+from typing import Any, Tuple
 
 parentdir = os.path.dirname(os.path.abspath(__file__))
 if parentdir not in sys.path:
@@ -50,6 +51,23 @@ def scrap_main(el: Scrap) -> str:
         print_color(nicestr, type_)
         return f"{start} {el.name}"
 
+    def manage_results(el: Scrap) -> Tuple(Any, str):
+        res = el.func_scrap()
+        if isinstance(res, list):
+            msg = f"[+] Well downloaded for {el.name} - {len(res)} tables"
+            for item in res:
+                msg += f"\n\t {len(item)} rows, {len(item.columns)} cols"
+                print(msg)
+        elif isinstance(res, tuple):
+            msg = res[0]
+        elif isinstance(res, pd.DataFrame):
+            msg = output_string(el, f"[+] Downloaded: {len(res)} rows, {len(res.columns)} cols for ", "RESULT")
+        elif isinstance(res, str):
+            msg = res
+        elif res is None:
+            msg = output_string(el, "[-] No data downloaded for ", "RESULT")
+        return res, msg
+
     try:
         msg = ""
         last_date = el.func_last_date()
@@ -57,28 +75,15 @@ def scrap_main(el: Scrap) -> str:
         need = need_reimport(last_date, datetoCompare)
         if need:
             print_color(f"\n\nFunc {el.func_scrap} will execute as latest date in DB was {last_date}", "HEADER")
-            t0=perf_counter()
+            t0 = perf_counter()
             try:
-                res = el.func_scrap()
-                if isinstance(res, list):
-                    msg = f"[+] Well downloaded for {el.name} - {len(res)} tables"
-                    for item in res:
-                        msg += f"\n\t {len(item)} rows, {len(item.columns)} cols"
-                        print(msg)
-                elif isinstance(res, tuple):
-                    msg = res[0]
-                elif isinstance(res, pd.DataFrame):
-                    msg = output_string(el, f"[+] Downloaded: {len(res)} rows, {len(res.columns)} cols for ", "RESULT")
-                elif isinstance(res, str):
-                    msg = res
-                elif res is None:
-                    msg = output_string(el, "[-] No data downloaded for ", "RESULT")
+                res, msg = manage_results(el)
 
             except Exception as e:
                 msg = f"[-] Error while scrapping with {el.func_scrap} for {el.name}"
                 raise Exception(msg) from e
             finally:
-                msg+=f"\n\t - run in {perf_counter()-t0:.0f} seconds"
+                msg += f"\n\t - run in {perf_counter()-t0:.0f} seconds"
         else:
             msg = output_string(el, f"[i] Data already scraped as of {last_date} - no need to reimport ", "RESULT")
 
