@@ -51,7 +51,7 @@ def scrap_main(el: Scrap) -> str:
         print_color(nicestr, type_)
         return f"{start} {el.name}"
 
-    def manage_results(el: Scrap) -> tuple(Any, str):
+    def manage_results(el: Scrap) -> tuple[Any, str]:
         res = el.func_scrap()
         if isinstance(res, list):
             msg = f"[+] Well downloaded for {el.name} - {len(res)} tables"
