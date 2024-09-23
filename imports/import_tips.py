@@ -19,6 +19,9 @@ from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common import exceptions
 import undetected_chromedriver as uc
+from webdriver_manager.chrome import ChromeDriverManager
+from webdriver_manager.core.utils import read_version_from_cmd
+from webdriver_manager.core.os_manager import PATTERN
 
 from tqdm import tqdm
 from icecream import ic
@@ -31,7 +34,7 @@ parentdir = os.path.dirname(currentdir)
 if parentdir not in sys.path:
     sys.path.insert(0, parentdir)
 
-from utils.utils import timer
+from utils.utils import timer, isLocal
 from databases.database_mysql import SQLA_last_date, databases_update
 from databases.classes import Scrap
 
@@ -74,9 +77,7 @@ def german_tips() -> float | None:
     return None
 
 
-"""
-now French
-"""
+""" now French """
 
 
 def clean_folder():
@@ -177,12 +178,28 @@ def _scrap_french_tips(verbose: bool = True) -> bool | None:
 
     # Setup Chrome options
     chrome_options = uc.ChromeOptions()
-    chrome_options.add_argument('--headless')  # Run Chrome in headless mode
-    chrome_options.add_argument('--disable-gpu')  # Disable GPU acceleration
+    chrome_options.add_argument("--disable-gpu")  # Disable GPU acceleration
     prefs = {"download.default_directory": str(DIR_DOWNLOAD.resolve())}
     chrome_options.add_experimental_option("prefs", prefs)
-    #* Initialize the WebDriver - force the version otherwise PythonANywhere wont work - means wont work locally
-    driver = uc.Chrome(version_main=90, options=chrome_options)  # ,use_subprocess=False
+    console.log("Starting browser")
+    if isLocal():
+        console.log("Downloading current browser...")
+        chrome_driver_path = ChromeDriverManager().install()
+        console.log(f"[+]Downloaded @ {chrome_driver_path}")
+        # version = read_version_from_cmd(chrome_driver_path, PATTERN["google-chrome"])
+        # console.log(f"ChromeDriver version: {version} installed")
+        try:
+            driver = uc.Chrome(service=chrome_driver_path, headless=False, options=chrome_options)
+        except Exception as e:
+            console.log(e) 
+            console.log("Could not start the browser - check if you dont need to update local Chrome browser", style=STYLE_ERROR)
+            exit(0)
+            
+    else:
+        chrome_options.add_argument("--headless")  # Run Chrome in headless mode
+        # * Initialize the WebDriver - force the version otherwise PythonAnywhere wont work
+        driver = uc.Chrome(version_main=90, options=chrome_options)  # ,use_subprocess=False
+
     wait = WebDriverWait(driver, 20)
 
     try:
@@ -195,7 +212,7 @@ def _scrap_french_tips(verbose: bool = True) -> bool | None:
 
         # Click the button to start the download
         download_button = driver.find_element(By.LINK_TEXT, "Téléchargez les données / Download the data")
-        console.log("Button found - clicking")
+        console.log("Download button found - clicking")
         download_button.click()
         time.sleep(15)
         if has_file_been_downloaded():

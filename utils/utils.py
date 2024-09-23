@@ -13,31 +13,30 @@ MYPYTHON_ROOT=os.environ['ONEDRIVECONSUMER']+'\\Python Scripts\\'
 """
 
 
-
 class Color(Enum):
-    HEADER = '\033[95m'
-    FAIL = '\033[91m'
-    ENDC = '\033[0m'
-    BOLD = '\033[1m'
-    UNDERLINE = '\033[4m'
-    WARNING = '\033[93m'
+    HEADER = "\033[95m"
+    FAIL = "\033[91m"
+    ENDC = "\033[0m"
+    BOLD = "\033[1m"
+    UNDERLINE = "\033[4m"
+    WARNING = "\033[93m"
 
-    BLUE = '\033[94m'
-    CYAN = '\033[96m'
-    GREEN = '\033[92m'
-    RED = '\033[91m'
-    PINK = '\033[95m'
-    YELLOW = '\033[33m'
-    
-    RESULT  = GREEN
+    BLUE = "\033[94m"
+    CYAN = "\033[96m"
+    GREEN = "\033[92m"
+    RED = "\033[91m"
+    PINK = "\033[95m"
+    YELLOW = "\033[33m"
+
+    RESULT = GREEN
     COMMENT = BLUE
-    DBCONNECT  = YELLOW
+    DBCONNECT = YELLOW
 
     def __str__(self):
         return self.value
 
 
-def print_color(text:str, color:Union[str,Color], logger=None):
+def print_color(text: str, color: Union[str, Color], logger=None):
     """
     The function `print_color` takes a string and a color as input and prints the string in the
     specified color.
@@ -49,36 +48,38 @@ def print_color(text:str, color:Union[str,Color], logger=None):
     :type color: Union[str,Color]
     """
     if isinstance(color, str):
-        col=Color[color.upper()]
+        col = Color[color.upper()]
     else:
-        col=color
+        col = color
     if logger:
         logger.info(f"{col}{text}{Color.ENDC}")
     else:
         print(f"{col}{text}{Color.ENDC}")
 
 
-
 def timer(func):
     """A decorator that prints the execution time for the decorated function"""
+
     @wraps(func)
     def wrapper(*args, **kwargs):
         start_time = time.perf_counter()
         result = func(*args, **kwargs)
         end_time = time.perf_counter()
-        print_color(f"[I]Function {func.__name__} from module {func.__module__} took {end_time - start_time:,.1f} seconds",'COMMENT')
+        print_color(f"[I]Function {func.__name__} from module {func.__module__} took {end_time - start_time:,.1f} seconds", "COMMENT")
         return result
+
     return wrapper
 
 
-if os.environ.get('HOMEPATH')=='\\Users\\clevy':
-    LOCATION='LOCAL'
+if os.environ.get("HOMEPATH") == "\\Users\\clevy":
+    LOCATION = "LOCAL"
 else:
-    LOCATION='SERVER'
+    LOCATION = "SERVER"
+
 
 def isLocal():
-    return (LOCATION=="LOCAL")
+    return LOCATION == "LOCAL"
 
 
-if __name__ == '__main__':
-    print_color('Test test testing', Color.HEADER)
+if __name__ == "__main__":
+    print_color("Test test testing", Color.HEADER)
