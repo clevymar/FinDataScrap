@@ -181,7 +181,7 @@ def _scrap_french_tips(verbose: bool = True) -> bool | None:
     chrome_options.add_argument('--disable-gpu')  # Disable GPU acceleration
     prefs = {"download.default_directory": str(DIR_DOWNLOAD.resolve())}
     chrome_options.add_experimental_option("prefs", prefs)
-    # Initialize the WebDriver - force the version otherwise PythonANywhere wont work
+    #* Initialize the WebDriver - force the version otherwise PythonANywhere wont work - means wont work locally
     driver = uc.Chrome(version_main=90, options=chrome_options)  # ,use_subprocess=False
     wait = WebDriverWait(driver, 20)
 

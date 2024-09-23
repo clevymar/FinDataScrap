@@ -77,8 +77,8 @@ def scrap_main(el: Scrap) -> str:
             except Exception as e:
                 msg = f"[-] Error while scrapping with {el.func_scrap} for {el.name}"
                 raise Exception(msg) from e
-            finally
-            msg+=f"\n\t - run in {perf_counter()-t0:.0f} seconds"
+            finally:
+                msg+=f"\n\t - run in {perf_counter()-t0:.0f} seconds"
         else:
             msg = output_string(el, f"[i] Data already scraped as of {last_date} - no need to reimport ", "RESULT")
 
