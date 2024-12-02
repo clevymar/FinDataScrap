@@ -10,9 +10,10 @@ if parentdir not in sys.path:
 import pandas as pd
 import numpy as np
 from icecream import ic
+from loguru import logger
 
 from common import need_reimport, isLocal, last_bd
-from utils.utils import timer, print_color
+from utils.utils import timer
 from scrap_selenium import selenium_scrap_ratios
 from databases.database_mysql import SQLA_last_date, databases_update, PADB_connection
 from databases.classes import Scrap
@@ -50,7 +51,7 @@ SECTORS = [
     "Utilities",
 ]
 
-MAX_TOUPDATE = int(10 * 60 / 6)  # * around 6 secs per udnerlying, want to limit to 10 mins
+MAX_TOUPDATE = int(10 * 60 / 6)  # * around 6 secs per underlying, want to limit to 10 mins
 # MAX_TOUPDATE = 2
 
 benchmark = "ACWI"
@@ -122,7 +123,8 @@ def _prep_ratios(ratios: pd.DataFrame, dfExisting: pd.DataFrame) -> pd.DataFrame
 
 # newList = ["ERUS", "GULF", "ITKY", "JKL", "RSX", "XTH"]
 # newList = ['XOP','GXG','CEE']
-newList = ['FYLD','AVDV']
+newList = ["FYLD", "AVDV"]
+
 
 def add_missing_unds(newList: list) -> None:
     with PADB_connection() as conn:
@@ -131,19 +133,19 @@ def add_missing_unds(newList: list) -> None:
     existingRatiosUnds = sorted(dfExisting["index"].to_list())
     undstoAdd = [c for c in newList if c not in existingRatiosUnds]
     if len(undstoAdd) > 0:
-        print(f"These are the {len(undstoAdd)} ETFs to add: ", undstoAdd)
+        logger.info(f"These are the {len(undstoAdd)} ETFs to add: {undstoAdd}")
         ratios, errs = selenium_scrap_ratios(undstoAdd, verbose=isLocal())
         dfNew = _prep_ratios(ratios, dfExisting)
         databases_update(dfNew, "ETF_RATIOS", idx=False, mode="replace", verbose=True, save_insqlite=True)
     else:
-        print("No ETFs to add")
+        logger.info("No ETFs to add")
 
 
 def _refresh_existing_unds() -> tuple[list | None, pd.DataFrame | None]:
     with PADB_connection() as conn:
         dfExisting = pd.read_sql_query("SELECT * FROM ETF_RATIOS", conn)
     if dfExisting is None or len(dfExisting) == 0:
-        print_color(f"[-] Big problem, ETF_RATIOS is empty ! Will regenerate from saved list in Nov 2023", "red")
+        logger.error("Big problem, ETF_RATIOS is empty! Will regenerate from saved list in Nov 2023")
         unds = regenerate_ETF_list()
         return unds, None
 
@@ -153,24 +155,22 @@ def _refresh_existing_unds() -> tuple[list | None, pd.DataFrame | None]:
         undsToUpdate = dfExisting[dfExisting["need_reimport"]]["index"].tolist()
         l = len(undsUptodate)
         if l > 0:
-            print_color(f"{l} underlyings already updated", "COMMENT")
-            print("\t", undsUptodate)
+            logger.info(f"{l} underlyings already updated: {undsUptodate}")
 
         l = len(undsToUpdate)
         if l == 0:
-            print_color("No underlyings to update", "RESULT")
+            logger.success("No underlyings to update")
             return None, dfExisting
         elif l <= MAX_TOUPDATE:
-            print_color(f"{l} underlyings to update", "COMMENT")
+            logger.info(f"{l} underlyings to update: {undsToUpdate}")
             unds = undsToUpdate
-            print("\t", unds)
         else:
-            print_color(f"{len(undsToUpdate)} underlyings to update\nChoosing {MAX_TOUPDATE} underlyings starting with the oldest ones", "COMMENT")
+            logger.info(f"{len(undsToUpdate)} underlyings to update. Choosing {MAX_TOUPDATE} underlyings starting with the oldest ones")
             dfOld = dfExisting[dfExisting["index"].isin(undsToUpdate)].sort_values("Last_updated", ascending=True)
             if len(dfOld) > MAX_TOUPDATE:
                 dfOld = dfOld.iloc[:MAX_TOUPDATE]
             unds = list(set(dfOld["index"].tolist()))
-            print(f"\tscrapping {len(unds)} unds:", unds)
+            logger.info(f"Scrapping {len(unds)} underlyings: {unds}")
         return unds, dfExisting
 
 
@@ -197,7 +197,7 @@ def ETFratios_toDB(verbose=True):
     if dfNew is not None and len(dfNew) > 0:
         databases_update(dfNew, "ETF_RATIOS", idx=False, mode="replace", verbose=verbose, save_insqlite=True)
     else:
-        print_color("No data was returned by the scrapping process", "RESULT")
+        logger.info("No data was returned by the scrapping process")
         return None
     return dfNew
 
@@ -212,12 +212,17 @@ ScrapRatios = Scrap("ETF_RATIOS", ETFratios_toDB, ETFRATIOS_last_date, datetoCom
 if __name__ == "__main__":
     # add_missing_unds(newList=newList)
 
-    print("Latest date in ETF_RATIOS: ", ETFRATIOS_last_date())
+    undsToRefresh = ["EWZ","XLE"]
+    ratios, errs = selenium_scrap_ratios(undsToRefresh, verbose=True)
+
+    exit(0)
+
+    logger.info(f"Latest date in ETF_RATIOS: {ETFRATIOS_last_date()}")
     unds = check_underlyings()
-    print(f"Existing ({len(unds)}) underlyings:\n",unds)
+    logger.info(f"Existing ({len(unds)}) underlyings: {unds}")
     # add_missing_unds(newList=newList)
     # exit(0)
     res = ETFratios_toDB()
     if res is not None:
-        print("full DB:\n", res)
-        print("updated:\n", res[res["Date"] == last_bd])
+        logger.info(f"full DB: {res}")
+        logger.info(f"updated: {res[res['Date'] == last_bd]}")

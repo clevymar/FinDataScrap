@@ -1,7 +1,14 @@
 import requests
 import json
+import time
+import random
+import os
+import sys
+
 from bs4 import BeautifulSoup
 import pandas as pd
+from tqdm import tqdm
+from loguru import logger
 
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -10,19 +17,16 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.remote.webelement import WebElement
-from tqdm import tqdm
+from selenium.common.exceptions import TimeoutException
 
-import os
-import sys
 
 currentdir = os.path.dirname(os.path.abspath(__file__))
 parentdir = os.path.dirname(currentdir)
 if parentdir not in sys.path:
     sys.path.insert(0, parentdir)
 
-
 from common import last_bd, fichierTSUnderlyings
-from utils.utils import timer, print_color
+from utils.utils import timer
 from databases.database_mysql import SQLA_read_table
 
 COLS_MORNINGSTAR = [
@@ -79,31 +83,100 @@ def _clean_price(s):
         s = s.replace("'", ".")
         return float(s[:5])
     except Exception as e:
-        print(e)
+        logger.exception(e)
         return None
 
 
 def details_element(element: WebElement):
-    id = element.get_attribute('id')
-    print(f'ID: {id}')
+    id = element.get_attribute("id")
+    logger.info(f"ID: {id}")
 
     # Get its name
-    name = element.get_attribute('name')
-    print(f'Name: {name}')
+    name = element.get_attribute("name")
+    logger.info(f"Name: {name}")
 
     # Get its text
     text = element.text
-    print(f'Text: {text}')
+    logger.info(f"Text: {text}")
 
     # Get its class
-    class_name = element.get_attribute('class')
-    print(f'Class: {class_name}')
+    class_name = element.get_attribute("class")
+    logger.info(f"Class: {class_name}")
 
     # Get its tag name
     tag_name = element.tag_name
-    print(f'Tag Name: {tag_name}')
+    logger.info(f"Tag Name: {tag_name}")
 
-def start_driver(headless=True, forCME=False):
+
+""" dealing with captcha"""
+
+
+def get_cookies_from_file(fichier: str = "morningstar_cookies.txt"):
+    def convert_to_dict(line):
+        line = line.replace("'", '"').replace("False", "false").replace("True", "true")
+        return json.loads(line)
+
+    with open(fichier, "r") as file:
+        content = file.read()
+
+    cookie_strings = content.split("},{")
+    cookie_strings[0] = cookie_strings[0] + "}"
+    for i in range(1, len(cookie_strings) - 1):
+        cookie_strings[i] = "{" + cookie_strings[i] + "}"
+    cookie_strings[-1] = "{" + cookie_strings[-1]
+
+    # Convert each split string to a dictionary and print the elements
+    res = []
+    for cookie_string in cookie_strings:
+        cookie_dict = convert_to_dict(cookie_string.strip())
+        res.append(cookie_dict)
+    return res
+
+
+def proc_to_get_manually_cookies(fichier: str = "temp_cookies.txt"):
+    driver = start_driver(headless=False)
+    url = "https://www.morningstar.com/etfs/arcx/DGS/portfolio"
+    driver.get(url)
+    try:
+        btn = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CLASS_NAME, "amzn-captcha-verify-button")))
+        btn.click()
+    except:
+        logger.warning("Button not found")
+    time.sleep(15)
+
+    cookies = driver.get_cookies()
+    logger.info(cookies)
+
+    # Save cookies
+    with open(fichier, "w") as file:
+        file.write(str(cookies))
+
+    driver.quit()
+
+
+def hack_captcha(driver):
+    cookies = get_cookies_from_file()
+    driver.execute_cdp_cmd("Network.enable", {})
+    for cookie in cookies:
+        # Fix issue Chrome exports 'expiry' key but expects 'expire' on import
+        if "expiry" in cookie:
+            cookie["expires"] = cookie["expiry"]
+            del cookie["expiry"]
+        # Set the actual cookie
+        res=driver.execute_cdp_cmd("Network.setCookie", cookie)
+
+    # Disable network tracking
+    driver.execute_cdp_cmd('Network.disable', {})
+    logger.info("\n cookies loaded")
+    time.sleep(1)
+    # print(driver.get_cookies())
+    return
+
+
+""" dealing with captcha - END """
+
+
+def start_driver(headless: bool = True, forCME: bool = False, forMorninstar: bool = False):
     """
     The function `start_driver` creates a headless Chrome driver with specific options"""
     from selenium import webdriver
@@ -120,48 +193,55 @@ def start_driver(headless=True, forCME=False):
             # chrome_options.add_argument("--start-maximized")
             chrome_options.add_argument("--disable-dev-shm-usage")
             chrome_options.add_argument("--headless=new")
-
         else:
             if headless:
                 chrome_options.add_argument("--headless")
+            if forMorninstar:
+                chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
+                chrome_options.add_experimental_option("useAutomationExtension", False)
+                chrome_options.add_argument("--disable-blink-features=AutomationControlled")
+
         chrome_options.add_argument("--disable-gpu")
         chrome_options.add_argument("--log-level=3")
+        chrome_options.add_argument("--enable-unsafe-swiftshader")
+
         driver = webdriver.Chrome(options=chrome_options)
 
         return driver
     except Exception as e:
         if driver:
             driver.quit()
+        logger.exception("Could not create the driver")
         raise Exception("Could not create the driver") from e
 
 
-@timer
-def selenium_scrap_simple(link: str):
-    """
-    The function `selenium_scrap_simple` uses Selenium to scrape the HTML source code of a given link.
-    :param link: The `link` parameter is a string that represents the URL of the webpage you want to
-    scrape using Selenium
-    """
-    html_source = None
-    driver = start_driver()
-    try:
-        driver.get(link)
-        html_source = driver.page_source
-    except Exception as e:
-        raise Exception("Could not scrap the link at {link}") from e
-    finally:
-        print_color("Quitting Selenium driver", "COMMENT")
-        driver.quit()
-    return html_source
+# @timer
+# def selenium_scrap_simple(link: str, headless: bool = True):
+#     """
+#     The function `selenium_scrap_simple` uses Selenium to scrape the HTML source code of a given link.
+#     :param link: The `link` parameter is a string that represents the URL of the webpage you want to
+#     scrape using Selenium
+#     """
+#     html_source = None
+#     driver = start_driver(headless=headless)
+#     hack_captcha(driver)
+#     try:
+#         driver.get(link)
+#         time.sleep(0.25 + random.random())
+#         html_source = driver.page_source
+#     except Exception as e:
+#         raise Exception("Could not scrap the link at {link}") from e
+#     finally:
+#         print_color("Quitting Selenium driver", "COMMENT")
+#         driver.quit()
+#     return html_source
 
 
-def _sub_getETF_Selenium(driver, ETF_name, exchange="arcx", verbose=True):
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"
-    }
+def _get_url(ETF_name:str, exchange="arcx", verbose=True):
+    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"}
     session = requests.Session()
     session.headers.update(headers)
-    
+
     if exchange[:5] == "funds":
         url = f"https://www.morningstar.com/{exchange}/{ETF_name}/portfolio"
     else:
@@ -170,7 +250,7 @@ def _sub_getETF_Selenium(driver, ETF_name, exchange="arcx", verbose=True):
         for exc in EXCHANGE_LIST:
             url = f"https://www.morningstar.com/etfs/{exc}/{ETF_name}/portfolio"
             r = session.get(url)
-            if r.status_code == 200:
+            if r.status_code in [200, 202]:
                 foundURL = True
                 break
             else:
@@ -179,11 +259,32 @@ def _sub_getETF_Selenium(driver, ETF_name, exchange="arcx", verbose=True):
         if not foundURL:
             raise SeleniumError("Correct Url could not be found for: " + ETF_name)
     if verbose:
-        print_color(f"\n[+]Scrapping for {ETF_name} on {exchange=} at {url=}", "COMMENT")
+        logger.info(f"\n[+]Scrapping for {ETF_name} on {exchange=} at {url=}")
+    return url
+
+
+def _sub_getETF_Selenium(driver, ETF_name:str, exchange="arcx", verbose=True):
+    
+    url = _get_url(ETF_name, exchange=exchange, verbose=verbose)
     driver.get(url)
     wait = WebDriverWait(driver, 15)
-    element = wait.until(EC.presence_of_element_located((By.CLASS_NAME, "sal-sector-exposure__sector-table")))
-    element = wait.until(EC.presence_of_element_located((By.CLASS_NAME, "sal-measures__value-table")))
+    max_attempts = 3
+    for i in range(max_attempts):
+        try:
+            _ = WebDriverWait(driver, 5 * (i + 1)).until(EC.presence_of_element_located((By.CLASS_NAME, "sal-sector-exposure__sector-table")))
+            break  # Exit the loop if successful
+        except TimeoutException:
+            logger.info(f"\t[-]Retrying {ETF_name} sectors grab - attempt {i+2}")
+            continue  # Retry if a timeout occurs
+
+    # time.sleep(0.25+random.random())
+    for i in range(max_attempts):
+        try:
+            _ = WebDriverWait(driver, 5 * (i + 1)).until(EC.presence_of_element_located((By.CLASS_NAME, "sal-measures__value-table")))
+            break  # Exit the loop if successful
+        except TimeoutException:
+            logger.info(f"\t[-]Retrying {ETF_name} measures grab - attempt {i+2}")
+            continue  # Retry if a timeout occurs
 
     html_source = driver.page_source
     source_data = html_source.encode("utf-8")
@@ -258,7 +359,8 @@ def selenium_scrap_ratios(secList: list, verbose=True):
     df = pd.DataFrame()
     dfETFRef = SQLA_read_table("ETF_REF")
 
-    driver = start_driver()
+    driver = start_driver(headless=True, forMorninstar=True)
+    hack_captcha(driver)
     try:
         for sec in tqdm(secList):
             exc = "arcx"
@@ -270,23 +372,30 @@ def selenium_scrap_ratios(secList: list, verbose=True):
             try:
                 tmp = _sub_getETF_Selenium(driver, sec, exchange=exc, verbose=verbose)
                 res.append(tmp.copy())
-            except Exception as e:
-                print_color(f"[-]Error in scrapping with selenium for {sec}: \n", "FAIL")
-                print(e)
+            except TimeoutException:
+                logger.error(f"[-]Error in scrapping with selenium for {sec} - TIMEOUT")
+                errs.append(sec)
+
+            except Exception:
+                logger.exception(f"[-]Error in scrapping with selenium for {sec}")
                 errs.append(sec)
 
         if len(res) > 0:
             df = pd.DataFrame(res)
-            print_color(f"[+] {len(df)} underlyings ratios scrapped", "RESULT")
+            logger.success(f"[+] {len(df)} underlyings ratios scrapped")
             if verbose:
                 print(df)
         else:
-            print_color(f"[-]No data was scrapped with selenium", "RESULT")
+            logger.warning(f"[-]No data was scrapped with selenium")
 
         if len(errs) > 0:
-            print_color(f"[-]Errors in scrapping with selenium for {len(errs)} underlyings", "FAIL")
-            print(errs)
+            logger.warning(f"[-]Errors in scrapping with selenium for {len(errs)} underlyings")
+            logger.error(errs)
     finally:
-        print_color("Quitting Selenium driver", "COMMENT")
+        logger.info("Quitting Selenium driver")
         driver.quit()
     return df, errs
+
+
+if __name__ == "__main__":
+    pass
