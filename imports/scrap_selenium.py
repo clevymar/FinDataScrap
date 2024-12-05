@@ -276,7 +276,7 @@ def _get_url(ETF_name:str, exchange="arcx", verbose=True):
         if not foundURL:
             raise SeleniumError("Correct Url could not be found for: " + ETF_name)
     if verbose:
-        logger.info(f"\n[+]Scrapping for {ETF_name} on {exchange=} at {url=}")
+        logger.info(f"Scrapping for {ETF_name} on {exchange=} at {url=}")
     return url
 
 
@@ -399,7 +399,7 @@ def selenium_scrap_ratios(secList: list, verbose=True):
 
         if len(res) > 0:
             df = pd.DataFrame(res)
-            logger.success(f"[+] {len(df)} underlyings ratios scrapped")
+            logger.success(f"{len(df)} underlyings ratios scrapped")
             if verbose:
                 print(df)
         else:
