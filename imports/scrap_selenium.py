@@ -110,13 +110,30 @@ def details_element(element: WebElement):
 
 """ dealing with captcha"""
 
+def find_cookie_file(file_path:str = "morningstar_cookies.txt"):
+    if os.path.exists(file_path):
+        pass        
+    else:
+        file_path=f"imports/{file_path}"
+        if os.path.exists(file_path):
+            pass
+        else:
+            return None
+    return file_path
+
+
 
 def get_cookies_from_file(fichier: str = "morningstar_cookies.txt"):
     def convert_to_dict(line):
         line = line.replace("'", '"').replace("False", "false").replace("True", "true")
         return json.loads(line)
 
-    with open(fichier, "r") as file:
+    file_path = find_cookie_file(fichier)
+    if file_path is None:
+        logger.error("cant find cookie file - proceeeding without")
+        return None
+    
+    with open(file_path, "r") as file:
         content = file.read()
 
     cookie_strings = content.split("},{")
@@ -146,29 +163,28 @@ def proc_to_get_manually_cookies(fichier: str = "temp_cookies.txt"):
 
     cookies = driver.get_cookies()
     logger.info(cookies)
-
-    # Save cookies
     with open(fichier, "w") as file:
         file.write(str(cookies))
-
     driver.quit()
 
 
 def hack_captcha(driver):
     cookies = get_cookies_from_file()
-    driver.execute_cdp_cmd("Network.enable", {})
-    for cookie in cookies:
-        # Fix issue Chrome exports 'expiry' key but expects 'expire' on import
-        if "expiry" in cookie:
-            cookie["expires"] = cookie["expiry"]
-            del cookie["expiry"]
-        # Set the actual cookie
-        res=driver.execute_cdp_cmd("Network.setCookie", cookie)
+    if cookies:
+        driver.execute_cdp_cmd("Network.enable", {})
+        for cookie in cookies:
+            # Fix issue Chrome exports 'expiry' key but expects 'expire' on import
+            if "expiry" in cookie:
+                cookie["expires"] = cookie["expiry"]
+                del cookie["expiry"]
+            # Set the actual cookie
+            res=driver.execute_cdp_cmd("Network.setCookie", cookie)
 
-    # Disable network tracking
-    driver.execute_cdp_cmd('Network.disable', {})
-    logger.info("\n cookies loaded")
-    time.sleep(1)
+        # Disable network tracking
+        driver.execute_cdp_cmd('Network.disable', {})
+        logger.info("\n cookies loaded")
+        time.sleep(1)
+        
     # print(driver.get_cookies())
     return
 

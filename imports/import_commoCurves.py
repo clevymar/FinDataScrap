@@ -28,7 +28,7 @@ if isLocal():
     MYPYTHON_ROOT = os.environ["ONEDRIVECONSUMER"] + "\\Python Scripts\\"
     DIR_COMMOS = MYPYTHON_ROOT + "Finance\\Commos\\"
     sys.path.append(DIR_COMMOS)
-    from commos_definitions_local import URL_COMPO_DBC, DICT_NAMES, DICT_REPLACE_FUTURES
+    from commos_definitions import URL_COMPO_DBC, DICT_NAMES, DICT_REPLACE_FUTURES
 else:
     """for pythonanywhere need to copy manually the definitions here from commos_definitions_local.py"""
     URL_COMPO_DBC = "https://www.invesco.com/us/financial-products/etfs/holdings/main/holdings/0?audienceType=Advisor&action=download&ticker=DBC"
