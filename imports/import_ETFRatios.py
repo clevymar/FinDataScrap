@@ -181,7 +181,7 @@ def update_secs():
         dfNew = _prep_ratios(ratios, dfExisting)
     else:
         dfNew = None
-    return dfNew
+    return dfNew, errs
 
 
 def check_underlyings() -> list[str]:
@@ -193,13 +193,16 @@ def check_underlyings() -> list[str]:
 
 @timer
 def ETFratios_toDB(verbose=True):
-    dfNew = update_secs()
+    dfNew, errs = update_secs()
     if dfNew is not None and len(dfNew) > 0:
         databases_update(dfNew, "ETF_RATIOS", idx=False, mode="replace", verbose=verbose, save_insqlite=True)
+        msg = f"Updated {len(dfNew)} underlyings"
+        msg += f"\nErrors with {len(errs)} underlyings: {','.join(errs)}"
     else:
-        logger.info("No data was returned by the scrapping process")
+        msg = "No ETF data was returned by the scrapping process"
+        logger.info(msg)
         return None
-    return dfNew
+    return msg, dfNew
 
 
 def ETFRATIOS_last_date():
@@ -212,7 +215,7 @@ ScrapRatios = Scrap("ETF_RATIOS", ETFratios_toDB, ETFRATIOS_last_date, datetoCom
 if __name__ == "__main__":
     # add_missing_unds(newList=newList)
 
-    undsToRefresh = ["EWZ","XLE"]
+    undsToRefresh = ["FYLD", "QVAL"]
     ratios, errs = selenium_scrap_ratios(undsToRefresh, verbose=True)
 
     exit(0)
@@ -222,7 +225,7 @@ if __name__ == "__main__":
     logger.info(f"Existing ({len(unds)}) underlyings: {unds}")
     # add_missing_unds(newList=newList)
     # exit(0)
-    res = ETFratios_toDB()
+    msg, res = ETFratios_toDB()
     if res is not None:
         logger.info(f"full DB: {res}")
         logger.info(f"updated: {res[res['Date'] == last_bd]}")

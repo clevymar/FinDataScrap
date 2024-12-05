@@ -252,6 +252,7 @@ def _get_url(ETF_name:str, exchange="arcx", verbose=True):
             r = session.get(url)
             if r.status_code in [200, 202]:
                 foundURL = True
+                exchange = exc
                 break
             else:
                 pass

@@ -11,6 +11,7 @@ import pandas as pd
 from rich.console import Console
 from rich.panel import Panel
 from rich import box
+from loguru import logger
 
 console = Console()
 
@@ -26,7 +27,7 @@ from imports.import_CMEfuts import ScrapCMEFuts
 from imports.import_tips import ScrapTIPS
 
 from common import need_reimport
-from utils.utils import print_color, isLocal, timer
+from utils.utils import isLocal, timer
 from email_report import send_report, send_email
 from databases.classes import Scrap
 
@@ -48,7 +49,12 @@ lstScrap = [
 def scrap_main(el: Scrap) -> str:
     def output_string(el: Scrap, start: str, type_: str):
         nicestr = f"{start} \033[6;30;42m{el.name}\033[0m"
-        print_color(nicestr, type_)
+        if type_ == "RESULT":
+            logger.success(nicestr)
+        elif type_ == "ERROR":
+            logger.error(nicestr)
+        else:
+            logger.info(nicestr)
         return f"{start} {el.name}"
 
     def manage_results(el: Scrap) -> tuple[Any, str]:
@@ -57,13 +63,15 @@ def scrap_main(el: Scrap) -> str:
             msg = f"[+] Well downloaded for {el.name} - {len(res)} tables"
             for item in res:
                 msg += f"\n\t {len(item)} rows, {len(item.columns)} cols"
-                print(msg)
+                logger.success(msg)
         elif isinstance(res, tuple):
             msg = res[0]
+            logger.info(msg)
         elif isinstance(res, pd.DataFrame):
             msg = output_string(el, f"[+] Downloaded: {len(res)} rows, {len(res.columns)} cols for ", "RESULT")
         elif isinstance(res, str):
             msg = res
+            logger.info(msg)
         elif res is None:
             msg = output_string(el, "[-] No data downloaded for ", "RESULT")
         return res, msg
@@ -74,13 +82,14 @@ def scrap_main(el: Scrap) -> str:
         datetoCompare = el.datetoCompare
         need = need_reimport(last_date, datetoCompare)
         if need:
-            print_color(f"\n\nFunc {el.func_scrap} will execute as latest date in DB was {last_date}", "HEADER")
+            logger.info(f"\n\nFunc {el.func_scrap} will execute as latest date in DB was {last_date}")
             t0 = perf_counter()
             try:
                 res, msg = manage_results(el)
 
             except Exception as e:
                 msg = f"[-] Error while scrapping with {el.func_scrap} for {el.name}"
+                logger.exception(msg)
                 raise Exception(msg) from e
             finally:
                 msg += f"\n\t - run in {perf_counter()-t0:.0f} seconds"
@@ -95,7 +104,7 @@ def scrap_main(el: Scrap) -> str:
 @timer
 def scrap_all():
     if not isLocal():
-        print("\n\n\n", "-" * 30)
+        logger.info("\n\n\n" + "-" * 30)
     msg = ""
     hasError = False
     for el in lstScrap:
@@ -107,12 +116,12 @@ def scrap_all():
                 hasError = True
             msg += tmp + "\n"
         except Exception as e:
-            print_color("MAJOR - " + errorMessage, "FAIL")
+            logger.error("MAJOR - " + errorMessage)
             msg += errorMessage + "\n"
             hasError = True
-            print(e)
+            logger.exception(e)
 
-    print("\n\n")
+    logger.info("\n\n")
     console.print(Panel(msg, title="Import Report", box=box.DOUBLE_EDGE, style="bold green"))
     subject = "Daily financial scrapping"
     if hasError:
@@ -120,7 +129,7 @@ def scrap_all():
     send_email(subject=subject, body=msg)
 
     if not isLocal():
-        print("\n\n\n", "*** IMPORT ENDED ***")
+        logger.success("\n\n\n" + "*** IMPORT ENDED ***")
 
 
 if __name__ == "__main__":
