@@ -244,7 +244,6 @@ def _get_url(ETF_name: str, exchange="arcx", verbose=True):
         for exc in EXCHANGE_LIST:
             url = f"https://www.morningstar.com/etfs/{exc}/{ETF_name}/portfolio"
             r = session.get(url)
-            print(exc, r.status_code)
             if r.status_code in [200, 202]:
                 foundURL = True
                 exchange = exc
@@ -365,7 +364,9 @@ def selenium_scrap_ratios(secList: list, verbose=True):
     driver = start_driver(headless=True, forMorninstar=True)
     hack_captcha(driver)
     try:
-        for sec in tqdm(secList):
+        pbar = tqdm(secList)
+        for sec in pbar:
+            pbar.set_description(f"Processing {sec}")
             exc = "arcx"
             tmp = dfETF_RATIOS.loc[sec]
             if len(tmp) == 0:
@@ -412,4 +413,4 @@ def selenium_scrap_ratios(secList: list, verbose=True):
 
 
 if __name__ == "__main__":
-    selenium_scrap_ratios(["QVAL"], True)
+    selenium_scrap_ratios(["FYLD", "ENZL"], True)
