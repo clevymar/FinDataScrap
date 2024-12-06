@@ -106,12 +106,13 @@ def scrap_main(el: Scrap) -> str:
 @timer
 def scrap_all():
     if not isLocal():
-        logger.info("\n\n\n" + "-" * 30)
+        print("\n\n\n" + "-" * 30)
     msg = ""
     hasError = False
     for el in lstScrap:
         errorMessage = f"Error while scrapping for {el.name}"
         try:
+            console.rule(f"Scraping {el.name}")
             tmp = scrap_main(el)
             if tmp is None:
                 tmp = errorMessage
@@ -123,7 +124,7 @@ def scrap_all():
             hasError = True
             logger.exception(e)
 
-    logger.info("\n\n")
+    print("\n\n")
     console.print(Panel(msg, title="Import Report", box=box.DOUBLE_EDGE, style="bold green"))
     subject = "Daily financial scrapping"
     if hasError:
