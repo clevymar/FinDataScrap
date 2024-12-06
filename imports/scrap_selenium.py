@@ -72,7 +72,7 @@ dictInput = json.load(open(fichierTSUnderlyings, "r"))
 fullList = dictInput["EQTY_SPOTS"]
 
 # ratios = []
-initDict = {x: "" for x in COLS_MORNINGSTAR}
+initDict: dict[str, str | float] = {x: "" for x in COLS_MORNINGSTAR}
 errs: list[str] = []
 
 
@@ -244,13 +244,11 @@ def _get_url(ETF_name: str, exchange="arcx", verbose=True):
         for exc in EXCHANGE_LIST:
             url = f"https://www.morningstar.com/etfs/{exc}/{ETF_name}/portfolio"
             r = session.get(url)
+            print(exc, r.status_code)
             if r.status_code in [200, 202]:
                 foundURL = True
                 exchange = exc
                 break
-            else:
-                pass
-                # print(f'Could not get a positive answer at {url} - {r.status_code}')
         if not foundURL:
             raise SeleniumError("Correct Url could not be found for: " + ETF_name)
     if verbose:
@@ -263,7 +261,6 @@ def _sub_getETF_Selenium(driver, ETF_name: str, exchange="arcx", verbose=True):
         for i in range(max_attempts):
             try:
                 _ = WebDriverWait(driver, 3 * (i + 1)).until(EC.presence_of_element_located((By.CLASS_NAME, class_name)))
-                hasAnythingWorked = True
                 return True  # Exit the loop if successful
             except TimeoutException:
                 if i < max_attempts:
@@ -281,6 +278,7 @@ def _sub_getETF_Selenium(driver, ETF_name: str, exchange="arcx", verbose=True):
     # need to run first befor loading into BS
     hasValuation = find_table("sal-measures__value-table")
     hasSectors = find_table("sal-sector-exposure__sector-table")
+    hasAnythingWorked = hasValuation or hasSectors
 
     html_source = driver.page_source
     source_data = html_source.encode("utf-8")
@@ -362,12 +360,20 @@ def selenium_scrap_ratios(secList: list, verbose=True):
     errs = []
     df = pd.DataFrame()
     dfETFRef = SQLA_read_table("ETF_REF")
+    dfETF_RATIOS = SQLA_read_table("ETF_RATIOS").set_index("index")
 
     driver = start_driver(headless=True, forMorninstar=True)
     hack_captcha(driver)
     try:
         for sec in tqdm(secList):
             exc = "arcx"
+            tmp = dfETF_RATIOS.loc[sec]
+            if len(tmp) == 0:
+                exc = "arcx"
+            else:
+                url = tmp["URL"]
+                exc = url[10:].split("/")[2]
+
             if sec in dfETFRef["ETF"].tolist():
                 if dfETFRef.loc[dfETFRef["ETF"] == sec, "DoNotRatio"].iloc[0]:
                     continue
@@ -379,7 +385,7 @@ def selenium_scrap_ratios(secList: list, verbose=True):
                     res.append(tmp.copy())
                 else:
                     logger.error(f"[-]Error in scrapping with selenium for {sec} - EMPTY")
-                errs.append(sec)
+                    errs.append(sec)
             except TimeoutException:
                 logger.error(f"[-]Error in scrapping with selenium for {sec} - TIMEOUT")
                 errs.append(sec)
@@ -394,7 +400,7 @@ def selenium_scrap_ratios(secList: list, verbose=True):
             if verbose:
                 print(df)
         else:
-            logger.warning(f"[-]No data was scrapped with selenium")
+            logger.warning("[-]No data was scrapped with selenium")
 
         if len(errs) > 0:
             logger.warning(f"[-]Errors in scrapping with selenium for {len(errs)} underlyings")
@@ -406,4 +412,4 @@ def selenium_scrap_ratios(secList: list, verbose=True):
 
 
 if __name__ == "__main__":
-    pass
+    selenium_scrap_ratios(["QVAL"], True)
