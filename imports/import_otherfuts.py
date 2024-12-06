@@ -3,19 +3,15 @@ import pandas as pd
 import time
 import traceback
 from io import StringIO
+from loguru import logger
 
-from selenium import webdriver
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
-from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.common.exceptions import TimeoutException
 from bs4 import BeautifulSoup
 
-from icecream import ic
-
 from scrap_selenium import start_driver, _clean_price
-from utils.utils import timer, print_color
 
 
 urlCHF = "https://www.theice.com/products/72270612/Three-Month-Saron-Index-Futures-Contract/data?span=1"
@@ -31,13 +27,13 @@ COOKIE_BUTTON = "cookiescript_accept"
 def get_webData(driver):
     driver.get(urlCHF)
     time.sleep(3)
-    print_color("Looking for cookies button", "COMMENT")
+    logger.info("Looking for cookies button")
     try:
         python_button = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.ID, "onetrust-accept-btn-handler")))
-        print_color("Clicking on cookies button", "COMMENT")
+        logger.info("Clicking on cookies button")
         python_button.click()
     except Exception as e:
-        print_color("[-] Cant find cookies button", "COMMENT")
+        logger.warning("[-] Cant find cookies button")
 
     html = driver.page_source
     soup = BeautifulSoup(html, "html.parser")
@@ -68,13 +64,13 @@ def analyse_results(bodies):
 def euribor_futures(driver):
     driver.get(urlEUR)
     time.sleep(3)
-    print_color("Looking for cookies button", "COMMENT")
+    logger.info("Looking for cookies button")
     try:
-        python_button = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.CLASS, "cookie-layover-button")))
-        print_color("Clicking on cookies button", "COMMENT")
+        python_button = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.CLASS_NAME, "cookie-layover-button")))
+        logger.info("Clicking on cookies button")
         python_button.click()
     except Exception as e:
-        print_color("[-] Cant find cookies button", "COMMENT")
+        logger.warning("[-] Cant find cookies button")
     driver.execute_script("window.scrollBy(0, 1000)")
     driver.execute_script("window.scrollBy(0, 1000)")
     time.sleep(1)
@@ -85,14 +81,14 @@ def euribor_futures(driver):
                 for _ in range(5):
                     python_button.click()
             except Exception as e:
-                print_color(e, "FAIL")
+                logger.error(e)
         except TimeoutException:
-            print(f"[-] Timeout getting button - might just not exist ! Scrolling down again instead")
+            logger.warning("[-] Timeout getting button - might just not exist ! Scrolling down again instead")
             driver.execute_script("window.scrollBy(0, 1000)")
             time.sleep(1)
     except Exception as e:
-        print(f"[-] Error processing: {e}")
-        print(traceback.format_exc())
+        logger.exception(f"Error processing: {e}")
+        
     html = driver.page_source
     dfs = pd.read_html(StringIO(html))
     df = dfs[0]
@@ -108,19 +104,15 @@ def scrap_otherAsset(driver, asset: str = "ER", verbose=False):
         dfFuts = euribor_futures(driver)
     elif asset == "HSCEI":
         dfFuts = get_hscei_data(driver)
-    elif asset == 'CH':
+    elif asset == "CH":
         bodies = get_webData(driver)
         dfFuts = analyse_results(bodies)
     else:
         raise ValueError(f"[-] Asset not defined: {asset}")
     if verbose:
-        print(f"\n\n\***************************\n\{asset} -  futures curve")
+        logger.success(f"***{asset} -  futures curve")
         print(dfFuts)
     return dfFuts
-
-
-
-
 
 
 # %%
@@ -137,23 +129,21 @@ def get_hscei_data(driver):
         time.sleep(2)
 
     except TimeoutException:
-        print(f"[-] Timeout getting button - might just not exist ! Scrolling downa again instead")
+        logger.warning("[-] Timeout getting button - might just not exist ! Scrolling down again instead")
         driver.execute_script("window.scrollTo(0, 1000)")
         time.sleep(0.5)
     except Exception as e:
-        print(f"[-] Error processing: {e}")
-        print(traceback.format_exc())
-
+        logger.exception(f"[-] Error processing: {e}")
+    
     try:
         _ = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.ID, "equity_future")))
     except TimeoutException:
-        print("[-] Timeout getting table - might just not exist ! Scrolling downa again instead")
+        logger.warning("[-] Timeout getting table - might just not exist ! Scrolling downa again instead")
         driver.execute_script("window.scrollTo(0, 1000)")
         time.sleep(0.5)
     except Exception as e:
-        print(f"[-] Error processing: {e}")
-        print(traceback.format_exc())
-
+        logger.exception(f"[-] Error processing: {e}")
+    
     html = driver.page_source
     soup = BeautifulSoup(html, "html.parser")
     table_html = soup.find(attrs={"class": "equity_future"})
@@ -176,12 +166,13 @@ def get_hscei_data(driver):
 
     return dfFuts
 
+
 # driver = start_driver(True, True)
 # dfFuts = get_hscei_data(driver)
 # dfFuts
 
 
-#%%
+# %%
 if __name__ == "__main__":
     driver = start_driver(True, True)
     try:
@@ -189,5 +180,5 @@ if __name__ == "__main__":
     except Exception as e:
         raise e
     finally:
-        print_color("Quitting Selenium driver", "COMMENT")
+        logger.info("Quitting Selenium driver")
         driver.quit()
