@@ -112,6 +112,7 @@ def scrap_all():
     for el in lstScrap:
         errorMessage = f"Error while scrapping for {el.name}"
         try:
+            console.print('\n\n')
             console.rule(f"Scraping {el.name}")
             tmp = scrap_main(el)
             if tmp is None:
