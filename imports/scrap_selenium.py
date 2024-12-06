@@ -231,28 +231,6 @@ def start_driver(headless: bool = True, forCME: bool = False, forMorninstar: boo
         raise Exception("Could not create the driver") from e
 
 
-# @timer
-# def selenium_scrap_simple(link: str, headless: bool = True):
-#     """
-#     The function `selenium_scrap_simple` uses Selenium to scrape the HTML source code of a given link.
-#     :param link: The `link` parameter is a string that represents the URL of the webpage you want to
-#     scrape using Selenium
-#     """
-#     html_source = None
-#     driver = start_driver(headless=headless)
-#     hack_captcha(driver)
-#     try:
-#         driver.get(link)
-#         time.sleep(0.25 + random.random())
-#         html_source = driver.page_source
-#     except Exception as e:
-#         raise Exception("Could not scrap the link at {link}") from e
-#     finally:
-#         print_color("Quitting Selenium driver", "COMMENT")
-#         driver.quit()
-#     return html_source
-
-
 def _get_url(ETF_name: str, exchange="arcx", verbose=True):
     headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"}
     session = requests.Session()
@@ -281,11 +259,11 @@ def _get_url(ETF_name: str, exchange="arcx", verbose=True):
 
 
 def _sub_getETF_Selenium(driver, ETF_name: str, exchange="arcx", verbose=True):
-    def find_table(class_name:str):
+    def find_table(class_name: str):
         for i in range(max_attempts):
             try:
                 _ = WebDriverWait(driver, 3 * (i + 1)).until(EC.presence_of_element_located((By.CLASS_NAME, class_name)))
-                hasAnythingWorked=True
+                hasAnythingWorked = True
                 return True  # Exit the loop if successful
             except TimeoutException:
                 if i < max_attempts:
@@ -294,11 +272,15 @@ def _sub_getETF_Selenium(driver, ETF_name: str, exchange="arcx", verbose=True):
                     logger.error(f"\t[-]Could not scrap {class_name} for {ETF_name}")
                 continue  # Retry if a timeout occurs
         return False
-    
+
     url = _get_url(ETF_name, exchange=exchange, verbose=verbose)
     driver.get(url)
     max_attempts = 3
-    hasAnythingWorked=False
+    hasAnythingWorked = False
+
+    # need to run first befor loading into BS
+    hasValuation = find_table("sal-measures__value-table")
+    hasSectors = find_table("sal-sector-exposure__sector-table")
 
     html_source = driver.page_source
     source_data = html_source.encode("utf-8")
@@ -316,9 +298,9 @@ def _sub_getETF_Selenium(driver, ETF_name: str, exchange="arcx", verbose=True):
         row_dict["Name"] = tmp[0].strip()
     except:
         logger.error(f"\t[-]Could not scrap name for {ETF_name}")
-        
+
     """ find and grab financial ratios """
-    if find_table("sal-measures__value-table"):
+    if hasValuation:
         res = soup.find(class_="sal-measures__value-table")
         res = res.find("tbody")
         for row in res.find_all("tr"):
@@ -336,11 +318,10 @@ def _sub_getETF_Selenium(driver, ETF_name: str, exchange="arcx", verbose=True):
                     else:
                         ratio = float("nan")
                 row_dict[COLS_MORNINGSTAR[compteur + 1]] = ratio
-                # print "%s \t % 6.2f" % (cols[compteur+1],ratio)
                 compteur += 1
     # tbs=soup.findAll("tr", {"class": "ng-scope"})
     """ find and grab sector composition """
-    if find_table("sal-sector-exposure__sector-table"):
+    if hasSectors:
         res = soup.find(class_="sal-sector-exposure__sector-table")
         res = res.find("tbody")
         for row in res.find_all("tr"):
@@ -353,7 +334,7 @@ def _sub_getETF_Selenium(driver, ETF_name: str, exchange="arcx", verbose=True):
                     weight = float("nan")
                 row_dict[lbl] = weight
                 compteur += 1
-    
+
     if hasAnythingWorked:
         row_dict["Last_updated"] = last_bd
         row_dict["UpdateMode"] = "Selenium"
