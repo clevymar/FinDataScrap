@@ -65,12 +65,14 @@ def scrap_main(el: Scrap) -> str:
                 msg += f"\n\t {len(item)} rows, {len(item.columns)} cols"
                 logger.success(msg)
         elif isinstance(res, tuple):
-            msg = res[0]
+            msg = f"Downloaded for {el.name}"
+            msg += res[0]
             logger.info(msg)
         elif isinstance(res, pd.DataFrame):
             msg = output_string(el, f"[+] Downloaded: {len(res)} rows, {len(res.columns)} cols for ", "RESULT")
         elif isinstance(res, str):
-            msg = res
+            msg = f"Downloaded for {el.name}"
+            msg += res
             logger.info(msg)
         elif res is None:
             msg = output_string(el, "[-] No data downloaded for ", "RESULT")
