@@ -71,9 +71,9 @@ benchmark = "ACWI"
 dictInput = json.load(open(fichierTSUnderlyings, "r"))
 fullList = dictInput["EQTY_SPOTS"]
 
-ratios = []
+# ratios = []
 initDict = {x: "" for x in COLS_MORNINGSTAR}
-errs = []
+errs: list[str] = []
 
 
 def _clean_price(s):
@@ -83,7 +83,7 @@ def _clean_price(s):
         s = s.replace("'", ".")
         return float(s[:5])
     except Exception as e:
-        logger.exception(e)
+        logger.error(str(e))
         return None
 
 
