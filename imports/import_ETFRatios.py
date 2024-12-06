@@ -51,7 +51,7 @@ SECTORS = [
     "Utilities",
 ]
 
-MAX_TOUPDATE = int(10 * 60 / 6)  # * around 6 secs per underlying, want to limit to 10 mins
+MAX_TOUPDATE = int(5 * 60 / 6)  # * around 6 secs per underlying, want to limit to 5 mins
 # MAX_TOUPDATE = 2
 
 benchmark = "ACWI"

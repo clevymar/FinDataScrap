@@ -110,17 +110,17 @@ def details_element(element: WebElement):
 
 """ dealing with captcha"""
 
-def find_cookie_file(file_path:str = "morningstar_cookies.txt"):
+
+def find_cookie_file(file_path: str = "morningstar_cookies.txt"):
     if os.path.exists(file_path):
-        pass        
+        pass
     else:
-        file_path=f"imports/{file_path}"
+        file_path = f"imports/{file_path}"
         if os.path.exists(file_path):
             pass
         else:
             return None
     return file_path
-
 
 
 def get_cookies_from_file(fichier: str = "morningstar_cookies.txt"):
@@ -132,7 +132,7 @@ def get_cookies_from_file(fichier: str = "morningstar_cookies.txt"):
     if file_path is None:
         logger.error("cant find cookie file - proceeeding without")
         return None
-    
+
     with open(file_path, "r") as file:
         content = file.read()
 
@@ -178,13 +178,13 @@ def hack_captcha(driver):
                 cookie["expires"] = cookie["expiry"]
                 del cookie["expiry"]
             # Set the actual cookie
-            res=driver.execute_cdp_cmd("Network.setCookie", cookie)
+            res = driver.execute_cdp_cmd("Network.setCookie", cookie)
 
         # Disable network tracking
-        driver.execute_cdp_cmd('Network.disable', {})
+        driver.execute_cdp_cmd("Network.disable", {})
         logger.info("\n cookies loaded")
         time.sleep(1)
-        
+
     # print(driver.get_cookies())
     return
 
@@ -253,7 +253,7 @@ def start_driver(headless: bool = True, forCME: bool = False, forMorninstar: boo
 #     return html_source
 
 
-def _get_url(ETF_name:str, exchange="arcx", verbose=True):
+def _get_url(ETF_name: str, exchange="arcx", verbose=True):
     headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"}
     session = requests.Session()
     session.headers.update(headers)
@@ -280,28 +280,25 @@ def _get_url(ETF_name:str, exchange="arcx", verbose=True):
     return url
 
 
-def _sub_getETF_Selenium(driver, ETF_name:str, exchange="arcx", verbose=True):
+def _sub_getETF_Selenium(driver, ETF_name: str, exchange="arcx", verbose=True):
+    def find_table(class_name:str):
+        for i in range(max_attempts):
+            try:
+                _ = WebDriverWait(driver, 3 * (i + 1)).until(EC.presence_of_element_located((By.CLASS_NAME, class_name)))
+                hasAnythingWorked=True
+                return True  # Exit the loop if successful
+            except TimeoutException:
+                if i < max_attempts:
+                    logger.info(f"\t[-]]Retrying finding {class_name} for {ETF_name} attempt {i+2}")
+                else:
+                    logger.error(f"\t[-]Could not scrap {class_name} for {ETF_name}")
+                continue  # Retry if a timeout occurs
+        return False
     
     url = _get_url(ETF_name, exchange=exchange, verbose=verbose)
     driver.get(url)
-    wait = WebDriverWait(driver, 15)
     max_attempts = 3
-    for i in range(max_attempts):
-        try:
-            _ = WebDriverWait(driver, 5 * (i + 1)).until(EC.presence_of_element_located((By.CLASS_NAME, "sal-sector-exposure__sector-table")))
-            break  # Exit the loop if successful
-        except TimeoutException:
-            logger.info(f"\t[-]Retrying {ETF_name} sectors grab - attempt {i+2}")
-            continue  # Retry if a timeout occurs
-
-    # time.sleep(0.25+random.random())
-    for i in range(max_attempts):
-        try:
-            _ = WebDriverWait(driver, 5 * (i + 1)).until(EC.presence_of_element_located((By.CLASS_NAME, "sal-measures__value-table")))
-            break  # Exit the loop if successful
-        except TimeoutException:
-            logger.info(f"\t[-]Retrying {ETF_name} measures grab - attempt {i+2}")
-            continue  # Retry if a timeout occurs
+    hasAnythingWorked=False
 
     html_source = driver.page_source
     source_data = html_source.encode("utf-8")
@@ -311,50 +308,59 @@ def _sub_getETF_Selenium(driver, ETF_name:str, exchange="arcx", verbose=True):
     row_dict = initDict.copy()
     row_dict["ETF"] = ETF_name
     row_dict["Last_updated"] = last_bd
-    res = soup.find(class_="mdc-security-header__name")
-    # res=res.find('span')
-    nom = res.text
-    tmp = nom.splitlines()
-    tmp = [el for el in tmp if len(el) >= 3]
-    row_dict["Name"] = tmp[0].strip()
+    try:
+        res = soup.find(class_="mdc-security-header__name")
+        nom = res.text
+        tmp = nom.splitlines()
+        tmp = [el for el in tmp if len(el) >= 3]
+        row_dict["Name"] = tmp[0].strip()
+    except:
+        logger.error(f"\t[-]Could not scrap name for {ETF_name}")
+        
     """ find and grab financial ratios """
-    res = soup.find(class_="sal-measures__value-table")
-    res = res.find("tbody")
-    for row in res.find_all("tr"):
-        sratio = row.find_all("td")[1].text
-        if sratio != "":
-            try:
-                ratio = float(sratio)
-            except:
-                """exception for P/CF not as important as others, replace by cat"""
-                if row.find_all("td")[0].text.strip() == "Price/Cash Flow":
-                    try:
-                        ratio = float(row.find_all("td")[2].text)
-                    except:
+    if find_table("sal-measures__value-table"):
+        res = soup.find(class_="sal-measures__value-table")
+        res = res.find("tbody")
+        for row in res.find_all("tr"):
+            sratio = row.find_all("td")[1].text
+            if sratio != "":
+                try:
+                    ratio = float(sratio)
+                except:
+                    """exception for P/CF not as important as others, replace by cat"""
+                    if row.find_all("td")[0].text.strip() == "Price/Cash Flow":
+                        try:
+                            ratio = float(row.find_all("td")[2].text)
+                        except:
+                            ratio = float("nan")
+                    else:
                         ratio = float("nan")
-                else:
-                    ratio = float("nan")
-            row_dict[COLS_MORNINGSTAR[compteur + 1]] = ratio
-            # print "%s \t % 6.2f" % (cols[compteur+1],ratio)
-            compteur += 1
+                row_dict[COLS_MORNINGSTAR[compteur + 1]] = ratio
+                # print "%s \t % 6.2f" % (cols[compteur+1],ratio)
+                compteur += 1
     # tbs=soup.findAll("tr", {"class": "ng-scope"})
     """ find and grab sector composition """
-    res = soup.find(class_="sal-sector-exposure__sector-table")
-    res = res.find("tbody")
-    for row in res.find_all("tr"):
-        cells = row.find_all("td")
-        lbl = cells[0].text.strip()
-        if lbl in SECTORS:
-            try:
-                weight = float(cells[1].text)
-            except:
-                weight = float("nan")
-            row_dict[lbl] = weight
-            compteur += 1
-    row_dict["Last_updated"] = last_bd
-    row_dict["UpdateMode"] = "Selenium"
-    row_dict["URL"] = url
-    return row_dict
+    if find_table("sal-sector-exposure__sector-table"):
+        res = soup.find(class_="sal-sector-exposure__sector-table")
+        res = res.find("tbody")
+        for row in res.find_all("tr"):
+            cells = row.find_all("td")
+            lbl = cells[0].text.strip()
+            if lbl in SECTORS:
+                try:
+                    weight = float(cells[1].text)
+                except:
+                    weight = float("nan")
+                row_dict[lbl] = weight
+                compteur += 1
+    
+    if hasAnythingWorked:
+        row_dict["Last_updated"] = last_bd
+        row_dict["UpdateMode"] = "Selenium"
+        row_dict["URL"] = url
+        return row_dict
+    else:
+        return None
 
 
 @timer
@@ -388,7 +394,11 @@ def selenium_scrap_ratios(secList: list, verbose=True):
                     exc = special.split("_")[0]
             try:
                 tmp = _sub_getETF_Selenium(driver, sec, exchange=exc, verbose=verbose)
-                res.append(tmp.copy())
+                if tmp:
+                    res.append(tmp.copy())
+                else:
+                    logger.error(f"[-]Error in scrapping with selenium for {sec} - EMPTY")
+                errs.append(sec)
             except TimeoutException:
                 logger.error(f"[-]Error in scrapping with selenium for {sec} - TIMEOUT")
                 errs.append(sec)

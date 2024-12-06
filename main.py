@@ -41,7 +41,7 @@ lstScrap = [
     ScrapFXImpliedRates,
     ScrapCreditETF,
     ScrapRatios,
-    ScrapCMEFuts,
+    ScrapCMEFuts,  #leave towards the end as it is the latest website updated
     ScrapCommosCurves,
 ]
 
