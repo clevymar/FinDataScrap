@@ -174,14 +174,14 @@ def _refresh_existing_unds() -> tuple[list | None, pd.DataFrame | None]:
         return unds, dfExisting
 
 
-def update_secs():
+def update_secs() -> tuple[pd.DataFrame | None, list[str], pd.DataFrame | None]:
     undsToRefresh, dfExisting = _refresh_existing_unds()
     if undsToRefresh:
         ratios, errs = selenium_scrap_ratios(undsToRefresh, verbose=isLocal())
         dfNew = _prep_ratios(ratios, dfExisting)
     else:
         dfNew = None
-    return dfNew, errs
+    return dfNew, errs, ratios
 
 
 def check_underlyings() -> list[str]:
@@ -192,10 +192,10 @@ def check_underlyings() -> list[str]:
 
 
 @timer
-def ETFratios_toDB(verbose=True):
-    dfNew, errs = update_secs()
+def ETFratios_toDB(verbose=True) -> tuple[str, pd.DataFrame | None]:
+    dfFull, errs, dfNew = update_secs()
     if dfNew is not None and len(dfNew) > 0:
-        databases_update(dfNew, "ETF_RATIOS", idx=False, mode="replace", verbose=verbose, save_insqlite=True)
+        databases_update(dfFull, "ETF_RATIOS", idx=False, mode="replace", verbose=verbose, save_insqlite=True)
         msg = f"Updated {len(dfNew)} underlyings"
         msg += f"\nErrors with {len(errs)} underlyings: {','.join(errs)}"
     else:
