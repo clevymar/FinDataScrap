@@ -102,3 +102,4 @@ def SQLA_read_table(tablename: str, retrieve_only_info_for_last_date: bool = Fal
 
 if __name__ == "__main__":
     print(SQLA_last_date("IRS_TS"))
+    # pass

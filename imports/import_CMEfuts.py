@@ -57,6 +57,7 @@ dictAssets = {
     "FF": ProductDef("FF", "interest-rates/stirs/30-day-federal-fund", "IRF"),
     "Gold": ProductDef("GC", "metals/precious/gold", "Commo"),
     "Silver": ProductDef("SI", "metals/precious/silver", "Commo"),
+    "Platinum": ProductDef("PL", "metals/precious/platinum", "Commo"),
     "Oil": ProductDef("CL", "energy/crude-oil/light-sweet-crude", "Commo"),
     "Gas": ProductDef("CL", "energy/natural-gas/natural-gas", "Commo"),
     "Aluminium": ProductDef("ALI", "metals/base/aluminum", "Commo"),
