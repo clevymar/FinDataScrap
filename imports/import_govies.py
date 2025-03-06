@@ -4,8 +4,6 @@ import sys
 from io import StringIO
 
 import pandas as pd
-import requests
-from bs4 import BeautifulSoup
 from loguru import logger
 
 currentdir = os.path.dirname(os.path.abspath(__file__))
@@ -52,7 +50,7 @@ def maturity_string_to_nyears(s: str) -> float:
     return res
 
 
-def get_curve(country: str, driver: WebDriver) -> pd.DataFrame | None:
+def get_curve(country: str, driver: WebDriver) -> pd.DataFrame:
     url = f"{URL_ROOT}{country}/"
     driver.get(url)
     try:
@@ -61,11 +59,11 @@ def get_curve(country: str, driver: WebDriver) -> pd.DataFrame | None:
         tables = pd.read_html(StringIO(table_curve.get_attribute("outerHTML")))
         df = tables[0].iloc[:, [1, 2]]
         df.columns = ["Maturity", "Yield"]
-        df.loc[:,"Yield"] = pd.to_numeric(df.loc[:,"Yield"].apply(lambda x: (x.replace("%", ""))), errors="coerce")
+        df.loc[:, "Yield"] = pd.to_numeric(df.loc[:, "Yield"].apply(lambda x: (x.replace("%", ""))), errors="coerce")
         return df
     except Exception as e:
         logger.error(f"Could not access govie curve for {country} - reason {e}")
-        return None
+        return pd.DataFrame()
 
 
 def scrap_govies(save_to_file: bool = True):
