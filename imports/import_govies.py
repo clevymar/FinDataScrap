@@ -1,9 +1,12 @@
+# %%
 import os
 import sys
+from io import StringIO
 
 import pandas as pd
 import requests
 from bs4 import BeautifulSoup
+from loguru import logger
 
 currentdir = os.path.dirname(os.path.abspath(__file__))
 parentdir = os.path.dirname(currentdir)
@@ -14,6 +17,11 @@ from common import last_bd
 from utils.utils import timer
 from databases.database_mysql import SQLA_last_date, databases_update
 from databases.classes import Scrap
+from scrap_selenium import start_driver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.chrome.webdriver import WebDriver
 
 URL_ROOT = "http://www.worldgovernmentbonds.com/country/"
 COUNTRIES = [
@@ -23,6 +31,11 @@ COUNTRIES = [
     "switzerland",
     "united-kingdom",
 ]
+
+# %%
+
+
+# %%
 
 
 def maturity_string_to_nyears(s: str) -> float:
@@ -39,43 +52,39 @@ def maturity_string_to_nyears(s: str) -> float:
     return res
 
 
-def get_curve(country: str) -> pd.DataFrame|None:
+def get_curve(country: str, driver: WebDriver) -> pd.DataFrame | None:
     url = f"{URL_ROOT}{country}/"
-    response = requests.get(url)
-    if response.status_code == 200:
-        # print(f"Successfully fetched the content ")
-        content = response.text
-        soup = BeautifulSoup(content, "html.parser")
-        res = soup.find("table", {"class": "w3-table"})
-        tab = []
-        for row in res.find_all("tr"):
-            data = row.find_all("td")
-            if len(data) >= 2:
-                tmp = {"Maturity": data[1].text.strip(), "Yield": data[2].text.strip()}
-                tab.append(tmp)
-        df = pd.DataFrame(tab)
-        df["Yield"] = df["Yield"].apply(lambda x: float(x.replace("%", "")))
+    driver.get(url)
+    try:
+        _ = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, "table-curve")))
+        table_curve = driver.find_element(By.ID, "table-curve")
+        tables = pd.read_html(StringIO(table_curve.get_attribute("outerHTML")))
+        df = tables[0].iloc[:, [1, 2]]
+        df.columns = ["Maturity", "Yield"]
+        df.loc[:,"Yield"] = pd.to_numeric(df.loc[:,"Yield"].apply(lambda x: (x.replace("%", ""))), errors="coerce")
         return df
-    else:
-        print(f"Could not access govie curve for {country}")
+    except Exception as e:
+        logger.error(f"Could not access govie curve for {country} - reason {e}")
         return None
 
 
-def scrap_govies(save_to_file:bool=True):
+def scrap_govies(save_to_file: bool = True):
     dfAll = pd.DataFrame()
-    for country in COUNTRIES:
-        print("Getting govies data for " + country)
-        df = get_curve(country)
-        df["country"] = country
-        df["Date"] = last_bd
-        if len(dfAll) == 0:
-            dfAll = df
-        else:
-            dfAll = pd.concat([dfAll, df])
-    # if save_to_file:
-    #     print('Saving to file: '+OUTPUT_FILE)
-    #     dfAll.to_csv(OUTPUT_FILE, index=False)
-
+    try:
+        driver = start_driver(headless=False)
+        print(type(driver))
+        for country in COUNTRIES:
+            logger.info(f"Getting govies data for {country} at {URL_ROOT}{country}/")
+            df = get_curve(country, driver)
+            if len(df) > 0:
+                df["country"] = country
+                df["Date"] = last_bd
+                if len(dfAll) == 0:
+                    dfAll = df
+                else:
+                    dfAll = pd.concat([dfAll, df])
+    finally:
+        driver.quit()
     return dfAll
 
 
@@ -98,7 +107,8 @@ def import_govies(argument=None):
         res = govies_toDB()
         msg = f"Well downloaded !!! \n{len(res)} rows, {len(res.columns)} cols"
     except Exception as e:
-        raise Exception("Error while downloading Govies") from e
+        logger.exception(f"Error while downloading Govies: {e}")
+        # raise Exception("Error while downloading Govies") from e
     return msg
 
 
