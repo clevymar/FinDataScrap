@@ -24,6 +24,19 @@ IRS_ccies = ["EUR", "USD", "JPY", "CHF", "GBP"]
 
 
 def scrap_allIRS(verbose=True):
+    
+    def btnAccept_click():
+        btnAccept = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, ".btn--primary")))
+        if btnAccept:
+            if verbose:
+                console.log("Button Accept found")
+            btnAccept.click()
+            if verbose:
+                console.log("Button Accept clicked")
+        else:
+            if verbose:
+                console.log("Button Accept not found")
+        
     def go_through_cookies(verbose: bool = True) -> None:
         btnCookies = wait.until(EC.presence_of_element_located((By.ID, "popin_tc_privacy_button")))
         if btnCookies:
@@ -38,7 +51,6 @@ def scrap_allIRS(verbose=True):
 
         # * deal with accept
         time.sleep(1)
-        # chkBoxAccept = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, ".css-cdisvn e1nwqvt62")))
         chkBoxAccept = wait.until(EC.presence_of_element_located((By.XPATH, '//div[@role="checkbox"]')))
         if chkBoxAccept:
             if verbose:
@@ -48,17 +60,8 @@ def scrap_allIRS(verbose=True):
                 console.log("Checkbox clicked")
         else:
             console.log("Checkbox not found")
-
-        btnAccept = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, ".btn--primary")))
-        if btnAccept:
-            if verbose:
-                console.log("Button Accept found")
-            btnAccept.click()
-            if verbose:
-                console.log("Button Accept clicked")
-        else:
-            if verbose:
-                console.log("Button Accept not found")
+            btnAccept_click
+        
 
         # click on top of screen otherwise creates issues
         try:
@@ -104,9 +107,9 @@ def scrap_allIRS(verbose=True):
             if not foundButton:
                 if verbose:
                     console.log(f"Button Show More for {CCY} not found")
-        except:
+        except Exception as e:
             if verbose:
-                console.log(f"Button Show More for {CCY} not found")
+                console.log(f"Button Show More for {CCY} not found\n\y {e}")
         # div = wait.until(EC.presence_of_element_located((By.CLASS_NAME, "gem-comp-mio-api-table")))
         time.sleep(2)
         section = driver.find_element(By.ID, "3")
@@ -133,6 +136,7 @@ def scrap_allIRS(verbose=True):
     )
 
     driver = start_driver(headless=True, forCME = True)
+    # driver = start_driver(headless=False, forCME = False)
     wait = WebDriverWait(driver, 5)
     try:
         driver.get(URL)
@@ -140,8 +144,11 @@ def scrap_allIRS(verbose=True):
             go_through_cookies(verbose=verbose)
         except Exception as e:
             console.log(f"Could not deal with cookies: {e}")
-            if verbose:
-                console.print_exception()
+            btnAccept_click()
+            try:
+                go_through_cookies(verbose=verbose)
+            except Exception as e:
+                console.log(f"Could not deal with cookies a second time")
 
         time.sleep(SLEEP_TIME)
         section = wait.until(EC.presence_of_element_located((By.ID, "3")))
@@ -152,9 +159,7 @@ def scrap_allIRS(verbose=True):
         res = []
         for button in buttons:
             try:
-                # ic(button.text)
                 section = scrap_ccy(section, button, verbose=verbose)
-                # ic(section)
                 df = create_df_from_section(section)
                 res.append(df)
             except:
