@@ -44,6 +44,7 @@ from databases.classes import Scrap
 DIR_DOWNLOAD = Path(__file__).parent / "Files"
 STYLE_ERROR = "bold red"
 
+VERSION_CHROME = 133
 
 def german_tips() -> float | None:
     # URL of the page
@@ -176,20 +177,23 @@ def _scrap_french_tips(verbose: bool = True) -> bool | None:
         except Exception as e:
             console.print_exception()
 
+
     # Setup Chrome options
     chrome_options = uc.ChromeOptions()
     chrome_options.add_argument("--disable-gpu")  # Disable GPU acceleration
     prefs = {"download.default_directory": str(DIR_DOWNLOAD.resolve())}
     chrome_options.add_experimental_option("prefs", prefs)
-    console.log("Starting browser")
+    
+    console.log(f"Starting browser version {VERSION_CHROME}")
     if isLocal():
-        console.log("Downloading current browser...")
-        chrome_driver_path = ChromeDriverManager().install()
-        console.log(f"[+]Downloaded @ {chrome_driver_path}")
-        # version = read_version_from_cmd(chrome_driver_path, PATTERN["google-chrome"])
-        # console.log(f"ChromeDriver version: {version} installed")
+        # Force download the latest ChromeDriver version
+        # console.log("Downloading current browser...")
+        # chrome_driver_path = ChromeDriverManager().install()
+        # console.log(f"[+]Downloaded @ {chrome_driver_path}")
         try:
-            driver = uc.Chrome(service=chrome_driver_path, headless=False, options=chrome_options)
+            # should download latest version automaticall
+            driver = uc.Chrome(version_main=VERSION_CHROME,headless=False, options=chrome_options)  
+            console.log("[+]Browser started successfully")
         except Exception as e:
             console.log(e) 
             console.log("Could not start the browser - check if you dont need to update local Chrome browser", style=STYLE_ERROR)
