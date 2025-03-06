@@ -71,7 +71,7 @@ def get_curve(country: str, driver: WebDriver) -> pd.DataFrame | None:
 def scrap_govies(save_to_file: bool = True):
     dfAll = pd.DataFrame()
     try:
-        driver = start_driver(headless=False)
+        driver = start_driver(headless=True)
         print(type(driver))
         for country in COUNTRIES:
             logger.info(f"Getting govies data for {country} at {URL_ROOT}{country}/")
