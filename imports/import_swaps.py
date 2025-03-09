@@ -164,13 +164,13 @@ def scrap_allIRS(verbose=True):
 
         time.sleep(SLEEP_TIME)
         section = wait.until(EC.presence_of_element_located((By.ID, "3")))
-        # ic(section)
-        # ic(section.text)    
+        ic(section)
+        ic(section.text)    
         
         buttons = section.find_elements(By.XPATH, ".//button[@role='tab']")
         time.sleep(SLEEP_TIME)
         if verbose:
-            console.log("\n\nCurrency buttons found: " + ",".join([b.text for b in buttons]))
+            console.log(f"\n\n{len(buttons)} currency buttons found: " + ",".join([b.text for b in buttons]))
         res = []
         for button in buttons:
             try:
