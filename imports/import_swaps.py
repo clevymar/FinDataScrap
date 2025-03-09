@@ -24,7 +24,7 @@ IRS_ccies = ["EUR", "USD", "JPY", "CHF", "GBP"]
 
 
 def scrap_allIRS(verbose=True):
-    
+
     def btnAccept_click():
         btnAccept = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, ".btn--primary")))
         if btnAccept:
@@ -36,7 +36,7 @@ def scrap_allIRS(verbose=True):
         else:
             if verbose:
                 console.log("Button Accept not found")
-        
+
     def go_through_cookies(verbose: bool = True) -> None:
         btnCookies = wait.until(EC.presence_of_element_located((By.ID, "popin_tc_privacy_button")))
         if btnCookies:
@@ -61,7 +61,7 @@ def scrap_allIRS(verbose=True):
         else:
             console.log("Checkbox not found")
             btnAccept_click
-        
+
 
         # click on top of screen otherwise creates issues
         try:
@@ -128,6 +128,7 @@ def scrap_allIRS(verbose=True):
         return section
 
     def create_df_from_section(section: WebElement) -> pd.DataFrame:
+        ic(section.text)
         s = section.text.replace("IRS\n", "IRS ")
         s = s.split("\n")[11:-1]
         s = "\n".join(s)
@@ -149,24 +150,33 @@ def scrap_allIRS(verbose=True):
 
     driver = start_driver(headless=True, forCME = True)
     # driver = start_driver(headless=False, forCME = False)
+    driver.execute_cdp_cmd('Network.setExtraHTTPHeaders', {
+        'headers': {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:136.0) Gecko/20100101 Firefox/136.0',
+            'Accept-Language': 'en-US,en;q=0.5',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+            'Upgrade-Insecure-Requests': '1',
+
+        }
+    })
     wait = WebDriverWait(driver, 5)
     try:
         driver.get(URL)
         try:
             go_through_cookies(verbose=verbose)
         except Exception as e:
-            console.log(f"Could not deal with cookies: {e}")
+            console.log(f"Could not deal with cookies") #{e}
             btnAccept_click()
             try:
                 go_through_cookies(verbose=verbose)
             except Exception as e:
                 console.log(f"Could not deal with cookies a second time")
 
-        time.sleep(SLEEP_TIME)
         section = wait.until(EC.visibility_of_element_located((By.ID, "3")))
+        time.sleep(SLEEP_TIME)
         ic(section)
-        ic(section.text)    
-        
+        ic(section.text)
+
         buttons = section.find_elements(By.XPATH, ".//button[@role='tab']")
         time.sleep(SLEEP_TIME)
         if verbose:
