@@ -164,6 +164,7 @@ def scrap_allIRS(verbose=True):
 
         time.sleep(SLEEP_TIME)
         section = wait.until(EC.presence_of_element_located((By.ID, "3")))
+        time.sleep(SLEEP_TIME)
         ic(section)
         ic(section.text)    
         
