@@ -163,8 +163,7 @@ def scrap_allIRS(verbose=True):
                 console.log(f"Could not deal with cookies a second time")
 
         time.sleep(SLEEP_TIME)
-        section = wait.until(EC.presence_of_element_located((By.ID, "3")))
-        time.sleep(SLEEP_TIME)
+        section = wait.until(EC.visibility_of_element_located((By.ID, "3")))
         ic(section)
         ic(section.text)    
         
