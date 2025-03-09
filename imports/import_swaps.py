@@ -71,6 +71,17 @@ def scrap_allIRS(verbose=True):
             console.log("Could not click on top of screen - a priori should be ok")
 
     def scrap_ccy(section: WebElement, button: WebElement, verbose: bool = True) -> WebElement:
+        """
+        Scrapes currency data by interacting with web elements on a page.
+        Args:
+            section (WebElement): The section of the webpage containing the buttons.
+            button (WebElement): The button element to be clicked for scraping.
+            verbose (bool, optional): If True, prints detailed logs. Defaults to True.
+        Returns:
+            WebElement: The updated section element after interaction.
+        Raises:
+            Exception: If an error occurs during the interaction with the "Show more" button.
+        """
         def handle_showMore(btnShowMore: WebElement):
             if verbose:
                 console.log(f"Button Show More for {CCY} found")
@@ -90,7 +101,8 @@ def scrap_allIRS(verbose=True):
             console.log(f"Button ccy {CCY} clicked")
 
         try:
-            buttons = section.find_elements(By.TAG_NAME, "button")
+            # buttons = section.find_elements(By.TAG_NAME, "button")
+            buttons = section.find_elements(By.CSS_SELECTOR, '[data-testid="show-more"]')
             foundButton = False
             if buttons[-1].text == "Show more":
                 btnShowMore = buttons[-1]
@@ -109,7 +121,7 @@ def scrap_allIRS(verbose=True):
                     console.log(f"Button Show More for {CCY} not found")
         except Exception as e:
             if verbose:
-                console.log(f"Button Show More for {CCY} not found\n\y {e}")
+                console.log(f"Button Show More for {CCY} not found\n\t {e}")
         # div = wait.until(EC.presence_of_element_located((By.CLASS_NAME, "gem-comp-mio-api-table")))
         time.sleep(2)
         section = driver.find_element(By.ID, "3")
@@ -152,6 +164,9 @@ def scrap_allIRS(verbose=True):
 
         time.sleep(SLEEP_TIME)
         section = wait.until(EC.presence_of_element_located((By.ID, "3")))
+        # ic(section)
+        # ic(section.text)    
+        
         buttons = section.find_elements(By.XPATH, ".//button[@role='tab']")
         time.sleep(SLEEP_TIME)
         if verbose:
