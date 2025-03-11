@@ -215,14 +215,16 @@ def start_driver(headless: bool = True, forCME: bool = False, forMorninstar: boo
                 chrome_options.add_experimental_option("useAutomationExtension", False)
                 chrome_options.add_argument("--disable-blink-features=AutomationControlled")
             if forPA:   
+                chrome_options.add_argument("--no-sandbox")
+                chrome_options.add_argument("--disable-gpu")
                 chrome_options.add_argument('--disable-dev-shm-usage')
-                chrome_options.add_argument('--disable-extensions')
-                chrome_options.add_argument('--disable-gpu')
-                chrome_options.add_argument('--disable-infobars')
-                chrome_options.add_argument('--disable-notifications')
-                chrome_options.add_argument('--blink-settings=imagesEnabled=false')
-                chrome_options.add_argument('--disable-dev-shm-usage')
-                chrome_options.add_argument('--disable-setuid-sandbox')
+                chrome_options.add_argument("--window-size=1920,1080")
+                # chrome_options.add_argument('--disable-extensions')
+                # chrome_options.add_argument('--disable-gpu')
+                # chrome_options.add_argument('--disable-infobars')
+                # chrome_options.add_argument('--disable-notifications')
+                # chrome_options.add_argument('--blink-settings=imagesEnabled=false')
+                # chrome_options.add_argument('--disable-setuid-sandbox')
                 chrome_options.add_argument(
                 "user-agent=Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.125 Safari/537.36"
                 )
