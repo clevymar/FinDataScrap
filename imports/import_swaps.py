@@ -58,16 +58,18 @@ def scrap_allIRS(verbose=True):
             if verbose:
                 console.log("Checkbox found")
             chkBoxAccept.click()
+            time.sleep(0.5)
             if verbose:
                 console.log("Checkbox clicked")
         else:
             console.log("Checkbox not found")
-            btnAccept_click
+            btnAccept_click()
 
         # click on top of screen otherwise creates issues
         try:
             btnBS = wait.until(EC.presence_of_element_located((By.XPATH, "/html/body/div[2]/main/div[2]/div/nav/div[1]/div/div/ul/li[3]/a")))
             btnBS.click()
+            time.sleep(0.5)
         except:
             console.log("Could not click on top of screen - a priori should be ok")
 
@@ -151,33 +153,7 @@ def scrap_allIRS(verbose=True):
     )
 
     driver = start_driver(headless=True, forCME=False, forPA=True)
-    # Print the default headers before making any requests
-    # console.log("Browser headers via JavaScript:")
-    # try:
-    #     script = """
-    #     var headers = {
-    #         'User-Agent': navigator.userAgent,
-    #         'Accept-Language': navigator.language,
-    #         'Platform': navigator.platform,
-    #         'Cookies-Enabled': navigator.cookieEnabled
-    #     };
-    #     return headers;
-    #     """
-    #     headers = driver.execute_script(script)
-    #     for key, value in headers.items():
-    #         console.log(f"  {key}: {value}")
-    # except Exception as e:
-    #     console.log(f"Could not get headers with JavaScript: {e}")
-    # driver = start_driver(headless=False, forCME = False)
-    # driver.execute_cdp_cmd('Network.setExtraHTTPHeaders', {
-    #     'headers': {
-    #         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:136.0) Gecko/20100101 Firefox/136.0',
-    #         'Accept-Language': 'en-US,en;q=0.5',
-    #         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-    #         'Upgrade-Insecure-Requests': '1',
 
-    #     }
-    # })
 
     wait = WebDriverWait(driver, 5)
     try:
@@ -208,6 +184,8 @@ def scrap_allIRS(verbose=True):
             filename='screenshot.png'
             driver.save_screenshot(filename)
             console.log(f"Screenshot saved to {filename}")
+            # driver.refresh()
+            
             
             blocks = wait.until(EC.visibility_of_any_elements_located((By.CSS_SELECTOR, '[data-testid="show-more"]')))
             for block in blocks:
