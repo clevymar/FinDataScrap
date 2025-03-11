@@ -84,7 +84,7 @@ def import_yahoo(verbose=True):
     for table, unds in dictInput.items():
         try:
             if table == "EQTY_SPOTS":
-                field = "Adj Close"
+                field = "Close" #was adj close before yfinance 2025 change
             else:
                 field = "Close"
             if verbose:
