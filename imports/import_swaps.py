@@ -154,7 +154,6 @@ def scrap_allIRS(verbose=True):
 
     driver = start_driver(headless=True, forCME=False, forPA=True)
 
-
     wait = WebDriverWait(driver, 5)
     try:
         driver.get(URL)
@@ -181,12 +180,12 @@ def scrap_allIRS(verbose=True):
             driver.execute_script(script, section, 0.75)
             # section = wait.until(EC.visibility_of_element_located((By.ID, "3")))
             ic(section.text)
-            filename='screenshot.png'
+            driver.refresh()
+            time.sleep(5)
+            filename = "screenshot.png"
             driver.save_screenshot(filename)
             console.log(f"Screenshot saved to {filename}")
-            # driver.refresh()
-            
-            
+
             blocks = wait.until(EC.visibility_of_any_elements_located((By.CSS_SELECTOR, '[data-testid="show-more"]')))
             for block in blocks:
                 ic(block.text)
