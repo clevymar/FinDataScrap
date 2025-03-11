@@ -192,10 +192,9 @@ def hack_captcha(driver):
 """ dealing with captcha - END """
 
 
-def start_driver(headless: bool = True, forCME: bool = False, forMorninstar: bool = False):
+def start_driver(headless: bool = True, forCME: bool = False, forMorninstar: bool = False, forPA:bool = False):
     """
     The function `start_driver` creates a headless Chrome driver with specific options"""
-    from selenium import webdriver
 
     try:
         driver = None
@@ -206,7 +205,6 @@ def start_driver(headless: bool = True, forCME: bool = False, forMorninstar: boo
                 "user-agent=Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.125 Safari/537.36"
             )
             chrome_options.add_argument("--window-size=1920,1080")
-            # chrome_options.add_argument("--start-maximized")
             chrome_options.add_argument("--disable-dev-shm-usage")
             chrome_options.add_argument("--headless=new")
         else:
@@ -216,6 +214,18 @@ def start_driver(headless: bool = True, forCME: bool = False, forMorninstar: boo
                 chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
                 chrome_options.add_experimental_option("useAutomationExtension", False)
                 chrome_options.add_argument("--disable-blink-features=AutomationControlled")
+            if forPA:   
+                chrome_options.add_argument('--disable-dev-shm-usage')
+                chrome_options.add_argument('--disable-extensions')
+                chrome_options.add_argument('--disable-gpu')
+                chrome_options.add_argument('--disable-infobars')
+                chrome_options.add_argument('--disable-notifications')
+                chrome_options.add_argument('--blink-settings=imagesEnabled=false')
+                chrome_options.add_argument('--disable-dev-shm-usage')
+                chrome_options.add_argument('--disable-setuid-sandbox')
+                chrome_options.add_argument(
+                "user-agent=Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.125 Safari/537.36"
+                )
 
         chrome_options.add_argument("--disable-gpu")
         chrome_options.add_argument("--log-level=3")
