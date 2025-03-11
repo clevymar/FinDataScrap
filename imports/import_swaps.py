@@ -150,7 +150,7 @@ def scrap_allIRS(verbose=True):
         "/html/body/div[2]/main/div[2]/div/div[4]/section/div[2]/div/section/div/div/div[2]/div/div[1]/div/div[3]/div/div/div/div/div/div[2]/button"
     )
 
-    driver = start_driver(headless=True, forCME=False)
+    driver = start_driver(headless=True, forCME=False, forPA=True)
     # Print the default headers before making any requests
     # console.log("Browser headers via JavaScript:")
     # try:
