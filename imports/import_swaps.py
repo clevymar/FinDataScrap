@@ -202,10 +202,10 @@ def scrap_allIRS(verbose=True):
                     arguments[0].scrollIntoView();
                     window.scrollBy(0, -(window.innerHeight * arguments[1]));
                     """
-            driver.execute_script(script, section,0.5)
+            driver.execute_script(script, section, 0.75)
             section = wait.until(EC.visibility_of_element_located((By.ID, "3")))
             ic(section.text)
-            blocks = wait.until(EC.visibility_of_any_elements_located((By.CLASS_NAME, "gem-comp-compact-tab-navigation")))
+            blocks = wait.until(EC.visibility_of_any_elements_located()((By.CSS_SELECTOR, '[data-testid="show-more"]')))
             for block in blocks:
                 ic(block.text)
 
