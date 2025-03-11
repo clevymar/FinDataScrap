@@ -199,8 +199,10 @@ def scrap_allIRS(verbose=True):
         if len(section.text) < 100:
             console.log("Section not loading")
             section = wait.until(EC.visibility_of_element_located((By.ID, "3")))
-            section = wait.until(EC.visibility_of_any_elements_located((By.CLASS_NAME, "gem-comp-compact-tab-navigation")))
             ic(section.text)
+            blocks = wait.until(EC.visibility_of_any_elements_located((By.CLASS_NAME, "gem-comp-compact-tab-navigation")))
+            for block in blocks:
+                ic(block.text)
 
         buttons = section.find_elements(By.XPATH, ".//button[@role='tab']")
         time.sleep(SLEEP_TIME)
