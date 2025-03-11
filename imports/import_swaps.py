@@ -1,3 +1,4 @@
+# %%
 import os
 import sys
 from io import StringIO
@@ -21,6 +22,7 @@ from scrap_selenium import start_driver, SeleniumError, WebDriverWait, EC, By, d
 from common import last_bd
 
 IRS_ccies = ["EUR", "USD", "JPY", "CHF", "GBP"]
+# %%
 
 
 def scrap_allIRS(verbose=True):
@@ -62,7 +64,6 @@ def scrap_allIRS(verbose=True):
             console.log("Checkbox not found")
             btnAccept_click
 
-
         # click on top of screen otherwise creates issues
         try:
             btnBS = wait.until(EC.presence_of_element_located((By.XPATH, "/html/body/div[2]/main/div[2]/div/nav/div[1]/div/div/ul/li[3]/a")))
@@ -82,6 +83,7 @@ def scrap_allIRS(verbose=True):
         Raises:
             Exception: If an error occurs during the interaction with the "Show more" button.
         """
+
         def handle_showMore(btnShowMore: WebElement):
             if verbose:
                 console.log(f"Button Show More for {CCY} found")
@@ -148,24 +150,49 @@ def scrap_allIRS(verbose=True):
         "/html/body/div[2]/main/div[2]/div/div[4]/section/div[2]/div/section/div/div/div[2]/div/div[1]/div/div[3]/div/div/div/div/div/div[2]/button"
     )
 
-    driver = start_driver(headless=True, forCME = True)
+    driver = start_driver(headless=True, forCME=False)
+    # Print the default headers before making any requests
+    # console.log("Browser headers via JavaScript:")
+    # try:
+    #     script = """
+    #     var headers = {
+    #         'User-Agent': navigator.userAgent,
+    #         'Accept-Language': navigator.language,
+    #         'Platform': navigator.platform,
+    #         'Cookies-Enabled': navigator.cookieEnabled
+    #     };
+    #     return headers;
+    #     """
+    #     headers = driver.execute_script(script)
+    #     for key, value in headers.items():
+    #         console.log(f"  {key}: {value}")
+    # except Exception as e:
+    #     console.log(f"Could not get headers with JavaScript: {e}")
     # driver = start_driver(headless=False, forCME = False)
-    driver.execute_cdp_cmd('Network.setExtraHTTPHeaders', {
-        'headers': {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:136.0) Gecko/20100101 Firefox/136.0',
-            'Accept-Language': 'en-US,en;q=0.5',
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-            'Upgrade-Insecure-Requests': '1',
+    # driver.execute_cdp_cmd('Network.setExtraHTTPHeaders', {
+    #     'headers': {
+    #         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:136.0) Gecko/20100101 Firefox/136.0',
+    #         'Accept-Language': 'en-US,en;q=0.5',
+    #         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+    #         'Upgrade-Insecure-Requests': '1',
 
-        }
-    })
+    #     }
+    # })
+
+    """
+    Accept-Language:en-GB 
+    Cookies-Enabled:True
+    Platform:Win32                                                                                             User-Agent: Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.125 Safari/537.36
+    """
+
     wait = WebDriverWait(driver, 5)
     try:
         driver.get(URL)
+        time.sleep(SLEEP_TIME)
         try:
             go_through_cookies(verbose=verbose)
         except Exception as e:
-            console.log(f"Could not deal with cookies") #{e}
+            console.log(f"Could not deal with cookies")  # {e}
             btnAccept_click()
             try:
                 go_through_cookies(verbose=verbose)
@@ -174,8 +201,11 @@ def scrap_allIRS(verbose=True):
 
         section = wait.until(EC.visibility_of_element_located((By.ID, "3")))
         time.sleep(SLEEP_TIME)
-        ic(section)
         ic(section.text)
+        if len(section.text) < 100:
+            console.log("Section not loading")
+            section = wait.until(EC.visibility_of_element_located((By.ID, "3")))
+            ic(section.text)
 
         buttons = section.find_elements(By.XPATH, ".//button[@role='tab']")
         time.sleep(SLEEP_TIME)
