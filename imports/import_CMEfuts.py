@@ -232,7 +232,8 @@ def refresh_data(verbose=True) -> pd.DataFrame:
                 try:
                     if verbose:
                         logger.info(f"\nScrapping data for {asset} [{counter}/{totalAssets}] ")
-                    df = get_futures_curve(asset)
+                    BBcode = dictAssets[asset].ticker
+                    df = get_futures_curve(BBcode)
                     if len(df) > 0:
                         df["asset"] = asset
                         tab.append(df)
