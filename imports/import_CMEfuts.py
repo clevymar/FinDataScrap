@@ -208,7 +208,7 @@ def refresh_data(verbose=True) -> pd.DataFrame:
             if asset in ["ER", "CH", "HSCEI"]:
                 try:
                     if verbose:
-                        logger.info(f"\nScrapping data for {asset} [{counter}/{totalAssets}] ")
+                        logger.info(f"\n\n****** Scrapping data for {asset} [{counter}/{totalAssets}] ")
                     df = scrap_otherAsset(driver, asset, verbose=False)
                     if len(df) > 0:
                         df["asset"] = asset
