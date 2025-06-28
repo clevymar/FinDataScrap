@@ -30,6 +30,7 @@ from databases.classes import Scrap
 from common import last_bd, tod
 from scrap_selenium import start_driver, _clean_price
 from import_otherfuts import scrap_otherAsset
+from import_futs_obb import get_futures_curve
 
 # TODO add Eurex and CHF
 # import eurex_curves
@@ -71,6 +72,7 @@ dictAssets = {
     "ER": ProductDef("ER", None, "IRF"),  # scrapped from Eurex
     "CH": ProductDef("CH", None, "IRF"),  # scrapped from ICE
     "HSCEI": ProductDef("HHI", None, "Equity"),  # scrapped from HKEX
+    "Sugar": ProductDef("KC", None, "Commo"),
 }
 
 # TODO  1) Zinc missing 2) replace CME for Sugar, WHeat...by correct exchange ?
@@ -208,6 +210,29 @@ def refresh_data(verbose=True) -> pd.DataFrame:
                     if verbose:
                         logger.info(f"\nScrapping data for {asset} [{counter}/{totalAssets}] ")
                     df = scrap_otherAsset(driver, asset, verbose=False)
+                    if len(df) > 0:
+                        df["asset"] = asset
+                        tab.append(df)
+                    if verbose:
+                        if len(df) > 0:
+                            msg = f"Scraped {asset} - {len(df)} maturities returned"
+                            logger.success(msg)
+                        else:
+                            msg = f"No data returned for {asset}"
+                            logger.warning(msg)
+                except KeyboardInterrupt:
+                    logger.info("Quitting Selenium driver")
+                    driver.quit()
+                    logger.info("Exiting...")
+                    exit(0)
+                except Exception as e:
+                    msg = f"Error scraping {asset}: {e}"
+                    logger.exception(msg)
+            elif asset in ["Sugar"]:
+                try:
+                    if verbose:
+                        logger.info(f"\nScrapping data for {asset} [{counter}/{totalAssets}] ")
+                    df = get_futures_curve(asset)
                     if len(df) > 0:
                         df["asset"] = asset
                         tab.append(df)
