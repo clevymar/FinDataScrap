@@ -40,7 +40,7 @@ def one_technical(und_row):
     dma20 = dfs[0].iloc[1, 1]
     dma50 = dfs[0].iloc[2, 1]
     dma200 = dfs[0].iloc[4, 1]
-    RSI14 = round(float(str(dfs[2].iloc[1, 1])[:-1]), 0)
+    RSI14 = round(float(str(dfs[1].iloc[1, 1])[:-1]), 0)
 
     tab = [name]
     tab = tab + [dma20, dma50, dma200, RSI14]
