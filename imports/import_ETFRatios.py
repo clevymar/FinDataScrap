@@ -215,7 +215,7 @@ ScrapRatios = Scrap("ETF_RATIOS", ETFratios_toDB, ETFRATIOS_last_date, datetoCom
 if __name__ == "__main__":
     # add_missing_unds(newList=newList)
 
-    undsToRefresh = ["FYLD", "QVAL"]
+    undsToRefresh = ["SPY", "GDX"]
     ratios, errs = selenium_scrap_ratios(undsToRefresh, verbose=True)
 
     exit(0)

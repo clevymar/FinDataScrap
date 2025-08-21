@@ -268,6 +268,29 @@ def _get_url(ETF_name: str, exchange="arcx", verbose=True):
 
 
 def _sub_getETF_Selenium(driver, ETF_name: str, exchange="arcx", verbose=True):
+    """
+    Scrapes ETF data from a webpage using Selenium and BeautifulSoup.
+    This function navigates to a specified URL, extracts financial ratios and sector composition
+    data for a given ETF, and returns the data in a dictionary format. It uses Selenium to interact
+    with dynamic web elements and BeautifulSoup for parsing the HTML content.
+    Args:
+        driver (selenium.webdriver): The Selenium WebDriver instance used to interact with the webpage.
+        ETF_name (str): The name of the ETF to scrape data for.
+        exchange (str, optional): The exchange code or a direct URL to scrape data from. Defaults to "arcx".
+        verbose (bool, optional): If True, enables verbose logging. Defaults to True.
+    Returns:
+        dict or None: A dictionary containing the scraped ETF data if successful, or None if scraping fails.
+    Notes:
+        - The function attempts to locate specific tables on the webpage for financial ratios and sector
+          composition. If neither table is found, the function returns None.
+        - The function retries locating elements up to a maximum number of attempts before logging an error.
+        - The returned dictionary includes keys for ETF name, last updated date, financial ratios, sector
+          weights, and other metadata.
+    Raises:
+        None: All exceptions are handled internally, and errors are logged using the `logger` instance.
+    Example:
+        row_dict = _sub_getETF_Selenium(driver, "SPY", exchange="arcx", verbose=True)
+    """
     def find_table(class_name: str):
         for i in range(max_attempts):
             try:
@@ -281,7 +304,10 @@ def _sub_getETF_Selenium(driver, ETF_name: str, exchange="arcx", verbose=True):
                 continue  # Retry if a timeout occurs
         return False
 
-    url = _get_url(ETF_name, exchange=exchange, verbose=verbose)
+    if len(exchange) <= 5:
+        url = _get_url(ETF_name, exchange=exchange, verbose=verbose)
+    else:
+        url = exchange
     driver.get(url)
     max_attempts = 3
     hasAnythingWorked = False
@@ -313,32 +339,32 @@ def _sub_getETF_Selenium(driver, ETF_name: str, exchange="arcx", verbose=True):
         res = soup.find(class_="sal-measures__value-table")
         res = res.find("tbody")
         for row in res.find_all("tr"):
-            sratio = row.find_all("td")[1].text
+            label = row.find_all("th")[0].text.strip()
+            sratio = row.find_all("td")[0].text
             if sratio != "":
                 try:
                     ratio = float(sratio)
                 except:
                     """exception for P/CF not as important as others, replace by cat"""
-                    if row.find_all("td")[0].text.strip() == "Price/Cash Flow":
+                    if label == "Price/Cash Flow":
                         try:
-                            ratio = float(row.find_all("td")[2].text)
+                            ratio = float(row.find_all("td")[1].text)
                         except:
                             ratio = float("nan")
                     else:
                         ratio = float("nan")
                 row_dict[COLS_MORNINGSTAR[compteur + 1]] = ratio
                 compteur += 1
-    # tbs=soup.findAll("tr", {"class": "ng-scope"})
     """ find and grab sector composition """
     if hasSectors:
         res = soup.find(class_="sal-sector-exposure__sector-table")
         res = res.find("tbody")
         for row in res.find_all("tr"):
-            cells = row.find_all("td")
-            lbl = cells[0].text.strip()
+            lbl = row.find_all("th")[0].text.strip()
+            w = row.find_all("td")[0].text
             if lbl in SECTORS:
                 try:
-                    weight = float(cells[1].text)
+                    weight = float(w)
                 except:
                     weight = float("nan")
                 row_dict[lbl] = weight
@@ -385,7 +411,8 @@ def selenium_scrap_ratios(secList: list, verbose=True):
                 exc = "arcx"
             else:
                 url = tmp["URL"]
-                exc = url[10:].split("/")[2]
+                # exc = url[10:].split("/")[2]
+                exc=url
 
             if sec in dfETFRef["ETF"].tolist():
                 if dfETFRef.loc[dfETFRef["ETF"] == sec, "DoNotRatio"].iloc[0]:
