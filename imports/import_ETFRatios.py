@@ -215,10 +215,10 @@ ScrapRatios = Scrap("ETF_RATIOS", ETFratios_toDB, ETFRATIOS_last_date, datetoCom
 if __name__ == "__main__":
     # add_missing_unds(newList=newList)
 
-    undsToRefresh = ["SPY", "GDX"]
-    ratios, errs = selenium_scrap_ratios(undsToRefresh, verbose=True)
+    # undsToRefresh = ["SPY", "GDX"]
+    # ratios, errs = selenium_scrap_ratios(undsToRefresh, verbose=True)
 
-    exit(0)
+    # exit(0)
 
     logger.info(f"Latest date in ETF_RATIOS: {ETFRATIOS_last_date()}")
     unds = check_underlyings()
@@ -228,4 +228,4 @@ if __name__ == "__main__":
     msg, res = ETFratios_toDB()
     if res is not None:
         logger.info(f"full DB: {res}")
-        logger.info(f"updated: {res[res['Date'] == last_bd]}")
+    
