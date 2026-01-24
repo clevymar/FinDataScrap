@@ -123,7 +123,7 @@ def _prep_ratios(ratios: pd.DataFrame, dfExisting: pd.DataFrame) -> pd.DataFrame
 
 # newList = ["ERUS", "GULF", "ITKY", "JKL", "RSX", "XTH"]
 # newList = ['XOP','GXG','CEE']
-newList = ["FYLD", "AVDV"]
+newList = ["MOO", "BLDG", "IPRP"]
 
 
 def add_missing_unds(newList: list) -> None:
@@ -136,7 +136,8 @@ def add_missing_unds(newList: list) -> None:
         logger.info(f"These are the {len(undstoAdd)} ETFs to add: {undstoAdd}")
         ratios, errs = selenium_scrap_ratios(undstoAdd, verbose=isLocal())
         dfNew = _prep_ratios(ratios, dfExisting)
-        databases_update(dfNew, "ETF_RATIOS", idx=False, mode="replace", verbose=True, save_insqlite=True)
+        if len(dfNew) > 0:
+            databases_update(dfNew, "ETF_RATIOS", idx=False, mode="replace", verbose=True, save_insqlite=True)
     else:
         logger.info("No ETFs to add")
 
@@ -213,12 +214,12 @@ ScrapRatios = Scrap("ETF_RATIOS", ETFratios_toDB, ETFRATIOS_last_date, datetoCom
 
 
 if __name__ == "__main__":
-    # add_missing_unds(newList=newList)
+    add_missing_unds(newList=newList)
 
     # undsToRefresh = ["SPY", "GDX"]
     # ratios, errs = selenium_scrap_ratios(undsToRefresh, verbose=True)
 
-    # exit(0)
+    exit(0)
 
     logger.info(f"Latest date in ETF_RATIOS: {ETFRATIOS_last_date()}")
     unds = check_underlyings()
