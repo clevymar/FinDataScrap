@@ -73,6 +73,8 @@ dictAssets = {
     "CH": ProductDef("CH", None, "IRF"),  # scrapped from ICE
     "HSCEI": ProductDef("HHI", None, "Equity"),  # scrapped from HKEX
     "Sugar": ProductDef("KC", None, "Commo"),
+    "Cocoa": ProductDef("CC", None, "Commo"),
+    "Brent": ProductDef("BZ", None, "Commo"),
 }
 
 # TODO  1) Zinc missing 2) replace CME for Sugar, WHeat...by correct exchange ?
@@ -106,7 +108,9 @@ def _get_webData(driver, coreURL: str, clickCookies: bool = True):
         logger.info("Looking for cookies button")
         try:
             _scroll_down()
-            python_button = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.ID, "onetrust-accept-btn-handler")))
+            python_button = WebDriverWait(driver, 10).until(
+                EC.element_to_be_clickable((By.ID, "onetrust-accept-btn-handler"))
+            )
             logger.info("Clicking on cookies button")
             python_button.click()
             hasClickedCookies = True
@@ -195,7 +199,57 @@ def compose_html_msg(messages):
     return msg
 
 
-def refresh_data(verbose=True) -> pd.DataFrame:
+def _scrap_mono(
+    _type: str,
+    tab: list,
+    asset: str,
+    driver,
+    counter: int,
+    totalAssets: int,
+    need_to_click_cookies: bool,
+    verbose: bool = True,
+):
+    try:
+        if verbose:
+            logger.info(f"\n\n****** Scrapping data for {asset} [{counter}/{totalAssets}] ")
+
+        match _type:
+            case "IRF":
+                df = scrap_otherAsset(driver, asset, verbose=False)
+            case "NYBOT":
+                BBcode = dictAssets[asset].ticker
+                df = get_futures_curve(BBcode)
+            case _:
+                df, hasClickedCookies = scrap_asset(
+                    driver, asset, verbose=False, need_to_click_cookies=need_to_click_cookies
+                )
+                if df is None:
+                    df = pd.DataFrame()
+                if need_to_click_cookies:
+                    need_to_click_cookies = not hasClickedCookies
+                else:
+                    need_to_click_cookies = False
+        if len(df) > 0:
+            df["asset"] = asset
+            tab.append(df)
+        if verbose:
+            if len(df) > 0:
+                msg = f"Scraped {asset} - {len(df)} maturities returned"
+                logger.success(msg)
+            else:
+                msg = f"No data returned for {asset}"
+                logger.warning(msg)
+    except KeyboardInterrupt:
+        logger.info("Quitting Selenium driver")
+        driver.quit()
+        logger.info("Exiting...")
+        exit(0)
+    except Exception as e:
+        msg = f"Error scraping {asset}: {e}"
+        logger.exception(msg)
+
+
+def refresh_data(verbose: bool = True) -> pd.DataFrame:
     driver = None
     driver = start_driver(headless=True, forCME=True)
     tab = []
@@ -206,82 +260,11 @@ def refresh_data(verbose=True) -> pd.DataFrame:
         for asset, product in dictAssets.items():
             counter += 1
             if asset in ["ER", "CH", "HSCEI"]:
-                try:
-                    if verbose:
-                        logger.info(f"\n\n****** Scrapping data for {asset} [{counter}/{totalAssets}] ")
-                    df = scrap_otherAsset(driver, asset, verbose=False)
-                    if len(df) > 0:
-                        df["asset"] = asset
-                        tab.append(df)
-                    if verbose:
-                        if len(df) > 0:
-                            msg = f"Scraped {asset} - {len(df)} maturities returned"
-                            logger.success(msg)
-                        else:
-                            msg = f"No data returned for {asset}"
-                            logger.warning(msg)
-                except KeyboardInterrupt:
-                    logger.info("Quitting Selenium driver")
-                    driver.quit()
-                    logger.info("Exiting...")
-                    exit(0)
-                except Exception as e:
-                    msg = f"Error scraping {asset}: {e}"
-                    logger.exception(msg)
-            elif asset in ["Sugar"]:
-                try:
-                    if verbose:
-                        logger.info(f"\nScrapping data for {asset} [{counter}/{totalAssets}] ")
-                    BBcode = dictAssets[asset].ticker
-                    df = get_futures_curve(BBcode)
-                    if len(df) > 0:
-                        df["asset"] = asset
-                        tab.append(df)
-                    if verbose:
-                        if len(df) > 0:
-                            msg = f"Scraped {asset} - {len(df)} maturities returned"
-                            logger.success(msg)
-                        else:
-                            msg = f"No data returned for {asset}"
-                            logger.warning(msg)
-                except KeyboardInterrupt:
-                    logger.info("Quitting Selenium driver")
-                    driver.quit()
-                    logger.info("Exiting...")
-                    exit(0)
-                except Exception as e:
-                    msg = f"Error scraping {asset}: {e}"
-                    logger.exception(msg)
+                _scrap_mono("IRF", tab, asset, driver, counter, totalAssets, need_to_click_cookies, verbose=verbose)
+            elif asset in ["Sugar", "Cocoa", "Brent"]:
+                _scrap_mono("NYBOT", tab, asset, driver, counter, totalAssets, need_to_click_cookies, verbose=verbose)
             else:
-                try:
-                    if verbose:
-                        logger.info(f"\nScrapping data for {asset} [{counter}/{totalAssets}] \n\tat {STEM}{product.coreURL}{TAIL}")
-                    df, hasClickedCookies = scrap_asset(driver, asset, verbose=False, need_to_click_cookies=need_to_click_cookies)
-                    if df is None:
-                        df = pd.DataFrame()
-                    if len(df) > 0:
-                        df["asset"] = asset
-                        tab.append(df)
-                        if need_to_click_cookies:
-                            need_to_click_cookies = not hasClickedCookies
-                        else:
-                            need_to_click_cookies = False
-                    if verbose:
-                        if len(df) > 0:
-                            msg = f"Scraped {asset} - {len(df)} maturities returned"
-                            logger.success(msg)
-                        else:
-                            msg = f"No data returned for {asset}"
-                            logger.warning(msg)
-                except KeyboardInterrupt:
-                    logger.info("Quitting Selenium driver")
-                    driver.quit()
-                    logger.info("Exiting...")
-                    exit(0)
-                except Exception as e:
-                    msg = f"Error scraping {asset}: {e}"
-                    logger.exception(msg)
-
+                _scrap_mono("CME", tab, asset, driver, counter, totalAssets, need_to_click_cookies, verbose=verbose)
     except KeyboardInterrupt:
         if driver:
             logger.info("Quitting Selenium driver")
@@ -320,7 +303,9 @@ def import_futs_curves(verbose=False) -> tuple[str, str]:
         else:
             tries = MAX_TRIES + 1
 
-    databases_update(resDB.reset_index(), "FUTURES_CURVES", idx=False, mode="append", verbose=verbose, save_insqlite=True)
+    databases_update(
+        resDB.reset_index(), "FUTURES_CURVES", idx=False, mode="append", verbose=verbose, save_insqlite=True
+    )
 
     logger.success(f"[+]{len(scrappedUnds)} future curves scrapped,  {len(resDB)} lines saved in DB")
     # generate the string to be used in the email
@@ -334,7 +319,7 @@ def import_futs_curves(verbose=False) -> tuple[str, str]:
 
     msgDetails = ""
     for und in scrappedUnds:
-        msg += f"\n\t{und}: {len(resDB[resDB.asset==und])} maturities scrapped"
+        msg += f"\n\t{und}: {len(resDB[resDB.asset == und])} maturities scrapped"
     return (msg, msgDetails)
 
 
