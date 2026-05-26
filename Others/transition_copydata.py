@@ -8,7 +8,7 @@ from sqlalchemy import create_engine, URL
 from databases.database_sqlite import DB_FOLDER, read_table
 from credentials import USERNAME, DB_PWD, PA_PWD
 from databases.database_connect import PADB_connection
-from common import DIR_FILES
+from import_common import DIR_FILES
 from databases.database_mysql import databases_update
 
 # HOST = '127.0.0.1'

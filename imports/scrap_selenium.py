@@ -25,7 +25,7 @@ parentdir = os.path.dirname(currentdir)
 if parentdir not in sys.path:
     sys.path.insert(0, parentdir)
 
-from common import last_bd, fichierTSUnderlyings
+from import_common import last_bd, fichierTSUnderlyings
 from utils.utils import timer
 from databases.database_mysql import SQLA_read_table
 

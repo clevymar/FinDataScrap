@@ -6,7 +6,7 @@ from datetime import timedelta as td
 import pandas as pd
 
 from database_mysql import SQLA_read_table
-from common import DIR_FILES
+from import_common import DIR_FILES
 
 # %%
 

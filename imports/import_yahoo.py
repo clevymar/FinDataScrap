@@ -14,7 +14,7 @@ from tqdm import tqdm
 from loguru import logger
 
 
-from common import start, end, DIR_FILES, fichierTSUnderlyings
+from import_common import start, end, DIR_FILES, fichierTSUnderlyings
 from utils.utils import timer, isLocal
 from databases.database_mysql import SQLA_last_date, databases_update
 from databases.classes import Scrap

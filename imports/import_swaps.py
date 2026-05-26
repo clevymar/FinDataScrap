@@ -19,7 +19,7 @@ from utils.utils import timer
 from databases.database_mysql import SQLA_last_date, databases_update
 from databases.classes import Scrap
 from scrap_selenium import start_driver, SeleniumError, WebDriverWait, EC, By, details_element, WebElement
-from common import last_bd
+from import_common import last_bd
 
 IRS_ccies = ["EUR", "USD", "JPY", "CHF", "GBP"]
 # %%

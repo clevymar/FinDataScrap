@@ -3,7 +3,7 @@ from typing import Callable
 import sys
 sys.path.insert(0, '..')
 
-from common import last_bd
+from import_common import last_bd
 @dataclass()
 class Scrap():
     name:str

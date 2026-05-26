@@ -11,7 +11,7 @@ parentdir = os.path.dirname(currentdir)
 if parentdir not in sys.path:
     sys.path.insert(0, parentdir)
 
-from common import fichierTSUnderlyings, need_reimport, isLocal, last_bd
+from import_common import fichierTSUnderlyings, need_reimport, isLocal, last_bd
 from utils.utils import timer, print_color
 from scrap_selenium import selenium_scrap_ratios
 from databases.database_mysql import SQLA_last_date, databases_update, PADB_connection,SQLA_read_table

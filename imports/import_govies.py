@@ -11,7 +11,7 @@ parentdir = os.path.dirname(currentdir)
 if parentdir not in sys.path:
     sys.path.insert(0, parentdir)
 
-from common import last_bd
+from import_common import last_bd
 from utils.utils import timer
 from databases.database_mysql import SQLA_last_date, databases_update
 from databases.classes import Scrap

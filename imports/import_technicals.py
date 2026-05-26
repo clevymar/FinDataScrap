@@ -12,7 +12,7 @@ if parentdir not in sys.path:
 from utils.utils import timer, isLocal
 from databases.database_mysql import SQLA_last_date, databases_update
 from databases.classes import Scrap
-from common import last_bd
+from import_common import last_bd
 
 unds = [
     ["Gold", "GLD"],

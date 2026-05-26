@@ -14,7 +14,7 @@ Runs on **PythonAnywhere** on a daily schedule. Can also be run locally for test
 ```
 GCP/
 ├── main.py              # Entry point — orchestrates all scrapers
-├── common.py            # Shared date helpers (tod, last_bd, need_reimport)
+├── import_common.py     # Shared date helpers (tod, last_bd, need_reimport)
 ├── common/              # Shared definitions synced from Finance/common/ — see Deployment
 ├── imports/             # One file per data source (import_CMEfuts.py, import_yahoo.py, …)
 ├── databases/           # DB read/write helpers (database_mysql.py, classes.py, …)

@@ -21,7 +21,7 @@ if parentdir not in sys.path:
 from utils.utils import print_color, timer
 from databases.classes import Scrap
 from databases.database_mysql import SQLA_last_date, databases_update, SQLA_read_table
-from common import last_bd
+from import_common import last_bd
 from utils.utils import isLocal
 
 if isLocal():

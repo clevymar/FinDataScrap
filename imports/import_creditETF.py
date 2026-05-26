@@ -18,7 +18,7 @@ from requests.exceptions import HTTPError
 from bs4 import BeautifulSoup
 from loguru import logger
 
-from common import last_bd
+from import_common import last_bd
 from utils.utils import timer
 from databases.database_mysql import SQLA_last_date, databases_update
 from databases.classes import Scrap

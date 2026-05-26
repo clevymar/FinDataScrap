@@ -65,7 +65,7 @@ from loguru import logger
 
 from databases.database_mysql import SQLA_last_date, databases_update
 from databases.classes import Scrap
-from common import last_bd
+from import_common import last_bd
 from scrap_selenium import start_driver, _clean_price
 from import_otherfuts import scrap_otherAsset
 from import_futs_obb import get_futures_curve

@@ -12,7 +12,7 @@ import numpy as np
 from icecream import ic
 from loguru import logger
 
-from common import need_reimport, isLocal, last_bd
+from import_common import need_reimport, isLocal, last_bd
 from utils.utils import timer
 from scrap_selenium import selenium_scrap_ratios
 from databases.database_mysql import SQLA_last_date, databases_update, PADB_connection

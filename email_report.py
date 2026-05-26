@@ -9,7 +9,7 @@ from rich.rule import Rule
 
 from utils.email_CLM import send_email, nice_table, send_cyril_andrea
 from databases.database_mysql import SQLA_read_table
-from common import DIR_FILES
+from import_common import DIR_FILES
 
 console = Console()
 

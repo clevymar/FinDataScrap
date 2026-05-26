@@ -26,7 +26,7 @@ from imports.import_creditETF import ScrapCreditETF
 from imports.import_CMEfuts import ScrapCMEFuts
 from imports.import_tips import ScrapTIPS
 
-from common import need_reimport
+from import_common import need_reimport
 from utils.utils import isLocal, timer
 from email_report import send_report, send_email
 from databases.classes import Scrap
