@@ -1,16 +1,28 @@
 {
 	"folders": [
 		{
+			"name": "GCP",
 			"path": "."
 		},
 		{
-			"path": "../.."
+			"name": "Financial files",
+			"path": "../../../../Financial files"
 		}
 	],
 	"settings": {
 		"[python]": {
 			"editor.defaultFormatter": "ms-python.black-formatter"
 		},
-		"python.formatting.provider": "none"
+		"python.formatting.provider": "none",
+		"docwriter.style": "NumPy",
+		"pieces.cloudCapabilities": "Blended",
+		"pieces.telemetry": true,
+		"workbench.colorCustomizations": {
+			"activityBar.background": "#471360",
+			"titleBar.activeBackground": "#631B87",
+			"titleBar.activeForeground": "#FEFCFE"
+		},
+		"postman.settings.dotenv-detection-notification-visibility": false,
+		"python.defaultInterpreterPath": "C:/Users/clevy/.envs/GCP/Scripts/python.exe"
 	}
 }

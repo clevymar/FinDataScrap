@@ -14,3 +14,4 @@ imports/Files/*
 /__pycache__/*
 __pycache__/*
 GCP.code-workspace
+uv.lock

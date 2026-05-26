@@ -1,0 +1,28 @@
+{
+    "python.analysis.typeCheckingMode": "basic",
+    "workbench.colorCustomizations": {
+        "activityBar.background": "#01227E",
+        "titleBar.activeBackground": "#0130B1",
+        "titleBar.activeForeground": "#FBFCFF"
+    },
+    "python.defaultInterpreterPath": "C:/Users/clevy/.envs/GCP/Scripts/python.exe",
+
+    "python.analysis.indexing": true,
+    // "[python]": {
+    //   "analysis.extraPaths": [
+    //     "${workspaceFolder}",
+    //     "${workspaceFolder}/Money"
+    //   ]
+    // },
+    // "python-envs.pythonProjects": [
+    //   {
+    //     "path": "",
+    //     "envManager": "ms-python.python:venv",
+    //     "packageManager": "ms-python.python:pip"
+    //   }
+    // ],
+
+    "terminal.integrated.env.windows": {
+        "UV_PROJECT_ENVIRONMENT": "%USERPROFILE%\\.envs\\GCP",
+    }
+}
