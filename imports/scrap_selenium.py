@@ -252,7 +252,7 @@ def _get_url(ETF_name: str, exchange="arcx", verbose=True):
         url = f"https://www.morningstar.com/{exchange}/{ETF_name}/portfolio"
     else:
         foundURL = False
-        EXCHANGE_LIST = [exchange] + [c for c in ["arcx", "xnys", "xnas", "bats"] if c != exchange]
+        EXCHANGE_LIST = [exchange] + [c for c in ["arcx", "xnys", "xams", "xnas", "bats"] if c != exchange]
         for exc in EXCHANGE_LIST:
             url = f"https://www.morningstar.com/etfs/{exc}/{ETF_name}/portfolio"
             r = session.get(url)
@@ -406,7 +406,7 @@ def selenium_scrap_ratios(secList: list, verbose=True):
         for sec in pbar:
             pbar.set_description(f"Processing {sec}")
             exc = "arcx"
-            tmp = dfETF_RATIOS.loc[sec]
+            tmp = dfETF_RATIOS.loc[sec] if sec in dfETF_RATIOS.index else pd.DataFrame()
             if len(tmp) == 0:
                 exc = "arcx"
             else:

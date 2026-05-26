@@ -163,7 +163,7 @@ def scrape_single_etf(driver, etf_name: str) -> pd.DataFrame:
     logger.info(f"Scraping {etf_name} from {url} - title: {driver.title}")
 
     html = driver.page_source
-    logger.debug(f"Page size: {len(html)} characters")
+    # logger.debug(f"Page size: {len(html)} characters")
     soup = BeautifulSoup(html, "lxml")
 
     # Extract ETF name
@@ -319,10 +319,14 @@ def refresh_all_etfs() -> list[str]:
     existing = etf_db.index.tolist()
     logger.info(f"Refreshing {len(existing)} ETFs")
 
-    errors, _ = update_etfs(existing, etf_db)
+    if len(existing)>0:
+        errors, _ = update_etfs(existing, etf_db)
 
-    if errors:
-        logger.error(f"Failed to update: {errors}")
+        if errors:
+            logger.error(f"Failed to update: {errors}")
+    else:
+        logger.error("No ETFs found in database to refresh !!!!!!!!!\n Exiting...")
+        errors = []
 
     return errors
 
@@ -341,11 +345,15 @@ def add_new_etfs(etf_list: list[str] | None = None) -> list[str]:
         etf_list = common_modules.assets_coll.get("Mine", []) or []
 
     etf_db = load_etf_db()
-    existing = set(etf_db.index.tolist())
-    to_add = [etf for etf in etf_list if etf not in existing]
+    if len(etf_db) == 0:
+        logger.warning("ETF_DB is empty")
+        to_add = etf_list
+    else:
+        existing = set(etf_db.index.tolist())
+        to_add = [etf for etf in etf_list if etf not in existing]
 
     if not to_add:
-        logger.info("No new ETFs to add")
+        logger.info("No new ETFs to add - they are already all present in the DB")
         return []
 
     logger.info(f"Adding {len(to_add)} new ETFs: {to_add}")
@@ -364,4 +372,5 @@ def add_new_etfs(etf_list: list[str] | None = None) -> list[str]:
 if __name__ == "__main__":
     recap, _ = list_existing_ETF()
     print(recap)
-    refresh_all_etfs()
+    add_new_etfs(recap.index.tolist())
+    # refresh_all_etfs()
