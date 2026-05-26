@@ -1,10 +1,5 @@
 # ruff: noqa: E402
 
-"""
-seems headless version, which is a MUST for PA, does not work for CME
-
-"""
-
 import os
 import sys
 
@@ -13,10 +8,15 @@ parentdir = os.path.dirname(currentdir)
 if parentdir not in sys.path:
     sys.path.insert(0, parentdir)
 
+# Locally common/ is at Finance/ (4 levels up); on PA it's at FinDataScrap/ (already in sys.path)
+from pathlib import Path
+_finance_root = Path(__file__).resolve().parents[4]
+if (_finance_root / "common").exists():
+    sys.path.insert(0, str(_finance_root))
+
 import time
 import pandas as pd
 import traceback
-from dataclasses import dataclass
 
 from bs4 import BeautifulSoup
 from selenium.webdriver.support import expected_conditions as EC
@@ -30,6 +30,7 @@ from utils.utils import timer, print_color
 from databases.database_mysql import SQLA_last_date, databases_update
 from databases.classes import Scrap
 from common import last_bd, tod
+from common.cme_definitions import dictAssets
 from scrap_selenium import start_driver, _clean_price
 from import_otherfuts import scrap_otherAsset
 from import_futs_obb import get_futures_curve
@@ -38,53 +39,6 @@ from import_futs_obb import get_futures_curve
 # import eurex_curves
 # import CHF_curve
 
-
-fmt = "<green>{time:DD/MM HH:mm:ss}</green> | <level>{level}</level> | <cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>"
-logger.remove()
-logger.add(sys.stderr, format=fmt, level="DEBUG", backtrace=True, diagnose=False)
-logger.add("Files/import_CMEfuts.log", format=fmt, level="DEBUG", rotation="1 week", backtrace=True, diagnose=False)
-
-
-# * COPIED from CME_common - not great but how do otherwise with PA ?
-@dataclass
-class ProductDef:
-    """Class defining an asset"""
-
-    ticker: str
-    coreURL: str | None
-    assetType: str
-    data: pd.DataFrame | None = None
-    lastDate: str | None = None
-
-
-dictAssets = {
-    # 'ED':ProductDef("ED","interest-rates/stirs/eurodollar",'IRF'),
-    "SOFR": ProductDef("SR", "interest-rates/stirs/three-month-sofr", "IRF"),  # SOFR futures
-    "FF": ProductDef("FF", "interest-rates/stirs/30-day-federal-fund", "IRF"),
-    "ER": ProductDef("ER", None, "IRF"),  # scrapped from Eurex
-    "CH": ProductDef("CH", None, "IRF"),  # scrapped from ICE
-
-    "HSCEI": ProductDef("HHI", None, "Commo"),  # scrapped from HKEX
-
-    "Gold": ProductDef("GC", "metals/precious/gold", "Commo"),
-    "Silver": ProductDef("SI", "metals/precious/silver", "Commo"),
-    "Platinum": ProductDef("PL", "metals/precious/platinum", "Commo"),
-
-    "Aluminium": ProductDef("ALI", "metals/base/aluminum", "Commo"),
-    "Copper": ProductDef("HG", "metals/base/copper", "Commo"),
-
-    "Oil": ProductDef("CL", "energy/crude-oil/light-sweet-crude", "Commo"),
-    "Brent": ProductDef("BZ", None, "Commo"),
-    "Gas": ProductDef("NG", "energy/natural-gas/natural-gas", "Commo"),
-
-    "Corn": ProductDef("ZC", "agriculture/grains/corn", "Commo"),
-    "Wheat": ProductDef("ZW", "agriculture/grains/wheat", "Commo"),
-    "Soybean": ProductDef("ZS", "agriculture/oilseeds/soybean", "Commo"),
-    "Sugar": ProductDef("KC", None, "Commo"),
-    "Cocoa": ProductDef("CC", None, "Commo"),
-    "Cattle": ProductDef("LE", "agriculture/livestock/live-cattle", "Commo"),
-    "Hogs": ProductDef("HE", "agriculture/livestock/lean-hogs", "Commo"),
-}
 # TODO  1) Zinc missing 2) replace CME for Sugar, Wheat...by correct exchange ?
 
 
