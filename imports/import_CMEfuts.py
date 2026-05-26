@@ -1,5 +1,7 @@
+# ruff: noqa: E402
+
 """
-seems headless version, which sia  MUST for PA, does not work for CME
+seems headless version, which is a MUST for PA, does not work for CME
 
 """
 
@@ -43,7 +45,7 @@ logger.add(sys.stderr, format=fmt, level="DEBUG", backtrace=True, diagnose=False
 logger.add("Files/import_CMEfuts.log", format=fmt, level="DEBUG", rotation="1 week", backtrace=True, diagnose=False)
 
 
-# * COPIED from CME_common - not great
+# * COPIED from CME_common - not great but how do otherwise with PA ?
 @dataclass
 class ProductDef:
     """Class defining an asset"""
@@ -51,33 +53,39 @@ class ProductDef:
     ticker: str
     coreURL: str | None
     assetType: str
+    data: pd.DataFrame | None = None
+    lastDate: str | None = None
 
 
 dictAssets = {
+    # 'ED':ProductDef("ED","interest-rates/stirs/eurodollar",'IRF'),
     "SOFR": ProductDef("SR", "interest-rates/stirs/three-month-sofr", "IRF"),  # SOFR futures
     "FF": ProductDef("FF", "interest-rates/stirs/30-day-federal-fund", "IRF"),
+    "ER": ProductDef("ER", None, "IRF"),  # scrapped from Eurex
+    "CH": ProductDef("CH", None, "IRF"),  # scrapped from ICE
+
+    "HSCEI": ProductDef("HHI", None, "Commo"),  # scrapped from HKEX
+
     "Gold": ProductDef("GC", "metals/precious/gold", "Commo"),
     "Silver": ProductDef("SI", "metals/precious/silver", "Commo"),
     "Platinum": ProductDef("PL", "metals/precious/platinum", "Commo"),
-    "Oil": ProductDef("CL", "energy/crude-oil/light-sweet-crude", "Commo"),
-    "Gas": ProductDef("CL", "energy/natural-gas/natural-gas", "Commo"),
+
     "Aluminium": ProductDef("ALI", "metals/base/aluminum", "Commo"),
     "Copper": ProductDef("HG", "metals/base/copper", "Commo"),
+
+    "Oil": ProductDef("CL", "energy/crude-oil/light-sweet-crude", "Commo"),
+    "Brent": ProductDef("BZ", None, "Commo"),
+    "Gas": ProductDef("NG", "energy/natural-gas/natural-gas", "Commo"),
+
     "Corn": ProductDef("ZC", "agriculture/grains/corn", "Commo"),
     "Wheat": ProductDef("ZW", "agriculture/grains/wheat", "Commo"),
     "Soybean": ProductDef("ZS", "agriculture/oilseeds/soybean", "Commo"),
-    "Cattle": ProductDef("LE", "agriculture/livestock/live-cattle", "Commo"),
-    "Hogs": ProductDef("HE", "agriculture/livestock/lean-hogs", "Commo"),
-    # "Sugar": ProductDef("YO", "agriculture/lumber-and-softs/sugar-no11", "Commo"),
-    "ER": ProductDef("ER", None, "IRF"),  # scrapped from Eurex
-    "CH": ProductDef("CH", None, "IRF"),  # scrapped from ICE
-    "HSCEI": ProductDef("HHI", None, "Equity"),  # scrapped from HKEX
     "Sugar": ProductDef("KC", None, "Commo"),
     "Cocoa": ProductDef("CC", None, "Commo"),
-    "Brent": ProductDef("BZ", None, "Commo"),
+    "Cattle": ProductDef("LE", "agriculture/livestock/live-cattle", "Commo"),
+    "Hogs": ProductDef("HE", "agriculture/livestock/lean-hogs", "Commo"),
 }
-
-# TODO  1) Zinc missing 2) replace CME for Sugar, WHeat...by correct exchange ?
+# TODO  1) Zinc missing 2) replace CME for Sugar, Wheat...by correct exchange ?
 
 
 STEM = "https://www.cmegroup.com/markets/"
