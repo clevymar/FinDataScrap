@@ -201,7 +201,8 @@ def _process_results(table_body, asset: str, page_type: str):
             )
             continue
 
-        expiry = els[0].text[:8].strip()
+        raw = els[0].text.strip().split()
+        expiry = f"{raw[0][:3]} {'20' + raw[1] if len(raw[1]) == 2 else raw[1]}"
         settle = _clean_price(els[settle_col].text.strip())
         last = settle if last_col is None else _clean_price(els[last_col].text.strip())
         tab = [
